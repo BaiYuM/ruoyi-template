@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "vite-plugin-vue-setup-extend": "^0.4.0"
+  },
+  "dependencies": {
+    "vuedraggable": "^4.1.0"
+  }
+}

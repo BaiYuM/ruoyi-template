@@ -1,10 +1,9 @@
-@import './variables.module.scss';
-@import './mixin.scss';
-@import './transition.scss';
-@import './element-ui.scss';
-@import './sidebar.scss';
-@import './btn.scss';
-@import './ruoyi.scss';
+@use './mixin.scss';
+@use './transition.scss';
+@use './element-ui.scss';
+@use './sidebar.scss';
+@use './btn.scss';
+@use './ruoyi.scss';
 
 body {
   height: 100%;
@@ -131,10 +130,6 @@ aside {
   position: relative;
 }
 
-.pagination-container {
-  margin-top: 30px;
-}
-
 .text-center {
   text-align: center
 }
@@ -181,13 +176,4 @@ aside {
     vertical-align: middle;
     margin-bottom: 10px;
   }
-}
-
-//refine vue-multiselect plugin
-.multiselect {
-  line-height: 16px;
-}
-
-.multiselect--active {
-  z-index: 1000 !important;
 }

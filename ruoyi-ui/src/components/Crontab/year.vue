@@ -1,36 +1,36 @@
 <template>
-    <el-form size="small">
+    <el-form>
         <el-form-item>
-            <el-radio :label="1" v-model='radioValue'>
+            <el-radio :value="1" v-model='radioValue'>
                 不填，允许的通配符[, - * /]
             </el-radio>
         </el-form-item>
 
         <el-form-item>
-            <el-radio :label="2" v-model='radioValue'>
+            <el-radio :value="2" v-model='radioValue'>
                 每年
             </el-radio>
         </el-form-item>
 
         <el-form-item>
-            <el-radio :label="3" v-model='radioValue'>
+            <el-radio :value="3" v-model='radioValue'>
                 周期从
-                <el-input-number v-model='cycle01' :min='fullYear' :max="maxFullYear - 1" /> -
-                <el-input-number v-model='cycle02' :min="cycle01 + 1" :max="maxFullYear" />
+                <el-input-number v-model='cycle01' :min='fullYear' :max="2098"/> -
+                <el-input-number v-model='cycle02' :min="cycle01 ? cycle01 + 1 : fullYear + 1" :max="2099"/>
             </el-radio>
         </el-form-item>
 
         <el-form-item>
-            <el-radio :label="4" v-model='radioValue'>
+            <el-radio :value="4" v-model='radioValue'>
                 从
-                <el-input-number v-model='average01' :min='fullYear' :max="maxFullYear - 1"/> 年开始，每
-                <el-input-number v-model='average02' :min="1" :max="10" /> 年执行一次
+                <el-input-number v-model='average01' :min='fullYear' :max="2098"/> 年开始，每
+                <el-input-number v-model='average02' :min="1" :max="2099 - average01 || fullYear"/> 年执行一次
             </el-radio>
 
         </el-form-item>
 
         <el-form-item>
-            <el-radio :label="5" v-model='radioValue'>
+            <el-radio :value="5" v-model='radioValue'>
                 指定
                 <el-select clearable v-model="checkboxList" placeholder="可多选" multiple :multiple-limit="8">
                     <el-option v-for="item in 9" :key="item" :value="item - 1 + fullYear" :label="item -1 + fullYear" />
@@ -61,22 +61,24 @@ const props = defineProps({
         }
     }
 })
-const fullYear = ref(0)
-const maxFullYear = ref(0)
+
+const fullYear = Number(new Date().getFullYear())
+const maxFullYear = fullYear + 10
 const radioValue = ref(1)
-const cycle01 = ref(0)
-const cycle02 = ref(0)
-const average01 = ref(0)
+const cycle01 = ref(fullYear)
+const cycle02 = ref(fullYear + 1)
+const average01 = ref(fullYear)
 const average02 = ref(1)
 const checkboxList = ref([])
-const checkCopy = ref([])
+const checkCopy = ref([fullYear])
+
 const cycleTotal = computed(() => {
-    cycle01.value = props.check(cycle01.value, fullYear.value, maxFullYear.value - 1)
-    cycle02.value = props.check(cycle02.value, cycle01.value + 1, maxFullYear.value)
+    cycle01.value = props.check(cycle01.value, fullYear, maxFullYear - 1)
+    cycle02.value = props.check(cycle02.value, cycle01.value + 1, maxFullYear)
     return cycle01.value + '-' + cycle02.value
 })
 const averageTotal = computed(() => {
-    average01.value = props.check(average01.value, fullYear.value, maxFullYear.value - 1)
+    average01.value = props.check(average01.value, fullYear, maxFullYear - 1)
     average02.value = props.check(average02.value, 1, 10)
     return average01.value + '/' + average02.value
 })
@@ -96,9 +98,9 @@ function changeRadioValue(value) {
         cycle02.value = Number(indexArr[1])
         radioValue.value = 3
     } else if (value.indexOf("/") > -1) {
-        const indexArr = value.split('#')
-        average01.value = Number(indexArr[1])
-        average02.value = Number(indexArr[0])
+        const indexArr = value.split('/')
+        average01.value = Number(indexArr[0])
+        average02.value = Number(indexArr[1])
         radioValue.value = 4
     } else {
         checkboxList.value = [...new Set(value.split(',').map(item => Number(item)))]
@@ -129,18 +131,10 @@ function onRadioChange() {
             break
     }
 }
-onMounted(() => {
-    fullYear.value = Number(new Date().getFullYear())
-    maxFullYear.value = fullYear.value + 10
-    cycle01.value = fullYear.value
-    cycle02.value = cycle01.value + 1
-    average01.value = fullYear.value
-    checkCopy.value = [fullYear.value]
-})
 </script>
 
 <style lang="scss" scoped>
-.el-input-number--small, .el-input-number--small, .el-select, .el-select--small {
+.el-input-number--small, .el-select, .el-select--small {
     margin: 0 0.2rem;
 }
 .el-select, .el-select--small {

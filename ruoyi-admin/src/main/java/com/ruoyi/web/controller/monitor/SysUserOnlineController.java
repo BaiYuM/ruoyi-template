@@ -22,6 +22,7 @@ import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysUserOnline;
 import com.ruoyi.system.service.ISysUserOnlineService;
+import com.alibaba.fastjson2.JSONObject;
 
 /**
  * 在线用户监控
@@ -46,23 +47,28 @@ public class SysUserOnlineController extends BaseController
         List<SysUserOnline> userOnlineList = new ArrayList<SysUserOnline>();
         for (String key : keys)
         {
-            LoginUser user = redisCache.getCacheObject(key);
-            if (StringUtils.isNotEmpty(ipaddr) && StringUtils.isNotEmpty(userName))
-            {
-                userOnlineList.add(userOnlineService.selectOnlineByInfo(ipaddr, userName, user));
+            Object obj = redisCache.getCacheObject(key);
+            // 添加类型检查，避免ClassCastException
+            if (obj instanceof LoginUser) {
+                LoginUser user = (LoginUser) obj;
+                if (StringUtils.isNotEmpty(ipaddr) && StringUtils.isNotEmpty(userName))
+                {
+                    userOnlineList.add(userOnlineService.selectOnlineByInfo(ipaddr, userName, user));
+                }
+                else if (StringUtils.isNotEmpty(ipaddr))
+                {
+                    userOnlineList.add(userOnlineService.selectOnlineByIpaddr(ipaddr, user));
+                }
+                else if (StringUtils.isNotEmpty(userName) && StringUtils.isNotNull(user.getUser()))
+                {
+                    userOnlineList.add(userOnlineService.selectOnlineByUserName(userName, user));
+                }
+                else
+                {
+                    userOnlineList.add(userOnlineService.loginUserToUserOnline(user));
+                }
             }
-            else if (StringUtils.isNotEmpty(ipaddr))
-            {
-                userOnlineList.add(userOnlineService.selectOnlineByIpaddr(ipaddr, user));
-            }
-            else if (StringUtils.isNotEmpty(userName) && StringUtils.isNotNull(user.getUser()))
-            {
-                userOnlineList.add(userOnlineService.selectOnlineByUserName(userName, user));
-            }
-            else
-            {
-                userOnlineList.add(userOnlineService.loginUserToUserOnline(user));
-            }
+            // 如果需要处理JSONObject类型，可以在这里添加相应的转换逻辑
         }
         Collections.reverse(userOnlineList);
         userOnlineList.removeAll(Collections.singleton(null));

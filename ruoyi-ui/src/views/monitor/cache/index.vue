@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
-    <el-row>
+    <el-row :gutter="10">
       <el-col :span="24" class="card-box">
         <el-card>
-          <template #header><span>基本信息</span></template>
+          <template #header><Monitor style="width: 1em; height: 1em; vertical-align: middle;" /> <span style="vertical-align: middle;">基本信息</span></template>
           <div class="el-table el-table--enable-row-hover el-table--medium">
             <table cellspacing="0" style="width: 100%">
               <tbody>
@@ -45,7 +45,7 @@
 
       <el-col :span="12" class="card-box">
         <el-card>
-          <template #header><span>命令统计</span></template>
+          <template #header><PieChart style="width: 1em; height: 1em; vertical-align: middle;" /> <span style="vertical-align: middle;">命令统计</span></template>
           <div class="el-table el-table--enable-row-hover el-table--medium">
             <div ref="commandstats" style="height: 420px" />
           </div>
@@ -54,9 +54,7 @@
 
       <el-col :span="12" class="card-box">
         <el-card>
-          <template #header>
-            <span>内存信息</span>
-          </template>
+          <template #header><Odometer style="width: 1em; height: 1em; vertical-align: middle;" /> <span style="vertical-align: middle;">内存信息</span></template>
           <div class="el-table el-table--enable-row-hover el-table--medium">
             <div ref="usedmemory" style="height: 420px" />
           </div>
@@ -67,21 +65,21 @@
 </template>
 
 <script setup name="Cache">
-import { getCache } from '@/api/monitor/cache';
-import * as echarts from 'echarts';
+import { getCache } from '@/api/monitor/cache'
+import * as echarts from 'echarts'
 
-const cache = ref([]);
-const commandstats = ref(null);
-const usedmemory = ref(null);
-const { proxy } = getCurrentInstance();
+const cache = ref([])
+const commandstats = ref(null)
+const usedmemory = ref(null)
+const { proxy } = getCurrentInstance()
 
 function getList() {
-  proxy.$modal.loading("正在加载缓存监控数据，请稍候！");
+  proxy.$modal.loading("正在加载缓存监控数据，请稍候！")
   getCache().then(response => {
-    proxy.$modal.closeLoading();
-    cache.value = response.data;
+    proxy.$modal.closeLoading()
+    cache.value = response.data
 
-    const commandstatsIntance = echarts.init(commandstats.value, "macarons");
+    const commandstatsIntance = echarts.init(commandstats.value, "macarons")
     commandstatsIntance.setOption({
       tooltip: {
         trigger: "item",
@@ -99,9 +97,8 @@ function getList() {
           animationDuration: 1000
         }
       ]
-    });
-
-    const usedmemoryInstance = echarts.init(usedmemory.value, "macarons");
+    })
+    const usedmemoryInstance = echarts.init(usedmemory.value, "macarons")
     usedmemoryInstance.setOption({
       tooltip: {
         formatter: "{b} <br/>{a} : " + cache.value.info.used_memory_human
@@ -124,8 +121,12 @@ function getList() {
         }
       ]
     })
+    window.addEventListener("resize", () => {
+      commandstatsIntance.resize()
+      usedmemoryInstance.resize()
+    })
   })
 }
 
-getList();
+getList()
 </script>
