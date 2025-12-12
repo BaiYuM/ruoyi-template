@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:html="http://www.w3.org/TR/REC-html40">
+  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+    <Author>ruoyi-template</Author>
+    <Created>2025-12-12T00:00:00Z</Created>
+    <Version>16.00</Version>
+  </DocumentProperties>
+  <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+    <WindowHeight>8130</WindowHeight>
+    <WindowWidth>15135</WindowWidth>
+    <WindowTopX>120</WindowTopX>
+    <WindowTopY>45</WindowTopY>
+    <ProtectStructure>False</ProtectStructure>
+    <ProtectWindows>False</ProtectWindows>
+  </ExcelWorkbook>
+  <Styles>
+    <Style ss:ID="sHeader">
+      <Font ss:Bold="1"/>
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Interior ss:Color="#D9E1F2" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="sDefault">
+      <Alignment ss:Vertical="Center"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="DirectionalTemplate">
+    <Table ss:ExpandedColumnCount="7" ss:ExpandedRowCount="3" x:FullColumns="1" x:FullRows="1">
+      <Column ss:AutoFitWidth="1" ss:Width="120"/>
+      <Column ss:AutoFitWidth="1" ss:Width="120"/>
+      <Column ss:AutoFitWidth="1" ss:Width="100"/>
+      <Column ss:AutoFitWidth="1" ss:Width="100"/>
+      <Column ss:AutoFitWidth="1" ss:Width="80"/>
+      <Column ss:AutoFitWidth="1" ss:Width="80"/>
+      <Column ss:AutoFitWidth="1" ss:Width="60"/>
+      <Row ss:AutoFitHeight="1">
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">name</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">account</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">platform</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">configType</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">dailyLimit</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">startTime</Data></Cell>
+        <Cell ss:StyleID="sHeader"><Data ss:Type="String">status</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">示例配置</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">example_account</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">douyin</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">评论</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="Number">10</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">08:00</Data></Cell>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="Number">1</Data></Cell>
+      </Row>
+      <Row>
+        <Cell ss:StyleID="sDefault"><Data ss:Type="String">说明:platform 可选值: douyin,kuaishou,weibo</Data></Cell>
+      </Row>
+    </Table>
+    <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+      <Selected/>
+      <Panes>
+        <Pane>
+          <Number>3</Number>
+          <ActiveRow>1</ActiveRow>
+        </Pane>
+      </Panes>
+      <ProtectObjects>False</ProtectObjects>
+      <ProtectScenarios>False</ProtectScenarios>
+    </WorksheetOptions>
+  </Worksheet>
+</Workbook>
