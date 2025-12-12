@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { getDirectionalList, saveDirectionalConfig } from '@/api/exposure'
+import { getDirectionalList, saveDirectionalConfig, uploadDirectionalFileAsync, downloadDirectionalTemplate } from '@/api/exposure'
 import MyTable from '@/components/myTable/MyTable.vue'
 import DirectionalConfigDrawer from './DirectionalConfigDrawer.vue'
 import PageHeader from '@/components/PageHeader'
@@ -34,6 +34,62 @@ const columns = [
   { prop: 'status', label: '状态' },
   { prop: 'operation', label: '操作' }
 ]
+
+const fileInputRef = ref(null)
+
+function downloadTemplate() {
+  // try server first
+  downloadDirectionalTemplate()
+    .then((blobData) => {
+      const blob = new Blob([blobData], { type: 'application/octet-stream' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'directional_template.csv'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    })
+    .catch(() => {
+      // fallback: generate CSV client-side
+      const headers = ['name', 'account', 'platform', 'configType', 'dailyLimit', 'startTime', 'status']
+      const sample = ['示例配置', 'example_account', 'douyin', '评论', '10', '08:00', '1']
+      const csv = [headers.join(','), sample.map(s => `"${String(s).replace(/"/g, '""')}"`).join(',')].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'directional_template.csv'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    })
+}
+
+function openImport() {
+  if (fileInputRef.value) fileInputRef.value.click()
+}
+
+function handleFileChange(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  const formData = new FormData()
+  formData.append('file', file)
+  // use async upload to let backend parse & return task id
+  uploadDirectionalFileAsync(formData)
+    .then(res => {
+      ElMessage.success(res?.message || '导入已提交')
+      // if taskId returned, show info
+      if (res && res.taskId) ElMessage.info('任务ID: ' + res.taskId)
+      // refresh list
+      fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
+    })
+    .catch(() => ElMessage.error('导入失败'))
+  // clear input value to allow re-upload same file
+  e.target.value = ''
+}
 
 function fetchList(params) {
   loading.value = true
@@ -117,6 +173,9 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
           <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
+          <el-button class="ml-2" @click="downloadTemplate">下载模板</el-button>
+          <el-button class="ml-2" @click="openImport">导入模板</el-button>
+          <input ref="fileInputRef" type="file" style="display:none" accept=".csv,.xlsx" @change="handleFileChange" />
         </div>
       </div>
       <div class="table-body">

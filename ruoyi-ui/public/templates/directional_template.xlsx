@@ -1,0 +1,3 @@
+name,account,platform,configType,dailyLimit,startTime,status
+示例配置,example_account,douyin,评论,10,08:00,1
+"说明:platform 可选值: douyin,kuaishou,weibo"

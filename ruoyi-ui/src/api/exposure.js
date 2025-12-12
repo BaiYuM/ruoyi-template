@@ -34,6 +34,14 @@ export function uploadDirectionalFileAsync(formData) {
   })
 }
 
+export function downloadDirectionalTemplate() {
+  return request({
+    url: '/exposure/directional/template',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
 export function getParseResult(taskId) {
   return request({
     url: '/exposure/parse/result',
