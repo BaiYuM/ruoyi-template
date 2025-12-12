@@ -37,36 +37,106 @@ const columns = [
 
 const fileInputRef = ref(null)
 
-function downloadTemplate() {
-  // try server first
-  downloadDirectionalTemplate()
-    .then((blobData) => {
-      const blob = new Blob([blobData], { type: 'application/octet-stream' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'directional_template.csv'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    })
-    .catch(() => {
-      // fallback: generate CSV client-side
-      const headers = ['name', 'account', 'platform', 'configType', 'dailyLimit', 'startTime', 'status']
-      const sample = ['示例配置', 'example_account', 'douyin', '评论', '10', '08:00', '1']
-      const csv = [headers.join(','), sample.map(s => `"${String(s).replace(/"/g, '""')}"`).join(',')].join('\n')
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'directional_template.csv'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    })
-}
+  async function downloadTemplate() {
+    const staticCsv = '/templates/directional_template.csv'
+    const staticXls = '/templates/directional_template.xls'
+    // try client-side xlsx generation first (preferred), then static CSV, then xls
+    const headers = ['name', 'account', 'platform', 'configType', 'dailyLimit', 'startTime', 'status']
+    const sample = ['示例配置', 'example_account', 'douyin', '评论', '10', '08:00', '1']
+    
+    // Try to use xlsx library (CDN or installed)
+    let XLSX = window.XLSX
+    if (!XLSX) {
+      try {
+        // Try to load from CDN dynamically
+        await new Promise((resolve, reject) => {
+          if (document.querySelector('script[src*="xlsx"]')) {
+            resolve()
+            return
+          }
+          const script = document.createElement('script')
+          script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+          script.onload = resolve
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+        XLSX = window.XLSX
+      } catch (e) {
+        // CDN load failed, skip xlsx generation
+      }
+    }
+    
+    if (XLSX) {
+      try {
+        const aoa = [headers, sample]
+        const ws = XLSX.utils.aoa_to_sheet(aoa)
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, 'DirectionalTemplate')
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+        const blob = new Blob([wbout], { type: 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'directional_template.xlsx'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        return
+      } catch (e) {
+        // xlsx generation failed — fall back to static assets
+      }
+    }
+    // try GET static CSV first (most compatible), then xls
+    try {
+      const res = await fetch(staticCsv)
+      if (res && res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'directional_template.csv'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        return
+      }
+    } catch (e) {
+      // ignore and try xls
+    }
+
+    try {
+      const res2 = await fetch(staticXls)
+      if (res2 && res2.ok) {
+        const blob = await res2.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'directional_template.xls'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        return
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // fallback: generate CSV client-side
+    const csv = [headers.join(','), sample.map(s => `"${String(s).replace(/"/g, '""')}"`).join(',')].join('\n')
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'directional_template.csv'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+
+  }
 
 function openImport() {
   if (fileInputRef.value) fileInputRef.value.click()
