@@ -31,7 +31,14 @@ const columns = [
   { prop: 'configType', label: '配置类型' },
   { prop: 'dailyLimit', label: '每天次数限制' },
   { prop: 'startTime', label: '启动时间' },
-  { prop: 'status', label: '状态' },
+  {
+    prop: "status",
+    label: "状态",
+    formatter: (row, column, value) => {
+      const v = typeof value === "string" ? Number(value) : value;
+      return v === 1 ? "启用" : "禁用";
+    },
+  },
   { prop: 'operation', label: '操作' }
 ]
 
@@ -274,5 +281,3 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
 <style scoped>
 @import '@/assets/styles/page-common.css';
 </style>
-
-*** End Patch
