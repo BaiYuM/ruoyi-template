@@ -1,0 +1,60 @@
+:root {
+  --accent-start: #ff6fb6;
+  --accent-end: #ff4ea1;
+  --card-bg: rgba(255,255,255,0.95);
+  --muted: #999;
+}
+
+.page-wrapper{
+  padding: 20px 24px;
+  background: linear-gradient(180deg, rgba(255,246,250,0.6), rgba(255,255,255,0.95));
+  min-height: calc(100vh - 80px);
+}
+
+.page-header{display:flex;align-items:center;gap:12px}
+.page-title{font-size:20px;font-weight:600;margin:0}
+.title-accent{height:6px;width:112px;border-radius:999px;margin-top:8px;background:linear-gradient(90deg,var(--accent-start),var(--accent-end));}
+.header-actions{display:flex;align-items:center}
+.link-btn{color:var(--accent-end);font-weight:500}
+.add-btn{background:linear-gradient(90deg,var(--accent-start),var(--accent-end));border-radius:20px;padding:6px 14px}
+
+.search-card{border-radius:10px;background:var(--card-bg);box-shadow:0 6px 18px rgba(255,110,150,0.06)}
+.search-row{padding:14px;display:flex;align-items:center;gap:12px}
+.search-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:center;flex:1}
+.search-cell{display:flex;align-items:center}
+.cell-label{width:auto;min-width:120px;text-align:right;margin-right:12px;color:var(--muted);white-space:normal;overflow:visible;text-overflow:clip}
+.select-control{flex:1}
+.search-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* compact search layout modifier */
+.search-grid.compact{display:flex;align-items:center;gap:12px;flex-wrap:nowrap}
+.search-grid.compact .platform-cell{flex:0 0 220px;display:flex;align-items:center;min-width:0}
+.search-grid.compact .keyword-cell{flex:1 1 320px;display:flex;align-items:center;min-width:0;max-width:560px}
+.search-grid.compact .search-actions.compact-actions{margin-left:12px;display:flex;align-items:center;gap:8px;flex:0}
+/* ensure inputs/selects can shrink and not force line-break */
+.search-grid.compact .platform-cell .el-select,
+.search-grid.compact .keyword-cell .el-input,
+.search-grid.compact .keyword-cell .el-select{
+  min-width:0;
+  width:100%;
+}
+/* keep labels fully visible (allow wrapping instead of ellipsis) */
+/* labels will wrap if too long but will not be truncated */
+
+.table-card{border-radius:10px;background:var(--card-bg);box-shadow:0 6px 18px rgba(0,0,0,0.04);padding:18px}
+.table-toolbar{padding:0}
+.toolbar-left{display:flex;align-items:center}
+.toolbar-left .el-button{border-radius:6px}
+.table-body{min-height:240px}
+
+.empty-center{display:flex;align-items:center;justify-content:center;padding:40px 0;color:var(--muted)}
+
+/* responsive */
+@media (max-width: 800px){
+  .search-field{min-width:100%}
+  .header-actions{display:none}
+  .search-grid.compact{flex-direction:column;align-items:stretch}
+  .search-grid.compact .platform-cell{flex:auto}
+  .search-grid.compact .keyword-cell{flex:auto}
+  .search-grid.compact .search-actions.compact-actions{justify-content:flex-end}
+}

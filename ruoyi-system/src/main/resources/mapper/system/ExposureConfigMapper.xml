@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ExposureConfigMapper">
+
+  <resultMap id="BaseResultMap" type="com.ruoyi.system.domain.ExposureConfig">
+    <id column="id" property="id" />
+    <result column="name" property="name" />
+    <result column="platform" property="platform" />
+    <result column="account" property="account" />
+    <result column="config_type" property="configType" />
+    <result column="search_keywords" property="searchKeywords" />
+    <result column="comment_content" property="commentContent" />
+    <result column="daily_limit" property="dailyLimit" />
+    <result column="start_time" property="startTime" />
+    <result column="sort_order" property="sortOrder" />
+    <result column="skip_repeat" property="skipRepeat" />
+    <result column="status" property="status" />
+    <result column="create_by" property="createBy" />
+    <result column="create_time" property="createTime" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time
+  </sql>
+
+  <select id="selectExposureById" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM exposure_config
+    WHERE id = #{id}
+  </select>
+
+  <select id="selectExposureStats" resultType="com.ruoyi.system.domain.ExposureStatsDTO" parameterType="com.ruoyi.system.domain.ExposureConfig">
+    SELECT
+      ec.account as account,
+      ec.platform as platform,
+      COALESCE(SUM(e.exposure_count), 0) as exposureCount,
+      MAX(e.exposure_time) as lastExposureTime,
+      COALESCE(MAX(e.create_time), ec.create_time) as createTime
+    FROM exposure_config ec
+    LEFT JOIN exposure_event e ON ec.id = e.config_id
+    <where>
+      <if test="platform != null and platform != ''">AND ec.platform = #{platform}</if>
+      <if test="account != null and account != ''">AND ec.account LIKE CONCAT('%', #{account}, '%')</if>
+    </where>
+    GROUP BY ec.id, ec.account, ec.platform, ec.create_time
+    ORDER BY lastExposureTime DESC
+  </select>
+
+  <select id="selectExposureList" resultMap="BaseResultMap" parameterType="com.ruoyi.system.domain.ExposureConfig">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM exposure_config
+    <where>
+      <if test="name != null and name != ''">AND name LIKE CONCAT('%', #{name}, '%')</if>
+      <if test="platform != null and platform != ''">AND platform = #{platform}</if>
+      <if test="configType != null and configType != ''">AND config_type = #{configType}</if>
+    </where>
+    ORDER BY create_time DESC
+  </select>
+
+  <insert id="insertExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
+    INSERT INTO exposure_config (name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time)
+    VALUES (#{name}, #{platform}, #{account}, #{configType}, #{searchKeywords}, #{commentContent}, #{dailyLimit}, #{startTime}, #{sortOrder}, #{skipRepeat}, #{status}, #{createBy}, #{createTime})
+  </insert>
+
+  <update id="updateExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
+    UPDATE exposure_config
+    <set>
+      <if test="name != null">name = #{name},</if>
+      <if test="platform != null">platform = #{platform},</if>
+      <if test="account != null">account = #{account},</if>
+      <if test="configType != null">config_type = #{configType},</if>
+      <if test="searchKeywords != null">search_keywords = #{searchKeywords},</if>
+      <if test="commentContent != null">comment_content = #{commentContent},</if>
+      <if test="dailyLimit != null">daily_limit = #{dailyLimit},</if>
+      <if test="startTime != null">start_time = #{startTime},</if>
+      <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+      <if test="skipRepeat != null">skip_repeat = #{skipRepeat},</if>
+      <if test="status != null">status = #{status},</if>
+    </set>
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteExposureById" parameterType="java.lang.Long">
+    DELETE FROM exposure_config WHERE id = #{id}
+  </delete>
+
+</mapper>

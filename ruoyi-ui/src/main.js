@@ -43,6 +43,7 @@ import ImageUpload from "@/components/ImageUpload"
 import ImagePreview from "@/components/ImagePreview"
 // 字典标签组件
 import DictTag from '@/components/DictTag'
+import dayjs from 'dayjs'
 
 const app = createApp(App)
 
@@ -56,6 +57,8 @@ app.config.globalProperties.addDateRange = addDateRange
 app.config.globalProperties.getConfigKey = getConfigKey
 app.config.globalProperties.selectDictLabel = selectDictLabel
 app.config.globalProperties.selectDictLabels = selectDictLabels
+// 全局 dayjs
+app.config.globalProperties.dayjs = dayjs
 
 // 全局组件挂载
 app.component('DictTag', DictTag)

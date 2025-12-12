@@ -16,7 +16,16 @@ export function parseTime(time, pattern) {
     if ((typeof time === 'string') && (/^[0-9]+$/.test(time))) {
       time = parseInt(time)
     } else if (typeof time === 'string') {
-      time = time.replace(new RegExp(/-/gm), '/').replace('T', ' ').replace(new RegExp(/\.[\d]{3}/gm), '')
+      // 如果是标准的 ISO 字符串（包含 'T' 且带时区），优先使用原始字符串交给 Date 解析
+      // 例如: 2025-12-12T12:59:39.000+08:00
+      if (time.indexOf('T') !== -1 && /[+-]\d{2}:?\d{2}$/.test(time)) {
+        // 保留原样，让浏览器按 ISO 解析（兼容大部分现代浏览器）
+        // 也去掉毫秒部分以提高兼容性
+        time = time.replace(new RegExp(/\.[\d]{3}/gm), '')
+      } else {
+        // 兼容老式浏览器（如 Safari）对 'YYYY-MM-DD' 的解析问题，替换为 '/' 并移除毫秒
+        time = time.replace(new RegExp(/-/gm), '/').replace('T', ' ').replace(new RegExp(/\.[\d]{3}/gm), '')
+      }
     }
     if ((typeof time === 'number') && (time.toString().length === 10)) {
       time = time * 1000
