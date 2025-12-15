@@ -36,7 +36,7 @@ const columns = [
     label: "状态",
     formatter: (row, column, value) => {
       const v = typeof value === "string" ? Number(value) : value;
-      return v === 1 ? "启用" : "禁用";
+      return v === 0 ? "启用" : "禁用";
     },
   },
   { prop: 'operation', label: '操作' }

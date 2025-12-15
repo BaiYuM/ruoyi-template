@@ -74,6 +74,22 @@ export function getExposureStats(params) {
   })
 }
 
+export function getTodayCount(configId) {
+  return request({
+    url: '/system/exposure/todayCount',
+    method: 'get',
+    params: { configId }
+  })
+}
+
+export function triggerAutoExposure(configId) {
+  return request({
+    url: '/system/exposure/trigger',
+    method: 'post',
+    params: { configId }
+  })
+}
+
 export function getAutoSettings() {
   return request({
     url: '/exposure/auto/settings',

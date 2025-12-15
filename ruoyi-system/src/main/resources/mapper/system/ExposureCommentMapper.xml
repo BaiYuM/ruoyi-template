@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ExposureCommentMapper">
+
+  <insert id="insertCommentSegment" parameterType="map">
+    INSERT INTO exposure_comment_segment (exposure_log_id, segment_index, content, create_time)
+    VALUES (#{exposureLogId}, #{segmentIndex}, #{content}, #{createTime})
+  </insert>
+
+  <select id="selectCommentsByLogId" resultType="map" parameterType="long">
+    SELECT id, exposure_log_id as exposureLogId, segment_index as segmentIndex, content, create_time as createTime
+    FROM exposure_comment_segment
+    WHERE exposure_log_id = #{value}
+    ORDER BY segment_index ASC, id ASC
+  </select>
+
+</mapper>

@@ -9,5 +9,18 @@
     VALUES (#{configId}, #{account}, #{platform}, #{exposureTime}, #{createTime})
   </insert>
 
-</mapper>
+  <select id="selectTodayCountByConfig" resultType="int" parameterType="long">
+    SELECT COALESCE(COUNT(*), 0)
+    FROM exposure_event_log
+    WHERE config_id = #{configId} AND DATE(exposure_time) = CURDATE()
+  </select>
 
+  <select id="selectLogsByConfig" resultType="com.ruoyi.system.domain.ExposureEvent" parameterType="map">
+    SELECT id, config_id, account, platform, exposure_time, create_time
+    FROM exposure_event_log
+    WHERE config_id = #{configId}
+    ORDER BY exposure_time DESC
+    LIMIT #{offset}, #{limit}
+  </select>
+
+</mapper>
