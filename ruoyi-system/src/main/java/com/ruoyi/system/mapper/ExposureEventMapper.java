@@ -35,4 +35,7 @@ public interface ExposureEventMapper {
     ExposureEvent selectByConfigAccountPlatform(@Param("configId") Long configId, @Param("account") String account, @Param("platform") String platform);
 
     java.util.Date selectLastExposureTime(@Param("account") String account, @Param("platform") String platform);
+
+    /** 查询指定配置当天的曝光总数 */
+    int selectTodayExposureCountByConfig(@Param("configId") Long configId);
 }

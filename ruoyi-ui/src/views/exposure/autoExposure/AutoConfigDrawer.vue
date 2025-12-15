@@ -44,7 +44,12 @@
       </el-form-item>
 
       <el-form-item label="启动时间" prop="startTime">
-        <el-time-picker v-model="form.startTime" format="HH:mm" placeholder="请选择时间" />
+        <el-time-picker
+          v-model="form.startTime"
+          format="HH:mm"
+          value-format="HH:mm"
+          placeholder="请选择时间"
+        />
       </el-form-item>
 
       <el-form-item label="视频/帖子排序">
