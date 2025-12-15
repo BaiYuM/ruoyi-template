@@ -5,6 +5,8 @@ import {
   saveAutoConfig,
   getAutoSettings,
   saveAutoSettings,
+  triggerAutoExposure,
+  getTodayCount,
 } from "@/api/exposure";
 import MyTable from "@/components/myTable/MyTable.vue";
 import AutoConfigDrawer from "./AutoConfigDrawer.vue";
@@ -12,7 +14,7 @@ import ExposureStatsDialog from "./ExposureStatsDialog.vue";
 import AutoExposureSettingsDialog from "./AutoExposureSettingsDialog.vue";
 import PageHeader from "@/components/PageHeader";
 import { Plus } from "@element-plus/icons-vue";
-import { ElMessage, formatter } from "element-plus";
+import { ElMessage, ElMessageBox, formatter } from "element-plus";
 
 const filters = reactive({ platform: "", configType: "" });
 const platformOptions = [
@@ -209,6 +211,38 @@ function onConfigSave(data) {
     });
 }
 
+function manualTrigger(row) {
+  if (!row || !row.id) return;
+  ElMessageBox.confirm('确定立即触发一次曝光？', '提示', { type: 'warning' })
+    .then(() => {
+      triggerAutoExposure(row.id)
+        .then((res) => {
+          if (res && res.success) {
+            ElMessage.success('触发成功');
+            fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize });
+          } else {
+            ElMessage.error('触发失败: ' + (res && res.message ? res.message : '未知错误'));
+          }
+        })
+        .catch(() => {
+          ElMessage.error('触发失败');
+        });
+    })
+    .catch(() => {});
+}
+
+function showTodayCount(row) {
+  if (!row || !row.id) return;
+  getTodayCount(row.id)
+    .then((res) => {
+      const cnt = (res && res.todayCount) || 0;
+      ElMessage.info(`今日曝光：${cnt}`);
+    })
+    .catch(() => {
+      ElMessage.error('获取失败');
+    });
+}
+
 onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
 </script>
 
@@ -237,7 +271,7 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
               />
             </el-select>
           </div>
-          <div class="search-cell platform-cell">
+          <div class="search-cell keyword-cell">
             <label class="cell-label">配置类型</label>
             <el-select
               v-model="filters.configType"
@@ -294,6 +328,18 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
                 @click.stop="toggleAuto(row)"
                 >{{ row.status === "0" ? "关闭" : "开启" }}</el-button
               >
+                  <el-button
+                    size="small"
+                    class="ml-2"
+                    @click.stop="manualTrigger(row)"
+                    >立即触发</el-button
+                  >
+                  <el-button
+                    size="small"
+                    class="ml-2"
+                    @click.stop="showTodayCount(row)"
+                    >今日计数</el-button
+                  >
             </div>
           </template>
         </MyTable>

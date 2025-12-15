@@ -31,9 +31,20 @@
 
       <el-form-item label="评论内容" prop="commentContent">
         <div>
-          <el-input type="textarea" v-model="form.commentContent" :rows="4" placeholder="请输入评论内容" />
+          <div v-for="(seg, idx) in segments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">段 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="adding" class="mb-2 flex items-center">
+            <el-input v-model="newSegment" placeholder="输入评论段，按回车或点击添加" @keyup.enter.native="confirmAdd" />
+            <el-button type="primary" class="ml-2" @click="confirmAdd">添加</el-button>
+            <el-button class="ml-2" @click="cancelAdd">取消</el-button>
+          </div>
+
           <div class="mt-2 flex items-center">
-            <el-button size="small" @click="addRow">+ 添加一行数据</el-button>
+            <el-button size="small" @click="startAdd">+ 添加一行数据</el-button>
             <el-button type="primary" class="ml-4" @click="openAI('comment')">已有文案？ 使用AI润色</el-button>
           </div>
         </div>
@@ -110,6 +121,34 @@ const rules = {
   account: [{ required: true, message: '请选择平台账号', trigger: 'change' }]
 }
 
+// 评论段管理
+const segments = ref([])
+const adding = ref(false)
+const newSegment = ref('')
+
+function startAdd() {
+  adding.value = true
+  newSegment.value = ''
+}
+
+function cancelAdd() {
+  adding.value = false
+  newSegment.value = ''
+}
+
+function confirmAdd() {
+  const v = (newSegment.value || '').trim()
+  if (!v) return
+  segments.value.push(v)
+  newSegment.value = ''
+  // keep input open
+  adding.value = true
+}
+
+function removeSegment(i) {
+  segments.value.splice(i, 1)
+}
+
 watch(
   () => props.config,
   (v) => {
@@ -122,6 +161,18 @@ watch(
       form.configType = v.configType ?? '评论'
       form.searchKeywords = v.searchKeywords ?? ''
       form.commentContent = v.commentContent ?? ''
+      // 解析 commentContent 到 segments（支持 JSON 数组或换行分隔）
+      try {
+        if (form.commentContent && form.commentContent.trim().startsWith('[')) {
+          const arr = JSON.parse(form.commentContent)
+          if (Array.isArray(arr)) segments.value = arr.slice()
+          else segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+        } else {
+          segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+        }
+      } catch (e) {
+        segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+      }
       form.dailyLimit = v.dailyLimit ?? 10
       form.startTime = v.startTime ?? '09:00'
       form.sortOrder = v.sortOrder ?? '综合'
@@ -151,6 +202,17 @@ function onReset() {
     form.configType = v.configType ?? '评论'
     form.searchKeywords = v.searchKeywords ?? ''
     form.commentContent = v.commentContent ?? ''
+    try {
+      if (form.commentContent && form.commentContent.trim().startsWith('[')) {
+        const arr = JSON.parse(form.commentContent)
+        if (Array.isArray(arr)) segments.value = arr.slice()
+        else segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+      } else {
+        segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+      }
+    } catch (e) {
+      segments.value = form.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+    }
     form.dailyLimit = v.dailyLimit ?? 10
     form.startTime = v.startTime ?? '09:00'
     form.sortOrder = v.sortOrder ?? '综合'
@@ -176,6 +238,8 @@ function onSubmit() {
   formRef.value.validate(valid => {
     if (!valid) return
     // 映射表单到后端 ExposureConfig 对象形态
+    // 将 segments 合并到 commentContent（使用换行作为默认分隔）
+    form.commentContent = segments.value.join('\n')
     const payload = {
       id: form.id,
       name: form.name,

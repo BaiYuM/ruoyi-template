@@ -55,8 +55,9 @@
 
   <!-- 查询指定配置当天的曝光总数 -->
   <select id="selectTodayExposureCountByConfig" resultType="int" parameterType="long">
-    SELECT COALESCE(SUM(exposure_count), 0)
-    FROM exposure_event
+    -- 从日志表统计当日曝光次数（推荐：保证 exposure_event 为累计表，今日统计来自 exposure_event_log）
+    SELECT COALESCE(COUNT(*), 0)
+    FROM exposure_event_log
     WHERE config_id = #{configId} AND DATE(exposure_time) = CURDATE()
   </select>
 
