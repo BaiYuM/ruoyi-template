@@ -3,6 +3,10 @@ package com.ruoyi.system.task;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +63,56 @@ public class AutoExposureTask {
                     String account = cfg.getAccount();
                     String platform = cfg.getPlatform();
                     Date last = eventMapper.selectLastExposureTime(account, platform);
+
+                    // 如果配置了每天上限且今天已达到，则跳过当天的执行（但不修改 status），并持久化上次停止原因
+                    try {
+                        Integer limitCheck = cfg.getDailyLimit();
+                        if (limitCheck != null && cfg.getId() != null) {
+                            int todayCount = eventMapper.selectTodayExposureCountByConfig(cfg.getId());
+                            if (todayCount >= limitCheck) {
+                                try {
+                                    // 仅写入停止原因以便前端展示，但保留 status=0（启用），以便隔日自动恢复
+                                    cfg.setLastStopReason("达到每日次数上限");
+                                    exposureService.updateExposure(cfg);
+                                } catch (Exception e) {
+                                    log.debug("failed to persist lastStopReason for config {}", cfg.getId(), e);
+                                }
+                                continue;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("failed to check daily limit for config {}", cfg.getId(), e);
+                    }
                     int interval = random.nextInt(max - min + 1) + min; // 秒
                     boolean should = false;
-                    if (last == null) {
-                        should = true;
-                    } else {
-                        long diff = (now.getTime() - last.getTime()) / 1000L;
-                        if (diff >= interval) should = true;
+
+                    // 如果配置了 startTime，则在每天的 startTime 到达且当天尚未触发过曝光时，触发一次
+                    String startTime = cfg.getStartTime();
+                    if (startTime != null && !startTime.trim().isEmpty()) {
+                        try {
+                            LocalTime lt = LocalTime.parse(startTime);
+                            LocalDateTime startOfToday = LocalDate.now().atTime(lt);
+                            Date startDate = Date.from(startOfToday.atZone(ZoneId.systemDefault()).toInstant());
+                            if (now.compareTo(startDate) >= 0) {
+                                // 若 last 为 null 或 last 在今天 startTime 之前，则应触发一次
+                                if (last == null || last.before(startDate)) {
+                                    should = true;
+                                }
+                            }
+                        } catch (Exception parseEx) {
+                            // 解析失败则回退到间隔逻辑
+                            log.debug("failed to parse startTime {} for config {}, fallback to interval", startTime, cfg.getId());
+                        }
+                    }
+
+                    // 若尚未因为 startTime 决定触发，则使用原有的随机间隔逻辑
+                    if (!should) {
+                        if (last == null) {
+                            should = true;
+                        } else {
+                            long diff = (now.getTime() - last.getTime()) / 1000L;
+                            if (diff >= interval) should = true;
+                        }
                     }
                     if (should) {
                         // 调用执行器进行实际曝光（占位实现）——只有执行成功才写入事件
@@ -84,18 +131,17 @@ public class AutoExposureTask {
                                     ev.setExposureCount(1);
                                     eventMapper.upsertExposureEvent(ev);
                                 }
-                                // 检查当天累计次数，若达到或超过 dailyLimit，则禁用该配置并写入停止原因
+                                // 检查当天累计次数，若达到或超过 dailyLimit，则记录停止原因（不修改 status）以便前端显示并阻止当天后续执行
                                 try {
                                     Integer limit = cfg.getDailyLimit();
                                     if (limit != null && cfg.getId() != null) {
                                         int today = eventMapper.selectTodayExposureCountByConfig(cfg.getId());
                                         if (today >= limit) {
-                                            cfg.setStatus("1"); // 禁用
                                             cfg.setLastStopReason("达到每日次数上限");
                                             try {
                                                 exposureService.updateExposure(cfg);
                                             } catch (Exception e) {
-                                                log.warn("failed to update config status for {}", cfg.getId(), e);
+                                                log.warn("failed to persist lastStopReason for {}", cfg.getId(), e);
                                             }
                                         }
                                     }
