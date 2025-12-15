@@ -1,11 +1,11 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { getDirectionalList, saveDirectionalConfig, uploadDirectionalFileAsync, downloadDirectionalTemplate } from '@/api/exposure'
+import { getDirectionalList, saveDirectionalConfig, uploadDirectionalFileAsync, downloadDirectionalTemplate, triggerAutoExposure, getTodayCount } from '@/api/exposure'
 import MyTable from '@/components/myTable/MyTable.vue'
 import DirectionalConfigDrawer from './DirectionalConfigDrawer.vue'
 import PageHeader from '@/components/PageHeader'
 import { Plus } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const filters = reactive({ platform: '', configType: '' })
 const platformOptions = [
@@ -23,11 +23,17 @@ const loading = ref(false)
 const drawerVisible = ref(false)
 const editingData = reactive({})
 const isEditing = ref(false)
+const bulkSaving = ref(false)
+const triggeringIds = ref(new Set())
 
 const columns = [
   { prop: 'name', label: '配置名称' },
   { prop: 'account', label: '平台账号' },
-  { prop: 'platform', label: '平台' },
+  { prop: 'platform', label: '平台', formatter: (row, column, value) => {
+      // map stored value (e.g. 'douyin') to human label (e.g. '抖音')
+      const opt = platformOptions.find(p => p.value === value)
+      return opt ? opt.label : (value || '')
+    } },
   { prop: 'configType', label: '配置类型' },
   { prop: 'dailyLimit', label: '每天次数限制' },
   { prop: 'startTime', label: '启动时间' },
@@ -207,10 +213,107 @@ function handleEdit(row) {
 }
 
 function onConfigSave(data) {
+  if (bulkSaving.value) {
+    ElMessage.warning('数据正在处理，请勿重复提交')
+    return
+  }
+  // 如果 targetAccounts 包含多行（用户通过换行输入多个目标账号），则为每个账号单独创建一条配置
+  try {
+    const t = data.targetAccounts || ''
+    const lines = Array.isArray(t) ? t : String(t).split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+    if (lines.length > 1) {
+      // 已迁移到后端表的 target_accounts 字段：将多账号作为单条配置保存到 target_accounts
+      bulkSaving.value = true
+      const payload = { ...data }
+      payload.targetAccounts = lines.join('\n')
+      // 保持 account 字段为空以避免歧义（单条记录里使用 targetAccounts 存储多个目标）
+      payload.account = null
+      saveDirectionalConfig(payload).then(() => {
+        bulkSaving.value = false
+        ElMessage.success('提交成功（多账号已保存）')
+        fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
+      }).catch(() => {
+        bulkSaving.value = false
+        ElMessage.error('提交失败，请重试')
+      })
+      return
+    }
+  } catch (e) {
+    // 忽略解析错误，继续按单条保存
+  }
+
+  bulkSaving.value = true
   saveDirectionalConfig(data).then(() => {
-    ElMessage.success('保存成功')
+    ElMessage.success('提交成功')
     fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
-  }).catch(() => ElMessage.error('保存失败'))
+  }).catch(() => ElMessage.error('保存失败')).finally(() => { bulkSaving.value = false })
+}
+
+// 重试失败账号的保存
+function retryFailedAccounts(failedAccounts) {
+  if (!failedAccounts || !failedAccounts.length) return
+  if (bulkSaving.value) {
+    ElMessage.warning('当前有保存任务进行中，请稍后重试')
+    return
+  }
+  bulkSaving.value = true
+  const tasks = failedAccounts.map(acc => {
+    // 构建 payload：使用 editingData 作基础并覆盖 account
+    const payload = Object.assign({}, editingData)
+    payload.account = acc
+    delete payload.targetAccounts
+    return saveDirectionalConfig(payload)
+  })
+  Promise.allSettled(tasks).then(results => {
+    bulkSaving.value = false
+    const rejected = results.filter(r => r.status === 'rejected')
+    if (rejected.length === 0) {
+      ElMessage.success('重试成功')
+    } else if (rejected.length === results.length) {
+      ElMessage.error('重试全部失败，请稍后人工检查')
+    } else {
+      ElMessage.error(`重试部分失败：${rejected.length} / ${results.length}`)
+    }
+    fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
+  }).catch(() => {
+    bulkSaving.value = false
+    ElMessage.error('重试发生错误，请稍后重试')
+  })
+}
+
+function manualTriggerDirectional(row) {
+  if (!row || !row.id) return
+  const id = row.id
+  if (triggeringIds.value.has(id)) {
+    ElMessage.warning('该配置正在触发中，请勿重复操作')
+    return
+  }
+  ElMessageBox.confirm('确定立即触发一次曝光？', '提示', { type: 'warning' })
+    .then(() => {
+      triggeringIds.value.add(id)
+      triggerAutoExposure(id).then((res) => {
+        if (res && res.success) {
+          ElMessage.success('触发成功')
+          fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
+        } else {
+          ElMessage.error('触发失败: ' + (res && res.message ? res.message : '未知错误'))
+        }
+      }).catch(() => {
+        ElMessage.error('触发失败')
+      }).finally(() => {
+        triggeringIds.value.delete(id)
+      })
+    }).catch(() => {})
+}
+
+function showTodayCountDirectional(row) {
+  if (!row || !row.id) return
+  getTodayCount(row.id).then((res) => {
+    const cnt = (res && res.todayCount) || 0
+    ElMessage.info(`今日曝光：${cnt}`)
+  }).catch(() => {
+    ElMessage.error('获取失败')
+  })
 }
 
 onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
@@ -266,15 +369,17 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
           :rowClickable="false"
         >
           <template #customOperation="{ row }">
-            <div class="flex flex-nowrap">
-              <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
-            </div>
+              <div class="flex flex-nowrap">
+                <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
+                <el-button size="small" class="ml-2" @click.stop="manualTriggerDirectional(row)" :loading="triggeringIds.has(row.id)">立即触发</el-button>
+                <el-button size="small" class="ml-2" @click.stop="showTodayCountDirectional(row)">今日计数</el-button>
+              </div>
           </template>
         </MyTable>
       </div>
     </el-card>
 
-    <DirectionalConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
+    <DirectionalConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" :saving="bulkSaving" @save="onConfigSave" />
   </div>
 </template>
 
