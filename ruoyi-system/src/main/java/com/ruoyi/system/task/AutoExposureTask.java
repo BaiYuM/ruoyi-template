@@ -21,6 +21,7 @@ import com.ruoyi.system.domain.ExposureEvent;
 import com.ruoyi.system.mapper.ExposureEventMapper;
 import com.ruoyi.system.service.IExposureConfigService;
 import com.ruoyi.system.service.ISysConfigService;
+import com.ruoyi.system.mapper.ExposureEventLogMapper;
 
 /**
  * 简单自动曝光任务：周期检查所有自动曝光配置并在满足间隔时写入一次曝光事件（占位实现）
@@ -33,6 +34,8 @@ public class AutoExposureTask {
 
     @Autowired
     private ExposureEventMapper eventMapper;
+    @Autowired
+    private ExposureEventLogMapper eventLogMapper;
 
     @Autowired
     private ISysConfigService configService;
@@ -42,8 +45,6 @@ public class AutoExposureTask {
 
     private final Random random = new Random();
 
-    // 每 30 秒检查一次（可调）
-    @Scheduled(fixedDelay = 30000)
     public void run() {
         try {
             int min = parseConfig("exposure.auto.min", 1);
@@ -119,7 +120,25 @@ public class AutoExposureTask {
                         try {
                             boolean executed = exposureExecutorService.executeExposure(cfg);
                             if (executed) {
-                                // 先尝试增量更新，若未匹配到任何行再执行 upsert（降低重复行风险）
+                                // 先写入历史日志（每次曝光一条），便于按日统计
+                                try {
+                                    ExposureEvent logEv = new ExposureEvent();
+                                    logEv.setConfigId(cfg.getId());
+                                    logEv.setAccount(account);
+                                    logEv.setPlatform(platform);
+                                    logEv.setExposureTime(now);
+                                    logEv.setCreateTime(now);
+                                    int inserted = eventLogMapper.insertExposureLog(logEv);
+                                    if (inserted <= 0) {
+                                        log.warn("no rows inserted into exposure_event_log for config {} account {} platform {}", cfg.getId(), account, platform);
+                                    } else {
+                                        log.info("exposure_event_log inserted for config {} account {} platform {}, rows={}", cfg.getId(), account, platform, inserted);
+                                    }
+                                } catch (Exception logEx) {
+                                    log.warn("failed to insert exposure log for config {} account {} platform {}", cfg.getId(), account, platform, logEx);
+                                }
+
+                                // 累加总曝光计数（exposure_event 保留为累计表）
                                 int updated = eventMapper.incrementSingleRowByConfigOrAccountPlatform(cfg.getId(), account, platform, 1, now);
                                 if (updated == 0) {
                                     ExposureEvent ev = new ExposureEvent();
