@@ -59,4 +59,17 @@ CREATE TABLE `exposure_event`  (
   UNIQUE INDEX `uk_config_account_platform`(`config_id` ASC, `account` ASC, `platform` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- Add column to store last stop reason for automatic disabling
+-- Use a safe conditional add that works across MySQL versions
+SET @__db = DATABASE();
+SELECT COUNT(*) INTO @__cnt FROM information_schema.COLUMNS
+ WHERE TABLE_SCHEMA = @__db AND TABLE_NAME = 'exposure_config' AND COLUMN_NAME = 'last_stop_reason';
+SET @__sql = IF(@__cnt = 0,
+  'ALTER TABLE `exposure_config` ADD COLUMN `last_stop_reason` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL;',
+  'SELECT "column_exists";'
+);
+PREPARE __stmt FROM @__sql;
+EXECUTE __stmt;
+DEALLOCATE PREPARE __stmt;
+
 SET FOREIGN_KEY_CHECKS = 1;

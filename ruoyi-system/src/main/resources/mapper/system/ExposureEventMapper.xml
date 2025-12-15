@@ -53,4 +53,11 @@
     WHERE account = #{account} AND platform = #{platform}
   </select>
 
+  <!-- 查询指定配置当天的曝光总数 -->
+  <select id="selectTodayExposureCountByConfig" resultType="int" parameterType="long">
+    SELECT COALESCE(SUM(exposure_count), 0)
+    FROM exposure_event
+    WHERE config_id = #{configId} AND DATE(exposure_time) = CURDATE()
+  </select>
+
 </mapper>

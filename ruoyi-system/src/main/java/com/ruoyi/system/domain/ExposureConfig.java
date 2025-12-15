@@ -34,6 +34,8 @@ public class ExposureConfig extends BaseEntity
     private Boolean skipRepeat;
 
     private String status;
+    /** 上次停止原因（若自动或手动停止） */
+    private String lastStopReason;
 
     public Long getId() {
         return id;
@@ -131,6 +133,14 @@ public class ExposureConfig extends BaseEntity
         this.status = status;
     }
 
+    public String getLastStopReason() {
+        return lastStopReason;
+    }
+
+    public void setLastStopReason(String lastStopReason) {
+        this.lastStopReason = lastStopReason;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
@@ -145,6 +155,7 @@ public class ExposureConfig extends BaseEntity
             .append("sortOrder", getSortOrder())
             .append("skipRepeat", getSkipRepeat())
             .append("status", getStatus())
+            .append("lastStopReason", getLastStopReason())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .toString();

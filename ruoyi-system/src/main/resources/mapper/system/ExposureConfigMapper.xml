@@ -15,12 +15,13 @@
     <result column="sort_order" property="sortOrder" />
     <result column="skip_repeat" property="skipRepeat" />
     <result column="status" property="status" />
+    <result column="last_stop_reason" property="lastStopReason" />
     <result column="create_by" property="createBy" />
     <result column="create_time" property="createTime" />
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time
+    id, name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, last_stop_reason, create_by, create_time
   </sql>
 
   <select id="selectExposureById" resultMap="BaseResultMap" parameterType="java.lang.Long">
@@ -60,8 +61,8 @@
   </select>
 
   <insert id="insertExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
-    INSERT INTO exposure_config (name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time)
-    VALUES (#{name}, #{platform}, #{account}, #{configType}, #{searchKeywords}, #{commentContent}, #{dailyLimit}, #{startTime}, #{sortOrder}, #{skipRepeat}, #{status}, #{createBy}, #{createTime})
+    INSERT INTO exposure_config (name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, last_stop_reason, create_by, create_time)
+    VALUES (#{name}, #{platform}, #{account}, #{configType}, #{searchKeywords}, #{commentContent}, #{dailyLimit}, #{startTime}, #{sortOrder}, #{skipRepeat}, #{status}, #{lastStopReason}, #{createBy}, #{createTime})
   </insert>
 
   <update id="updateExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
@@ -78,6 +79,7 @@
       <if test="sortOrder != null">sort_order = #{sortOrder},</if>
       <if test="skipRepeat != null">skip_repeat = #{skipRepeat},</if>
       <if test="status != null">status = #{status},</if>
+      <if test="lastStopReason != null">last_stop_reason = #{lastStopReason},</if>
     </set>
     WHERE id = #{id}
   </update>

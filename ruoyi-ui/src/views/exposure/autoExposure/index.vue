@@ -78,6 +78,18 @@ const columns = [
   { prop: "name", label: "配置名称" },
   { prop: "account", label: "平台账号" },
   { prop: "platform", label: "平台" },
+  // { prop: "dailyLimit", label: "每天次数限制", width: 120 },
+  // { prop: "exposureCount", label: "今日已曝光", width: 120 },
+  // {
+  //   prop: "remaining",
+  //   label: "剩余次数",
+  //   width: 120,
+  //   formatter: (row) => {
+  //     const limit = Number(row.dailyLimit ?? 0);
+  //     const used = Number(row.exposureCount ?? 0);
+  //     return Math.max(0, limit - used);
+  //   },
+  // },
   { prop: "lastStopReason", label: "上次停止原因" },
   { prop: "configType", label: "配置类型" },
   { prop: "searchKeywords", label: "搜索关键词" },
@@ -87,7 +99,7 @@ const columns = [
     label: "状态",
     formatter: (row, column, value) => {
       const v = typeof value === "string" ? Number(value) : value;
-      return v === 1 ? "启用" : "禁用";
+      return v === 0 ? "启用" : "禁用";
     },
   },
   { prop: "operation", label: "操作" },
@@ -137,11 +149,44 @@ function handleEdit(row) {
 }
 
 function toggleAuto(row) {
-  const newStatus = row.status === "0" ? "1" : "0";
-  const payload = { id: row.id, status: newStatus };
+  const enabling = !(row.status === "0");
+  const newStatus = enabling ? "0" : "1"; // '0' 表示启用
+
+  // 计算剩余可用曝光次数（以今日已曝光计）
+  const limit = Number(row.dailyLimit ?? 0);
+  const used = Number(row.exposureCount ?? 0);
+  const remaining = Math.max(0, limit - used);
+
+  // If trying to enable but no remaining capacity, stop and record reason
+  if (enabling && remaining <= 0) {
+    const reason = "达到每日次数上限";
+    const payload = { id: row.id, status: "1", lastStopReason: reason };
+    saveAutoConfig(payload)
+      .then(() => {
+        row.status = "1";
+        row.lastStopReason = reason;
+        ElMessage.warning("无法启用：已达到今日上限");
+      })
+      .catch(() => {
+        ElMessage.error("操作失败");
+      });
+    return;
+  }
+
+  // When disabling, automatically set a stop reason
+  let payload = { id: row.id, status: newStatus };
+  if (!enabling) {
+    payload.lastStopReason = "手动停止";
+  } else {
+    // when enabling, optionally inform backend how many runs are allowed today
+    payload.maxRunsToday = remaining;
+  }
+
   saveAutoConfig(payload)
     .then(() => {
       row.status = newStatus;
+      if (!enabling) row.lastStopReason = payload.lastStopReason;
+      if (enabling) row.scheduledCount = remaining;
       ElMessage.success("操作成功");
     })
     .catch(() => {

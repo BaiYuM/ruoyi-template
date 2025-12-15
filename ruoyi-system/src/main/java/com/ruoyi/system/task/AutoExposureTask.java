@@ -84,6 +84,24 @@ public class AutoExposureTask {
                                     ev.setExposureCount(1);
                                     eventMapper.upsertExposureEvent(ev);
                                 }
+                                // 检查当天累计次数，若达到或超过 dailyLimit，则禁用该配置并写入停止原因
+                                try {
+                                    Integer limit = cfg.getDailyLimit();
+                                    if (limit != null && cfg.getId() != null) {
+                                        int today = eventMapper.selectTodayExposureCountByConfig(cfg.getId());
+                                        if (today >= limit) {
+                                            cfg.setStatus("1"); // 禁用
+                                            cfg.setLastStopReason("达到每日次数上限");
+                                            try {
+                                                exposureService.updateExposure(cfg);
+                                            } catch (Exception e) {
+                                                log.warn("failed to update config status for {}", cfg.getId(), e);
+                                            }
+                                        }
+                                    }
+                                } catch (Exception ex) {
+                                    log.warn("failed to evaluate daily limit for config {}", cfg.getId(), ex);
+                                }
                             } else {
                                 log.info("exposureExecutorService reported not executed for config {}", cfg.getId());
                             }
