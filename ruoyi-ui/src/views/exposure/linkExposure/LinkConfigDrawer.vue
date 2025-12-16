@@ -20,7 +20,7 @@
         />
       </el-form-item>
 
-      <el-form-item label="平台账号">
+      <el-form-item label="平台">
         <el-select v-model="localForm.platform" placeholder="请选择">
           <el-option
             v-for="it in platformOptions"
@@ -29,6 +29,10 @@
             :value="it.value"
           />
         </el-select>
+      </el-form-item>
+
+      <el-form-item label="平台账号">
+        <el-input v-model="localForm.account" placeholder="请输入平台账号（示例：example_account）" />
       </el-form-item>
 
       <el-form-item label="批量导入分享链接">
@@ -40,7 +44,23 @@
       </el-form-item>
 
       <el-form-item label="抖音视频链接">
-        <el-input type="textarea" v-model="localForm.shareLinks" placeholder="一行一个链接" rows="4" />
+        <div>
+          <div v-for="(seg, idx) in shareSegments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">链接 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeShareSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="addingShare" class="mb-2 flex items-center">
+            <el-input v-model="newShare" placeholder="输入视频链接，按回车或点击添加" @keyup.enter.native="confirmAddShare" />
+            <el-button type="primary" class="ml-2" @click="confirmAddShare">添加</el-button>
+            <el-button class="ml-2" @click="cancelAddShare">取消</el-button>
+          </div>
+
+          <div class="mt-2 flex items-center">
+            <el-button size="small" @click="startAddShare">+ 添加一行链接</el-button>
+          </div>
+        </div>
       </el-form-item>
 
       <el-form-item label="评论区 - 匹配关键词">
@@ -66,12 +86,23 @@
       </el-form-item>
 
       <el-form-item label="私信内容">
-        <el-input
-          type="textarea"
-          v-model="localForm.privateMessage"
-          placeholder="私信内容示例"
-          rows="3"
-        />
+        <div>
+          <div v-for="(seg, idx) in segments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">段 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="adding" class="mb-2 flex items-center">
+            <el-input v-model="newSegment" placeholder="输入私信段，按回车或点击添加" @keyup.enter.native="confirmAdd" />
+            <el-button type="primary" class="ml-2" @click="confirmAdd">添加</el-button>
+            <el-button class="ml-2" @click="cancelAdd">取消</el-button>
+          </div>
+
+          <div class="mt-2 flex items-center">
+            <el-button size="small" @click="startAdd">+ 添加一行数据</el-button>
+          </div>
+        </div>
       </el-form-item>
 
       <el-form-item label="每天次数限制">
@@ -91,8 +122,8 @@
       </el-form-item>
 
       <div style="text-align: right; margin-top: 12px">
-        <el-button @click="onCancel">取消</el-button>
-        <el-button type="primary" class="ml-2" @click="onSave">保存</el-button>
+        <el-button @click="onCancel" :disabled="props.saving">取消</el-button>
+        <el-button type="primary" class="ml-2" @click="onSave" :loading="props.saving" :disabled="props.saving">保存</el-button>
       </div>
     </el-form>
   </el-drawer>
@@ -106,6 +137,7 @@ const props = defineProps({
   config: { type: Object, default: () => ({}) },
   platformOptions: { type: Array, default: () => [] },
   isEditing: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false }
 });
 const emit = defineEmits(["update:visible", "save"]);
 
@@ -120,12 +152,67 @@ const localForm = reactive({
   commentKeywords: "",
   commentTime: "",
   commentRegion: "",
+  account: '',
   privateMessage: "",
   dailyLimit: 10,
   startTime: "09:00",
   skipRepeat: false,
   enabled: true,
 });
+
+// 私信/评论 分段管理（与其它抽屉保持一致）
+const segments = ref([])
+const adding = ref(false)
+const newSegment = ref('')
+
+function startAdd() {
+  adding.value = true
+  newSegment.value = ''
+}
+
+function cancelAdd() {
+  adding.value = false
+  newSegment.value = ''
+}
+
+function confirmAdd() {
+  const v = (newSegment.value || '').trim()
+  if (!v) return
+  segments.value.push(v)
+  newSegment.value = ''
+  adding.value = true
+}
+
+function removeSegment(i) {
+  segments.value.splice(i, 1)
+}
+
+// 抖音视频链接 分段管理
+const shareSegments = ref([])
+const addingShare = ref(false)
+const newShare = ref('')
+
+function startAddShare() {
+  addingShare.value = true
+  newShare.value = ''
+}
+
+function cancelAddShare() {
+  addingShare.value = false
+  newShare.value = ''
+}
+
+function confirmAddShare() {
+  const v = (newShare.value || '').trim()
+  if (!v) return
+  shareSegments.value.push(v)
+  newShare.value = ''
+  addingShare.value = true
+}
+
+function removeShareSegment(i) {
+  shareSegments.value.splice(i, 1)
+}
 
 import { uploadDirectionalFileAsync, getParseResult } from '@/api/exposure'
 
@@ -198,24 +285,69 @@ watch(
       localForm.commentKeywords = v.commentKeywords ?? v.commentKeywords ?? "";
       localForm.commentTime = v.commentTime ?? "";
       localForm.commentRegion = v.commentRegion ?? "";
-      localForm.privateMessage = v.privateMessage ?? "";
+        localForm.account = v.account ?? '';
+        localForm.privateMessage = v.privateMessage ?? "";
+        // 解析 privateMessage 到 segments（支持 JSON 数组或换行分隔）
+        try {
+          if (localForm.privateMessage && localForm.privateMessage.trim().startsWith('[')) {
+            const arr = JSON.parse(localForm.privateMessage)
+            if (Array.isArray(arr)) segments.value = arr.slice()
+            else segments.value = localForm.privateMessage.split('\n').map(s => s.trim()).filter(Boolean)
+          } else {
+            segments.value = (localForm.privateMessage || '').split('\n').map(s => s.trim()).filter(Boolean)
+          }
+        } catch (e) {
+          segments.value = (localForm.privateMessage || '').split('\n').map(s => s.trim()).filter(Boolean)
+        }
       localForm.dailyLimit = v.dailyLimit ?? 10;
       localForm.startTime = v.startTime ?? "09:00";
       localForm.skipRepeat = v.skipRepeat ?? false;
       localForm.enabled = v.enabled ?? !v.isClosed;
+      // 解析 shareLinks 到 shareSegments（支持 JSON 数组或换行分隔）
+      try {
+        if (localForm.shareLinks && localForm.shareLinks.trim().startsWith('[')) {
+          const arr = JSON.parse(localForm.shareLinks)
+          if (Array.isArray(arr)) shareSegments.value = arr.slice()
+          else shareSegments.value = localForm.shareLinks.split('\n').map(s => s.trim()).filter(Boolean)
+        } else {
+          shareSegments.value = (localForm.shareLinks || '').split('\n').map(s => s.trim()).filter(Boolean)
+        }
+      } catch (e) {
+        shareSegments.value = (localForm.shareLinks || '').split('\n').map(s => s.trim()).filter(Boolean)
+      }
     }
   },
   { immediate: true, deep: true }
 );
 
 function onCancel() {
-  visibleLocal.value = false;
+  // reset to defaults
+  localForm.id = null
+  localForm.name = ''
+  localForm.platform = ''
+  localForm.account = ''
+  localForm.shareLinks = ''
+  localForm.commentKeywords = ''
+  localForm.commentTime = ''
+  localForm.commentRegion = ''
+  localForm.privateMessage = ''
+  segments.value = []
+  shareSegments.value = []
+  localForm.dailyLimit = 10
+  localForm.startTime = '09:00'
+  localForm.skipRepeat = false
+  localForm.enabled = true
+  visibleLocal.value = false
 }
 
 function onSave() {
   if (!localForm.name) return;
-  emit("save", { ...localForm });
-  visibleLocal.value = false;
+  const payload = { ...localForm }
+  payload.privateMessage = segments.value.join('\n')
+  payload.shareLinks = shareSegments.value.join('\n')
+  payload.status = localForm.enabled ? '0' : '1'
+  emit('save', payload)
+  visibleLocal.value = false
 }
 </script>
 

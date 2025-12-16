@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { getDirectionalList, saveDirectionalConfig } from '@/api/exposure'
+import { getDirectionalList, saveDirectionalConfig, triggerAutoExposure, getTodayCount } from '@/api/exposure'
 import MyTable from '@/components/myTable/MyTable.vue'
 import LinkConfigDrawer from './LinkConfigDrawer.vue'
 import PageHeader from '@/components/PageHeader'
@@ -23,16 +23,26 @@ const loading = ref(false)
 const drawerVisible = ref(false)
 const editingData = reactive({})
 const isEditing = ref(false)
+const bulkSaving = ref(false)
+const triggeringIds = ref(new Set())
 
 const columns = [
   { prop: 'name', label: '配置名称' },
   { prop: 'account', label: '平台账号' },
-  { prop: 'platform', label: '平台' },
+  { prop: 'platform', label: '平台', formatter: (row, column, value) => {
+      const opt = platformOptions.find(p => p.value === value)
+      return opt ? opt.label : (value || '')
+    } },
   { prop: 'lastStopReason', label: '上次停止原因' },
   { prop: 'commentKeywords', label: '评论匹配关键词' },
   { prop: 'commentTime', label: '评论时间匹配' },
   { prop: 'commentRegion', label: '评论地区匹配' },
-  { prop: 'status', label: '状态' },
+  { prop: 'status', label: '状态', formatter: (row, column, value) => {
+      // 后端可能返回 0/1 表示显示/隐藏，也可能直接返回启用/禁用文字
+      if (value === 0 || value === '0') return '可见'
+      if (value === 1 || value === '1') return '隐藏'
+      return value ?? ''
+    } },
   { prop: 'operation', label: '操作' }
 ]
 
@@ -75,10 +85,43 @@ function handleEdit(row) {
 }
 
 function onConfigSave(data) {
+  bulkSaving.value = true
   saveDirectionalConfig(data).then(() => {
-    ElMessage.success('保存成功')
+    bulkSaving.value = false
+    ElMessage.success('提交成功')
     fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
-  }).catch(() => ElMessage.error('保存失败'))
+  }).catch(() => {
+    bulkSaving.value = false
+    ElMessage.error('提交失败')
+  })
+}
+
+function manualTriggerLink(row) {
+  if (!row || !row.id) return
+  const id = row.id
+  if (triggeringIds.value.has(id)) {
+    ElMessage.warning('该配置正在触发中，请勿重复操作')
+    return
+  }
+  triggeringIds.value.add(id)
+  triggerAutoExposure(id).then((res) => {
+    if (res && res.success) {
+      ElMessage.success('触发成功')
+      fetchList({ page: pagination.currentPage, pageSize: pagination.pageSize })
+    } else {
+      ElMessage.error('触发失败: ' + (res && res.message ? res.message : '未知错误'))
+    }
+  }).catch(() => {
+    ElMessage.error('触发失败')
+  }).finally(() => triggeringIds.value.delete(id))
+}
+
+function showTodayCountLink(row) {
+  if (!row || !row.id) return
+  getTodayCount(row.id).then((res) => {
+    const cnt = (res && res.todayCount) || 0
+    ElMessage.info(`今日曝光：${cnt}`)
+  }).catch(() => ElMessage.error('获取失败'))
 }
 
 onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
@@ -130,16 +173,18 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
           :handle-edit="handleEdit"
           :rowClickable="false"
         >
-          <template #customOperation="{ row }">
-            <div class="flex flex-nowrap">
-              <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
-            </div>
-          </template>
+            <template #customOperation="{ row }">
+              <div class="flex flex-nowrap">
+                <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
+                <el-button size="small" class="ml-2" @click.stop="manualTriggerLink(row)" :loading="triggeringIds.has && triggeringIds.has(row.id)">立即触发</el-button>
+                <el-button size="small" class="ml-2" @click.stop="showTodayCountLink(row)">今日计数</el-button>
+              </div>
+            </template>
         </MyTable>
       </div>
     </el-card>
 
-    <LinkConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
+    <LinkConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" :saving="bulkSaving" @save="onConfigSave" />
   </div>
 </template>
 

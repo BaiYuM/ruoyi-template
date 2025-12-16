@@ -24,6 +24,12 @@ public class ExposureConfig extends BaseEntity
     private String searchKeywords;
 
     private String commentContent;
+    /** 可选：批量目标账号（多账号文本，换行或逗号分隔） */
+    private String targetAccounts;
+    /** 抖音/链接列表，换行或 JSON 数组 */
+    private String shareLinks;
+    /** 私信内容（段式，换行或 JSON 数组） */
+    private String privateMessage;
 
     private Integer dailyLimit;
 
@@ -93,6 +99,30 @@ public class ExposureConfig extends BaseEntity
         this.commentContent = commentContent;
     }
 
+    public String getTargetAccounts() {
+        return targetAccounts;
+    }
+
+    public void setTargetAccounts(String targetAccounts) {
+        this.targetAccounts = targetAccounts;
+    }
+
+    public String getShareLinks() {
+        return shareLinks;
+    }
+
+    public void setShareLinks(String shareLinks) {
+        this.shareLinks = shareLinks;
+    }
+
+    public String getPrivateMessage() {
+        return privateMessage;
+    }
+
+    public void setPrivateMessage(String privateMessage) {
+        this.privateMessage = privateMessage;
+    }
+
     public Integer getDailyLimit() {
         return dailyLimit;
     }
@@ -148,6 +178,9 @@ public class ExposureConfig extends BaseEntity
             .append("name", getName())
             .append("platform", getPlatform())
             .append("account", getAccount())
+            .append("shareLinks", getShareLinks())
+            .append("targetAccounts", getTargetAccounts())
+            .append("privateMessage", getPrivateMessage())
             .append("configType", getConfigType())
             .append("searchKeywords", getSearchKeywords())
             .append("dailyLimit", getDailyLimit())

@@ -11,10 +11,14 @@
         <el-input v-model="localForm.name" maxlength="40" placeholder="请输入配置名称" />
       </el-form-item>
 
-      <el-form-item label="平台账号">
+      <el-form-item label="平台">
         <el-select v-model="localForm.platform" placeholder="请选择">
           <el-option v-for="it in platformOptions" :key="it.value" :label="it.label" :value="it.value" />
         </el-select>
+      </el-form-item>
+
+      <el-form-item label="平台账号">
+        <el-input v-model="localForm.account" placeholder="请输入平台账号（示例：example_account）" />
       </el-form-item>
 
       <el-form-item label="批量导入目标账号">
@@ -41,9 +45,23 @@
       </el-form-item>
 
       <el-form-item label="评论内容">
-        <el-input type="textarea" v-model="localForm.commentContent" placeholder="请填写评论内容" rows="3" />
-        <div style="margin-top:8px">
-          <el-button type="primary" plain size="small">已有文案？ 使用 AI 润色</el-button>
+        <div>
+          <div v-for="(seg, idx) in segments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">段 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="adding" class="mb-2 flex items-center">
+            <el-input v-model="newSegment" placeholder="输入评论段，按回车或点击添加" @keyup.enter.native="confirmAdd" />
+            <el-button type="primary" class="ml-2" @click="confirmAdd">添加</el-button>
+            <el-button class="ml-2" @click="cancelAdd">取消</el-button>
+          </div>
+
+          <div class="mt-2 flex items-center">
+            <el-button size="small" @click="startAdd">+ 添加一行数据</el-button>
+            <el-button type="primary" class="ml-4">已有文案？ 使用 AI 润色</el-button>
+          </div>
         </div>
       </el-form-item>
 
@@ -64,8 +82,8 @@
       </el-form-item>
 
       <div style="text-align: right; margin-top: 12px">
-        <el-button @click="onCancel">重置</el-button>
-        <el-button type="primary" class="ml-2" @click="onSave">提交</el-button>
+        <el-button @click="onCancel" :disabled="props.saving">重置</el-button>
+        <el-button type="primary" class="ml-2" @click="onSave" :loading="props.saving" :disabled="props.saving">提交</el-button>
       </div>
     </el-form>
   </el-drawer>
@@ -78,7 +96,8 @@ const props = defineProps({
   visible: { type: Boolean, default: false },
   config: { type: Object, default: () => ({}) },
   platformOptions: { type: Array, default: () => [] },
-  isEditing: { type: Boolean, default: false }
+  isEditing: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:visible', 'save'])
 
@@ -89,6 +108,7 @@ const localForm = reactive({
   id: null,
   name: '',
   platform: '',
+  account: '',
   targetAccounts: '',
   configType: '评论',
   commentContent: '',
@@ -97,6 +117,33 @@ const localForm = reactive({
   skipRepeat: false,
   enabled: true
 })
+
+// 评论段管理（与自动曝光保持一致的段式编辑）
+const segments = ref([])
+const adding = ref(false)
+const newSegment = ref('')
+
+function startAdd() {
+  adding.value = true
+  newSegment.value = ''
+}
+
+function cancelAdd() {
+  adding.value = false
+  newSegment.value = ''
+}
+
+function confirmAdd() {
+  const v = (newSegment.value || '').trim()
+  if (!v) return
+  segments.value.push(v)
+  newSegment.value = ''
+  adding.value = true
+}
+
+function removeSegment(i) {
+  segments.value.splice(i, 1)
+}
 
 // handle file uploads: CSV parsed client-side; Excel sent to backend (async)
 import { uploadDirectionalFileAsync, getParseResult } from '@/api/exposure'
@@ -168,9 +215,22 @@ watch(
       localForm.id = v.id ?? null
       localForm.name = v.name ?? ''
       localForm.platform = v.platform ?? ''
+      localForm.account = v.account ?? ''
       localForm.targetAccounts = v.targetAccounts ?? ''
       localForm.configType = v.configType ?? '评论'
-      localForm.commentContent = v.commentContent ?? ''
+        localForm.commentContent = v.commentContent ?? ''
+        // 解析 commentContent 到 segments（支持 JSON 数组或换行分隔）
+        try {
+          if (localForm.commentContent && localForm.commentContent.trim().startsWith('[')) {
+            const arr = JSON.parse(localForm.commentContent)
+            if (Array.isArray(arr)) segments.value = arr.slice()
+            else segments.value = localForm.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+          } else {
+            segments.value = localForm.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+          }
+        } catch (e) {
+          segments.value = localForm.commentContent.split('\n').map(s => s.trim()).filter(Boolean)
+        }
       localForm.dailyLimit = v.dailyLimit ?? 10
       localForm.startTime = v.startTime ?? '09:00'
       localForm.skipRepeat = v.skipRepeat ?? false
@@ -185,9 +245,11 @@ function onCancel() {
   localForm.id = null
   localForm.name = ''
   localForm.platform = ''
+  localForm.account = ''
   localForm.targetAccounts = ''
   localForm.configType = '评论'
   localForm.commentContent = ''
+  segments.value = []
   localForm.dailyLimit = 10
   localForm.startTime = '09:00'
   localForm.skipRepeat = false
@@ -196,7 +258,12 @@ function onCancel() {
 
 function onSave() {
   if (!localForm.name) return
-  emit('save', { ...localForm })
+  // 合并 segments 到 commentContent 字段
+  const payload = { ...localForm }
+  payload.commentContent = segments.value.join('\n')
+  // 后端使用 status 字符串，'0' 表示启用
+  payload.status = localForm.enabled ? '0' : '1'
+  emit('save', payload)
   visibleLocal.value = false
 }
 </script>
