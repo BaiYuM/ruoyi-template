@@ -42,7 +42,6 @@ public class ExposureConfigController extends BaseController
     @Autowired
     private ISysConfigService configService;
 
-    @PreAuthorize("@ss.hasPermi('exposure:auto:list')")
     @ApiOperation("获取自动曝光配置列表（分页/筛选）")
     @GetMapping("/exposure/auto/list")
     public TableDataInfo list(ExposureConfig exposure)
@@ -55,7 +54,6 @@ public class ExposureConfigController extends BaseController
         return getDataTable(list);
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:auto:stats')")
     @ApiOperation("曝光统计（按账号汇总）")
     @GetMapping("/exposure/auto/stats")
     public TableDataInfo stats(ExposureConfig filter) {
@@ -64,7 +62,6 @@ public class ExposureConfigController extends BaseController
         return getDataTable(list);
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:auto:add')")
     @Log(title = "自动曝光", businessType = BusinessType.INSERT)
     @ApiOperation("创建或更新自动曝光配置")
     @PostMapping("/exposure/auto/save")
@@ -86,7 +83,6 @@ public class ExposureConfigController extends BaseController
         return result;
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:dupload')")
     @ApiOperation("获取定向/链接曝光配置列表（分页/筛选）")
     @GetMapping("/exposure/directional/list")
     public TableDataInfo directionalList(ExposureConfig exposure) {
@@ -98,7 +94,6 @@ public class ExposureConfigController extends BaseController
         return getDataTable(list);
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:dupload')")
     @Log(title = "定向曝光", businessType = BusinessType.INSERT)
     @ApiOperation("创建或更新定向/链接曝光配置")
     @PostMapping("/exposure/directional/save")
@@ -119,7 +114,6 @@ public class ExposureConfigController extends BaseController
         return result;
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:dupload')")
     @ApiOperation("上传目标账号文件并解析（支持 csv, xls, xlsx），建议使用异步接口处理大文件）")
     @PostMapping("/exposure/directional/upload")
     public AjaxResult upload(MultipartFile file) {
@@ -142,8 +136,6 @@ public class ExposureConfigController extends BaseController
             return err;
         }
     }
-
-    @PreAuthorize("@ss.hasPermi('exposure:dupload')")
     @ApiOperation("异步上传目标账号文件，返回 taskId，可轮询结果")
     @PostMapping("/exposure/directional/upload/async")
     public AjaxResult uploadAsync(MultipartFile file) {
@@ -166,7 +158,6 @@ public class ExposureConfigController extends BaseController
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:dupload')")
     @ApiOperation("查询异步解析结果（taskId）")
     @GetMapping("/exposure/parse/result")
     public AjaxResult parseResult(String taskId) {
@@ -193,7 +184,6 @@ public class ExposureConfigController extends BaseController
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:auto:settings')")
     @ApiOperation("获取自动曝光设置")
     @GetMapping("/exposure/auto/settings")
     public AjaxResult getAutoSettings() {
@@ -207,7 +197,6 @@ public class ExposureConfigController extends BaseController
         return ok;
     }
 
-    @PreAuthorize("@ss.hasPermi('exposure:auto:settings')")
     @ApiOperation("保存自动曝光设置")
     @PostMapping("/exposure/auto/settings")
     public AjaxResult saveAutoSettings(@RequestBody Map<String, Object> payload) {
