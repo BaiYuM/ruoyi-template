@@ -37,7 +37,12 @@ const columns = [
   { prop: 'commentKeywords', label: '评论匹配关键词' },
   { prop: 'commentTime', label: '评论时间匹配' },
   { prop: 'commentRegion', label: '评论地区匹配' },
-  { prop: 'status', label: '状态' },
+  { prop: 'status', label: '状态', formatter: (row, column, value) => {
+      // 后端可能返回 0/1 表示显示/隐藏，也可能直接返回启用/禁用文字
+      if (value === 0 || value === '0') return '可见'
+      if (value === 1 || value === '1') return '隐藏'
+      return value ?? ''
+    } },
   { prop: 'operation', label: '操作' }
 ]
 
