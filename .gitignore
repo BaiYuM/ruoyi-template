@@ -45,3 +45,11 @@ nbdist/
 !*/build/*.java
 !*/build/*.html
 !*/build/*.xml
+
+######################################################################
+# Node.js
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
