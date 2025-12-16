@@ -217,11 +217,10 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-          <el-button type="primary" :icon="Plus" @click="openCreate"
-            >添加配置</el-button
-          >
-          <el-button class="ml-2" @click="openStats">曝光统计</el-button>
-          <el-button class="ml-2" @click="openSettings">自动曝光设置</el-button>
+          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px;" @click="openSettings">自动曝光设置</div>
+          <el-button   type="primary" :icon="Plus" @click="openCreate"
+            >添加配置</el-button>
         </div>
         <div class="toolbar-right"></div>
       </div>
@@ -273,4 +272,10 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
 
 <style scoped>
 @import "@/assets/styles/page-common.css";
+.toolbar-left {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  margin-bottom: 5px;
+}
 </style>

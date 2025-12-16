@@ -1,3 +1,67 @@
+<template>
+  <div class="page-wrapper">
+    <PageHeader />
+
+    <el-card shadow="never" class="search-card mb-4">
+      <div class="search-row">
+        <div class="search-grid compact">
+          <div class="search-cell platform-cell">
+            <label class="cell-label">平台账号</label>
+            <el-select v-model="filters.platform" placeholder="请选择平台" clearable class="select-control">
+              <el-option v-for="item in platformOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </div>
+          <div class="search-cell keyword-cell">
+            <label class="cell-label">配置类型</label>
+            <el-select v-model="filters.configType" placeholder="请选择配置类型" clearable>
+              <el-option label="全部" value="" />
+              <el-option label="评论" value="评论" />
+              <el-option label="私信" value="私信" />
+            </el-select>
+          </div>
+
+          <div class="search-actions compact-actions">
+            <el-button type="primary" @click="fetchList">查询</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </div>
+        </div>
+      </div>
+    </el-card>
+
+    <el-card shadow="never" class="table-card">
+      <div class="table-toolbar flex items-center mb-4">
+        <div class="toolbar-left">
+          <div style="margin-right: 8px;">曝光统计</div>
+          <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
+          <!-- <el-button class="ml-2" @click="downloadTemplate">下载模板</el-button>
+          <el-button class="ml-2" @click="openImport">导入模板</el-button> -->
+          <input ref="fileInputRef" type="file" style="display:none" accept=".csv,.xlsx" @change="handleFileChange" />
+        </div>
+      </div>
+      <div class="table-body">
+        <MyTable
+          v-model="pageConfig.tableData"
+          :loading="loading"
+          :columns="columns"
+          :pagination="pagination"
+          :fetch-data="fetchList"
+          :handle-edit="handleEdit"
+          :rowClickable="false"
+        >
+          <template #customOperation="{ row }">
+              <div class="flex flex-nowrap">
+                <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
+                <el-button size="small" class="ml-2" @click.stop="manualTriggerDirectional(row)" :loading="triggeringIds.has(row.id)">立即触发</el-button>
+                <el-button size="small" class="ml-2" @click.stop="showTodayCountDirectional(row)">今日计数</el-button>
+              </div>
+          </template>
+        </MyTable>
+      </div>
+    </el-card>
+
+    <DirectionalConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" :saving="bulkSaving" @save="onConfigSave" />
+  </div>
+</template>
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { getDirectionalList, saveDirectionalConfig, uploadDirectionalFileAsync, downloadDirectionalTemplate } from '@/api/exposure'
@@ -139,70 +203,16 @@ function onConfigSave(data) {
 onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }))
 </script>
 
-<template>
-  <div class="page-wrapper">
-    <PageHeader />
 
-    <el-card shadow="never" class="search-card mb-4">
-      <div class="search-row">
-        <div class="search-grid compact">
-          <div class="search-cell platform-cell">
-            <label class="cell-label">平台账号</label>
-            <el-select v-model="filters.platform" placeholder="请选择平台" clearable class="select-control">
-              <el-option v-for="item in platformOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </div>
-          <div class="search-cell keyword-cell">
-            <label class="cell-label">配置类型</label>
-            <el-select v-model="filters.configType" placeholder="请选择配置类型" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="评论" value="评论" />
-              <el-option label="私信" value="私信" />
-            </el-select>
-          </div>
-
-          <div class="search-actions compact-actions">
-            <el-button type="primary" @click="fetchList">查询</el-button>
-            <el-button @click="resetSearch">重置</el-button>
-          </div>
-        </div>
-      </div>
-    </el-card>
-
-    <el-card shadow="never" class="table-card">
-      <div class="table-toolbar flex items-center mb-4">
-        <div class="toolbar-left">
-          <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
-          <el-button class="ml-2" @click="downloadTemplate">下载模板</el-button>
-          <el-button class="ml-2" @click="openImport">导入模板</el-button>
-          <input ref="fileInputRef" type="file" style="display:none" accept=".csv,.xlsx" @change="handleFileChange" />
-        </div>
-      </div>
-      <div class="table-body">
-        <MyTable
-          v-model="pageConfig.tableData"
-          :loading="loading"
-          :columns="columns"
-          :pagination="pagination"
-          :fetch-data="fetchList"
-          :handle-edit="handleEdit"
-          :rowClickable="false"
-        >
-          <template #customOperation="{ row }">
-            <div class="flex flex-nowrap">
-              <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
-            </div>
-          </template>
-        </MyTable>
-      </div>
-    </el-card>
-
-    <DirectionalConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
-  </div>
-</template>
 
 <style scoped>
 @import '@/assets/styles/page-common.css';
+.toolbar-left {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  margin-bottom: 5px;
+}
 </style>
 
 *** End Patch

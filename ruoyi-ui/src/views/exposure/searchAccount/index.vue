@@ -1,3 +1,84 @@
+<template>
+  <div class="page-wrapper">
+    <!-- Header (统一 PageHeader) -->
+    <PageHeader>
+      <template #actions>
+      </template>
+    </PageHeader>
+
+    <!-- Search card (multi-column grid like screenshot) -->
+    <el-card shadow="never" class="search-card mb-4">
+      <div class="search-row">
+        <div class="search-grid">
+          <div class="search-cell">
+            <label class="cell-label">平台账号</label>
+            <el-select v-model="filters.platform" placeholder="请选择平台" clearable class="select-control">
+              <el-option v-for="item in platformOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </div>
+          <div class="search-cell">
+            <label class="cell-label">账号/昵称</label>
+            <el-input v-model="filters.keyword" placeholder="请输入账号或昵称" clearable />
+          </div>
+          <div class="search-cell">
+            <label class="cell-label">状态</label>
+            <el-select v-model="filters.status" placeholder="全部" clearable>
+              <el-option label="全部" value="" />
+              <el-option label="启用" value="enabled" />
+              <el-option label="停用" value="disabled" />
+            </el-select>
+          </div>  
+        </div>
+
+        <div class="search-actions">
+          <el-button type="primary" :icon="Search" @click="fetchUserList">搜索</el-button>
+          <el-button @click="resetSearch">重置</el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- Table card using MyTable (保持项目样式与交互) -->
+    <el-card shadow="never" class="table-card">
+      <div class="table-toolbar flex items-center mb-4">
+        <div class="toolbar-left">
+          <div style="margin-right: 8px;">曝光统计</div>
+          <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
+          <!-- <el-button class="ml-2" type="danger" @click="ElMessage.info('批量停用（mock）')">批量停用</el-button>
+          <el-button class="ml-2" type="success" @click="ElMessage.info('批量启用（mock）')">批量启用</el-button> -->
+        </div>
+      </div>
+
+      <div class="table-body">
+        <MyTable
+          v-model="pageConfig.tableData"
+          :loading="loading"
+          :columns="columns"
+          :pagination="pagination"
+          :fetch-data="fetchUserList"
+          :handle-edit="handleEdit"
+          :handle-view="handleView"
+          :handle-disable="onDisableUser"
+          :handle-enable="onEnableUser"
+          :handle-selection-change="rows => (selectedRows.value = rows)"
+          :rowClickable="true"
+        >
+          <template #customOperation="{ row }">
+            <div class="flex flex-nowrap">
+              <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
+              <el-button type="primary" size="small" class="ml-2" @click.stop="handleClassify(row)">分配</el-button>
+              <el-button v-if="!row.isClosed" type="danger" size="small" class="ml-2" @click.stop="onDisableUser(row)">停用</el-button>
+              <el-button v-else type="success" size="small" class="ml-2" @click.stop="onEnableUser(row)">启用</el-button>
+            </div>
+          </template>
+        </MyTable>
+      </div>
+    </el-card>
+
+    <!-- Drawer component -->
+    <ConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
+  </div>
+</template>
+
 <script setup>
 import { reactive, ref, onMounted, nextTick, computed } from 'vue'
 import { getDirectionalList } from '@/api/exposure'
@@ -126,86 +207,14 @@ function onConfigSave(data) {
 }
 </script>
 
-<template>
-  <div class="page-wrapper">
-    <!-- Header (统一 PageHeader) -->
-    <PageHeader>
-      <template #actions>
-      </template>
-    </PageHeader>
 
-    <!-- Search card (multi-column grid like screenshot) -->
-    <el-card shadow="never" class="search-card mb-4">
-      <div class="search-row">
-        <div class="search-grid">
-          <div class="search-cell">
-            <label class="cell-label">平台账号</label>
-            <el-select v-model="filters.platform" placeholder="请选择平台" clearable class="select-control">
-              <el-option v-for="item in platformOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </div>
-          <div class="search-cell">
-            <label class="cell-label">账号/昵称</label>
-            <el-input v-model="filters.keyword" placeholder="请输入账号或昵称" clearable />
-          </div>
-          <div class="search-cell">
-            <label class="cell-label">状态</label>
-            <el-select v-model="filters.status" placeholder="全部" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="启用" value="enabled" />
-              <el-option label="停用" value="disabled" />
-            </el-select>
-          </div>  
-        </div>
-
-        <div class="search-actions">
-          <el-button type="primary" :icon="Search" @click="fetchUserList">搜索</el-button>
-          <el-button @click="resetSearch">重置</el-button>
-        </div>
-      </div>
-    </el-card>
-
-    <!-- Table card using MyTable (保持项目样式与交互) -->
-    <el-card shadow="never" class="table-card">
-      <div class="table-toolbar flex items-center mb-4">
-        <div class="toolbar-left">
-          <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
-          <el-button class="ml-2" type="danger" @click="ElMessage.info('批量停用（mock）')">批量停用</el-button>
-          <el-button class="ml-2" type="success" @click="ElMessage.info('批量启用（mock）')">批量启用</el-button>
-        </div>
-      </div>
-
-      <div class="table-body">
-        <MyTable
-          v-model="pageConfig.tableData"
-          :loading="loading"
-          :columns="columns"
-          :pagination="pagination"
-          :fetch-data="fetchUserList"
-          :handle-edit="handleEdit"
-          :handle-view="handleView"
-          :handle-disable="onDisableUser"
-          :handle-enable="onEnableUser"
-          :handle-selection-change="rows => (selectedRows.value = rows)"
-          :rowClickable="true"
-        >
-          <template #customOperation="{ row }">
-            <div class="flex flex-nowrap">
-              <el-button type="primary" size="small" @click.stop="handleEdit(row)">编辑</el-button>
-              <el-button type="primary" size="small" class="ml-2" @click.stop="handleClassify(row)">分配</el-button>
-              <el-button v-if="!row.isClosed" type="danger" size="small" class="ml-2" @click.stop="onDisableUser(row)">停用</el-button>
-              <el-button v-else type="success" size="small" class="ml-2" @click.stop="onEnableUser(row)">启用</el-button>
-            </div>
-          </template>
-        </MyTable>
-      </div>
-    </el-card>
-
-    <!-- Drawer component -->
-    <ConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
-  </div>
-</template>
 
 <style scoped>
 @import '@/assets/styles/page-common.css';
+.toolbar-left {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  margin-bottom: 5px;
+}
 </style>

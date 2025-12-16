@@ -9,10 +9,12 @@
     <el-form
       ref="localFormRef"
       :model="localForm"
+      label-position="top"
       label-width="120px"
+      :rules="rules"
       class="drawer-form"
     >
-      <el-form-item label="配置名称">
+      <el-form-item label="配置名称" prop="name">
         <el-input
           v-model="localForm.name"
           maxlength="40"
@@ -20,37 +22,45 @@
         />
       </el-form-item>
 
-      <el-form-item label="平台账号">
-        <el-select v-model="localForm.platform" placeholder="请选择">
-          <el-option
-            v-for="it in platformOptions"
-            :key="it.value"
-            :label="it.label"
-            :value="it.value"
-          />
-        </el-select>
+      <el-form-item label="平台账号" prop="account">
+        <el-input v-model="localForm.account" placeholder="请输入平台账号（示例：example_account）" />
       </el-form-item>
 
-      <el-form-item label="批量导入分享链接">
+      <el-form-item >
         <el-upload :before-upload="handleBeforeUploadShare" :show-file-list="false" accept=".csv,.xls,.xlsx">
-          <el-button type="primary" plain size="small">批量导入</el-button>
+          <el-button type="primary" plain round>批量导入</el-button>
         </el-upload>
-        <el-button plain size="small" class="ml-2">下载导入模板</el-button>
-        <div class="hint" style="margin-top:6px;color:var(--muted);font-size:12px">上传 CSV 会在前端解析并填充链接；Excel 文件会上传到后端处理</div>
+        <div style="margin-left: 5px;">下载导入模板</div>
       </el-form-item>
 
-      <el-form-item label="抖音视频链接">
-        <el-input type="textarea" v-model="localForm.shareLinks" placeholder="一行一个链接" rows="4" />
+      <el-form-item label="抖音视频链接" prop="shareLinks">
+        <div>
+          <div v-for="(seg, idx) in shareSegments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">链接 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeShareSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="addingShare" class="mb-2 flex items-center">
+            <el-input v-model="newShare" placeholder="输入视频链接，按回车或点击添加" @keyup.enter.native="confirmAddShare" />
+            <el-button type="primary" class="ml-2" @click="confirmAddShare">添加</el-button>
+            <el-button class="ml-2" @click="cancelAddShare">取消</el-button>
+          </div>
+
+          <div class="mt-2 flex items-center">
+            <el-button style="width: 100%;" @click="startAddShare" round>+ 添加一行数据</el-button>
+          </div>
+        </div>
       </el-form-item>
 
-      <el-form-item label="评论区 - 匹配关键词">
+      <el-form-item label="评论区 - 匹配关键词" prop="commentKeywords">
         <el-input
           v-model="localForm.commentKeywords"
           placeholder="请输入关键字，逗号分隔"
         />
       </el-form-item>
 
-      <el-form-item label="评论时间匹配">
+      <el-form-item label="评论时间匹配" prop="commentTime">
         <el-select v-model="localForm.commentTime" placeholder="不限">
           <el-option label="不限" value="" />
           <el-option label="全天" value="全天" />
@@ -58,28 +68,45 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="评论地区匹配">
+      <el-form-item label="评论地区匹配" prop="commentRegion">
         <el-input
           v-model="localForm.commentRegion"
           placeholder="请输入省/市，逗号分隔"
         />
       </el-form-item>
 
-      <el-form-item label="私信内容">
-        <el-input
-          type="textarea"
-          v-model="localForm.privateMessage"
-          placeholder="私信内容示例"
-          rows="3"
-        />
+      <el-form-item label="私信内容" prop="segments">
+        <div>
+          <div v-for="(seg, idx) in segments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">段 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="adding" class="mb-2 flex items-center">
+            <el-input v-model="newSegment" placeholder="输入私信段，按回车或点击添加" @keyup.enter.native="confirmAdd" />
+            <el-button type="primary" class="ml-2" @click="confirmAdd">添加</el-button>
+            <el-button class="ml-2" @click="cancelAdd">取消</el-button>
+          </div>
+
+         <div>
+            <el-button style="width: 100%; margin:8px 0;" @click="startAdd" round>+ 添加一行数据</el-button>
+            <el-button style="width: 100%; margin-left: 0;" type="primary" @click="openAI('comment')" round>已有文案？ 使用AI润色</el-button>
+          </div>
+        </div>
       </el-form-item>
 
-      <el-form-item label="每天次数限制">
+      <el-form-item label="每天次数限制" prop="dailyLimit">
         <el-input-number v-model="localForm.dailyLimit" :min="1" />
       </el-form-item>
 
-      <el-form-item label="启动时间">
-        <el-input-number v-model="localForm.startTime" />
+     <el-form-item label="启动时间" prop="startTime">
+        <el-time-picker
+          v-model="localForm.startTime"
+          format="HH:mm"
+          value-format="HH:mm"
+          placeholder="请选择时间"
+        />
       </el-form-item>
 
       <el-form-item label="跳过重复">
@@ -90,9 +117,9 @@
         <el-switch v-model="localForm.enabled" />
       </el-form-item>
 
-      <div style="text-align: right; margin-top: 12px">
-        <el-button @click="onCancel">取消</el-button>
-        <el-button type="primary" class="ml-2" @click="onSave">保存</el-button>
+       <div style="text-align: left; margin-top: 12px">
+        <el-button @click="onCancel" :disabled="props.saving" round>重置</el-button>
+        <el-button type="primary" class="ml-2" @click="onSave" :loading="props.saving" :disabled="props.saving" round>提交</el-button>
       </div>
     </el-form>
   </el-drawer>
@@ -115,7 +142,6 @@ const localFormRef = ref(null);
 const localForm = reactive({
   id: null,
   name: "",
-  platform: "",
   shareLinks: "",
   commentKeywords: "",
   commentTime: "",
@@ -126,6 +152,71 @@ const localForm = reactive({
   skipRepeat: false,
   enabled: true,
 });
+
+const rules = {
+  name: [{ required: true, message: '请填写配置名称', trigger: 'blur' }],
+  account: [{ required: true, message: '请选择平台账号', trigger: 'blur' }],
+  shareLinks:[{ required: true, message: '请输入抖音视频链接', trigger: 'blur' }],
+  commentKeywords:[{ required: true, message: '请输入评论区匹配关键词', trigger: 'blur' }],
+  segments:[{ required: true, message: '请输入私信内容', trigger: 'blur' }],
+  dailyLimit:[{ required: true, type: 'number', message: '请填写每天次数限制', trigger: 'change' }],
+  startTime:[{ required: true, message: '请选择启动时间', trigger: 'change' }]
+
+}
+
+// 私信/评论 分段管理（与其它抽屉保持一致）
+const segments = ref([])
+const adding = ref(false)
+const newSegment = ref('')
+
+function startAdd() {
+  adding.value = true
+  newSegment.value = ''
+}
+
+function cancelAdd() {
+  adding.value = false
+  newSegment.value = ''
+}
+
+function confirmAdd() {
+  const v = (newSegment.value || '').trim()
+  if (!v) return
+  segments.value.push(v)
+  newSegment.value = ''
+  adding.value = true
+}
+
+function removeSegment(i) {
+  segments.value.splice(i, 1)
+}
+
+// 抖音视频链接 分段管理
+const shareSegments = ref([])
+const addingShare = ref(false)
+const newShare = ref('')
+
+function startAddShare() {
+  addingShare.value = true
+  newShare.value = ''
+}
+
+function cancelAddShare() {
+  addingShare.value = false
+  newShare.value = ''
+}
+
+function confirmAddShare() {
+  const v = (newShare.value || '').trim()
+  if (!v) return
+  shareSegments.value.push(v)
+  newShare.value = ''
+  addingShare.value = true
+}
+
+function removeShareSegment(i) {
+  shareSegments.value.splice(i, 1)
+}
 
 import { uploadDirectionalFileAsync, getParseResult } from '@/api/exposure'
 
@@ -193,7 +284,6 @@ watch(
     if (v) {
       localForm.id = v.id ?? null;
       localForm.name = v.name ?? v.account ?? "";
-      localForm.platform = v.platform ?? "";
       localForm.shareLinks = v.shareLinks ?? "";
       localForm.commentKeywords = v.commentKeywords ?? v.commentKeywords ?? "";
       localForm.commentTime = v.commentTime ?? "";
@@ -209,7 +299,22 @@ watch(
 );
 
 function onCancel() {
-  visibleLocal.value = false;
+  // reset to defaults
+  localForm.id = null
+  localForm.name = ''
+  localForm.account = ''
+  localForm.shareLinks = ''
+  localForm.commentKeywords = ''
+  localForm.commentTime = ''
+  localForm.commentRegion = ''
+  localForm.privateMessage = ''
+  segments.value = []
+  shareSegments.value = []
+  localForm.dailyLimit = 10
+  localForm.startTime = '09:00'
+  localForm.skipRepeat = false
+  localForm.enabled = true
+  visibleLocal.value = false
 }
 
 function onSave() {

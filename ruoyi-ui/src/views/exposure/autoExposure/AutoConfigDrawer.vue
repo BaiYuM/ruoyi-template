@@ -1,6 +1,6 @@
 <template>
   <el-drawer :model-value="visible" :title="isEditing ? '编辑配置' : '新增配置'" direction="rtl" size="520px" :with-header="true" @close="handleClose">
-    <el-form :model="form" :rules="rules" ref="formRef" label-width="110px">
+    <el-form :model="form" :rules="rules" ref="formRef" label-position="top" label-width="auto">
       <el-form-item label="配置名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入配置名称" maxlength="50" show-word-limit />
       </el-form-item>
@@ -31,10 +31,21 @@
 
       <el-form-item label="评论内容" prop="commentContent">
         <div>
-          <el-input type="textarea" v-model="form.commentContent" :rows="4" placeholder="请输入评论内容" />
-          <div class="mt-2 flex items-center">
-            <el-button size="small" @click="addRow">+ 添加一行数据</el-button>
-            <el-button type="primary" class="ml-4" @click="openAI('comment')">已有文案？ 使用AI润色</el-button>
+          <div v-for="(seg, idx) in segments" :key="idx" class="mb-2 flex items-center">
+            <el-tag type="info" class="mr-2">段 {{ idx + 1 }}</el-tag>
+            <div class="flex-1">{{ seg }}</div>
+            <el-button type="text" class="ml-2" @click="removeSegment(idx)">删除</el-button>
+          </div>
+
+          <div v-if="adding" class="mb-2 flex items-center">
+            <el-input v-model="newSegment" placeholder="输入评论段，按回车或点击添加" @keyup.enter.native="confirmAdd" />
+            <el-button type="primary" style="margin-top: 8px;" class="ml-2" @click="confirmAdd">添加</el-button>
+            <el-button class="ml-2" @click="cancelAdd">取消</el-button>
+          </div>
+
+          <div>
+            <el-button style="width: 100%; margin:8px 0;" @click="startAdd" round>+ 添加一行数据</el-button>
+            <el-button style="width: 100%; margin-left: 0;" type="primary" @click="openAI('comment')" round>已有文案？ 使用AI润色</el-button>
           </div>
         </div>
       </el-form-item>
@@ -64,8 +75,8 @@
       </el-form-item>
 
       <div class="drawer-actions mt-4 flex justify-end">
-        <el-button @click="onReset">重置</el-button>
-        <el-button type="primary" class="ml-4" @click="onSubmit">提交</el-button>
+        <el-button @click="onReset" round>重置</el-button>
+        <el-button type="primary" class="ml-4" @click="onSubmit" round>提交</el-button>
       </div>
     </el-form>
 
@@ -103,6 +114,34 @@ const form = reactive({
 const rules = {
   name: [{ required: true, message: '请填写配置名称', trigger: 'blur' }],
   account: [{ required: true, message: '请选择平台账号', trigger: 'change' }]
+}
+
+// 评论段管理
+const segments = ref([])
+const adding = ref(false)
+const newSegment = ref('')
+
+function startAdd() {
+  adding.value = true
+  newSegment.value = ''
+}
+
+function cancelAdd() {
+  adding.value = false
+  newSegment.value = ''
+}
+
+function confirmAdd() {
+  const v = (newSegment.value || '').trim()
+  if (!v) return
+  segments.value.push(v)
+  newSegment.value = ''
+  // keep input open
+  adding.value = true
+}
+
+function removeSegment(i) {
+  segments.value.splice(i, 1)
 }
 
 watch(
