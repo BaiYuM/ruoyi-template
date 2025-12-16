@@ -2,7 +2,7 @@
   <div class="data-overview page-wrapper">
     <el-card class="header-card" shadow="never">
       <div class="header-row">
-        <div class="title">数据总览</div>
+        <div class="title" style="font-weight: bold; font-size: 20px;">数据总览</div>
         <div class="controls">
           <el-date-picker
             v-model="range"
@@ -14,10 +14,15 @@
             :picker-options="pickerOptions"
             @change="onRangeChange"
           />
-          <el-button size="small" @click="quickRange(0)">今天</el-button>
-          <el-button size="small" @click="quickRange(1)">昨天</el-button>
-          <el-button size="small" type="primary" @click="quickRange(7)">近7天</el-button>
-          <el-button size="small" @click="quickRange(30)">近30天</el-button>
+           <el-button
+            v-for="(btn, idx) in quickBtns"
+            :key="idx"
+            size="small"
+            :type="activeIdx === idx ? 'primary' : ''"
+            @click="handleQuick(idx, btn.days)"
+          >
+            {{ btn.label }}
+          </el-button>
           <el-button size="small" icon="el-icon-refresh" @click="refresh">刷新</el-button>
         </div>
       </div>
@@ -63,6 +68,14 @@ import { getOverview } from '@/api/dataOverview'
 const range = ref([])
 const chartRef = ref(null)
 let chart = null
+const activeIdx = ref(2)  
+
+const quickBtns = reactive([
+  { label: '今天',  days: 0 },
+  { label: '昨天',  days: 1 },
+  { label: '近7天', days: 7 },
+  { label: '近30天', days: 30 }
+])
 
 const statsCards = reactive([
   { title: '接待人数', value: 0 },
@@ -92,6 +105,11 @@ function formatDate(d) {
   return `${y}-${m}-${day}`
 }
 
+function handleQuick(idx, days) {
+  activeIdx.value = idx
+  quickRange(days)
+}
+
 function quickRange(days) {
   const end = new Date()
   let start = new Date()
@@ -106,6 +124,7 @@ async function loadData() {
   if (!range.value || range.value.length !== 2) {
     ElMessage.warning('请选择日期范围（默认近7天）')
     quickRange(7)
+    activeIdx.value = 2
   }
   const params = {
     startDate: formatDate(range.value[0]),
