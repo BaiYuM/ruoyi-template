@@ -1,6 +1,6 @@
 <template>
   <div class="data-overview page-wrapper">
-    <el-card class="header-card" shadow="never">
+    <el-card class="header-card" shadow="never" >
       <div class="header-row">
         <div class="title" style="font-weight: bold; font-size: 20px;">数据总览</div>
         <div class="controls">
@@ -27,9 +27,11 @@
         </div>
       </div>
     </el-card>
+    <div style="font-weight: 100; font-size: 12px; margin: 10px 20px;">因操作时效等原因，统计数据可能有误差，请以实际操作结果为准!</div>
 
     <el-row :gutter="16">
       <el-col :span="18">
+
         <el-card class="stats-grid-card" shadow="never">
           <div class="stats-grid">
             <el-card v-for="(item, idx) in statsCards" :key="idx" class="stat-card" shadow="never">
@@ -265,7 +267,7 @@ onMounted(() => {
 .data-overview .header-row { display:flex; justify-content:space-between; align-items:center }
 .data-overview .controls { display:flex; gap:8px; align-items:center }
 .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px }
-.stat-card { text-align:center; padding:18px }
+.stat-card { text-align:center; padding:16px }
 .stat-title { color:#666 }
 .stat-value { font-size:28px; color:#ff3b7a; margin-top:8px }
 .chart-card { padding:0 }
