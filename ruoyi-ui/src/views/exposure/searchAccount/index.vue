@@ -169,7 +169,6 @@ function handleEdit(row) {
   drawerVisible.value = true
 }
 
-// 保存（mock）：新增或更新 pageConfig.tableData
 function saveConfig() {
   const validate = formRef.value && formRef.value.validate
   if (validate) {
@@ -205,6 +204,7 @@ function onConfigSave(data) {
     fetchUserList({ page: pagination.currentPage, pageSize: pagination.pageSize })
   }).catch(() => ElMessage.error('保存失败'))
 }
+
 </script>
 
 
