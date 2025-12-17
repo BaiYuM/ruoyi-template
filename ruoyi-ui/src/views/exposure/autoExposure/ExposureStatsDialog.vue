@@ -6,10 +6,10 @@
     @close="onClose"
   >
     <div style="min-height: 320px">
-      <div class="flex items-center mb-3">
+      <!-- <div class="flex items-center mb-3">
         <el-button size="small" @click="fetchList">刷新</el-button>
         <el-button size="small" class="ml-2" @click="onClose">关闭</el-button>
-      </div>
+      </div> -->
 
       <MyTable
         v-model:modelValue="tableData"

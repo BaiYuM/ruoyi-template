@@ -27,11 +27,10 @@
         </div>
       </div>
     </el-card>
-    <div style="font-weight: 100; font-size: 12px; margin: 10px 20px;">因操作时效等原因，统计数据可能有误差，请以实际操作结果为准!</div>
+    <div style="font-weight: 100; font-size: 12px; margin: 10px 20px; color: #404040;">因操作时效等原因，统计数据可能有误差，请以实际操作结果为准!</div>
 
     <el-row :gutter="16">
       <el-col :span="18">
-
         <el-card class="stats-grid-card" shadow="never">
           <div class="stats-grid">
             <el-card v-for="(item, idx) in statsCards" :key="idx" class="stat-card" shadow="never">
@@ -44,8 +43,6 @@
         <el-card class="chart-card" shadow="never" style="margin-top:16px">
           <div ref="chartRef" class="chart"></div>
         </el-card>
-
-        <!-- 明细列表已移除，页面仅保留统计卡片与图表 -->
       </el-col>
 
       <el-col :span="6">
@@ -268,8 +265,8 @@ onMounted(() => {
 .data-overview .controls { display:flex; gap:8px; align-items:center }
 .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px }
 .stat-card { text-align:center; padding:16px }
-.stat-title { color:#666 }
-.stat-value { font-size:28px; color:#ff3b7a; margin-top:8px }
+.stat-title { color:#666; }
+.stat-value { font-size:28px; color:#3b3bff; margin-top:8px }
 .chart-card { padding:0 }
 .chart { width:100%; height:360px }
 .robot-card, .robot-panel { padding:18px }

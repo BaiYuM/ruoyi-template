@@ -86,7 +86,6 @@ const rules = {
   privateMessage:[{ required: true, message: '请输入私信内容', trigger: 'blur' }],
   dailyLimit:[{ required: true, type: 'number', message: '请填写每天次数限制', trigger: 'change' }],
   startTime:[{ required: true, message: '请选择启动时间', trigger: 'change' }]
-
 }
 
 watch(() => props.visible, v => (visibleLocal.value = v))
