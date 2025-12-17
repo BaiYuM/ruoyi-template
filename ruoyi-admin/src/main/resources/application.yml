@@ -134,3 +134,10 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+tt:
+  op:
+    useRedis: true
+    configs:
+      - clientKey: awxxxxxxxxx
+        clientSecret: 87111aaaaaaa1111xxxx11

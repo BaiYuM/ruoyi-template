@@ -218,6 +218,19 @@
                 <version>${ruoyi.version}</version>
             </dependency>
 
+            <!-- 抖音开放平台 SDK -->
+            <dependency>
+                <groupId>vip.gadfly</groupId>
+                <artifactId>douyin-open-api-sdk</artifactId>
+                <version>0.0.3</version>
+            </dependency>
+            
+            <!-- SDK 默认使用 okhttp4，若依自带 3.x 可主动升级 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>4.9.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -228,6 +241,7 @@
         <module>ruoyi-quartz</module>
         <module>ruoyi-generator</module>
         <module>ruoyi-common</module>
+        <module>douyin-open-api-sdk</module>
     </modules>
     <packaging>pom</packaging>
 

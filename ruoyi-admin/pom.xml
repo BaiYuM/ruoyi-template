@@ -81,6 +81,13 @@
             <artifactId>ruoyi-generator</artifactId>
         </dependency>
 
+        <!-- douyin-open-api-sdk -->
+        <dependency>
+            <groupId>vip.gadfly</groupId>
+            <artifactId>douyin-open-api-sdk</artifactId>
+            <version>0.0.3</version>
+        </dependency>
+
     </dependencies>
 
     <build>
