@@ -76,11 +76,12 @@ watch(
   }
 );
 
+
 function fetchList(opts = {}) {
   loading.value = true;
   const page = opts.page ?? pagination.currentPage;
   const size = opts.pageSize ?? pagination.pageSize;
-  getExposureStats({ pageNum: page, pageSize: size ,type: 'autoExposure' })
+  getExposureStats({ pageNum: page, pageSize: size ,type: 'searchAccount' })
     .then((res) => {
       loading.value = false;
       // follow TableDataInfo: rows, total

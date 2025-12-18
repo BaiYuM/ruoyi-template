@@ -27,7 +27,7 @@
               <el-option label="启用" value="enabled" />
               <el-option label="停用" value="disabled" />
             </el-select>
-          </div>  
+          </div>
         </div>
 
         <div class="search-actions">
@@ -41,7 +41,7 @@
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-          <div style="margin-right: 8px;">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
           <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
           <!-- <el-button class="ml-2" type="danger" @click="ElMessage.info('批量停用（mock）')">批量停用</el-button>
           <el-button class="ml-2" type="success" @click="ElMessage.info('批量启用（mock）')">批量启用</el-button> -->
@@ -75,6 +75,7 @@
     </el-card>
 
     <!-- Drawer component -->
+    <ExposureStatsDialog v-model:visible="statsVisible" />
     <ConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" @save="onConfigSave" />
   </div>
 </template>
@@ -88,6 +89,7 @@ import PageHeader from '@/components/PageHeader'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { saveDirectionalConfig } from '@/api/exposure'
+import ExposureStatsDialog from "./ExposureStatsDialog.vue";
 
 // Filters and options
 const filters = reactive({ platform: '', keyword: '' })
@@ -112,7 +114,7 @@ const pagination = reactive({
 
 const loading = ref(false)
 const selectedRows = ref([])
-
+const statsVisible = ref(false);
 
 // Drawer visibility + editing data
 const drawerVisible = ref(false)
@@ -159,7 +161,9 @@ function openCreate() {
   drawerVisible.value = true
 }
 
-function openStats() { ElMessage.info('打开曝光统计（mock）') }
+function openStats() {
+  statsVisible.value = true;
+}
 
 function handleEdit(row) {
   isEditing.value = true
@@ -168,6 +172,8 @@ function handleEdit(row) {
   Object.assign(editingData, row)
   drawerVisible.value = true
 }
+
+
 
 function saveConfig() {
   const validate = formRef.value && formRef.value.validate

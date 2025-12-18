@@ -94,8 +94,8 @@ const props = defineProps({
   platformOptions: { type: Array, default: () => [] },
   isEditing: { type: Boolean, default: false }
 })
+const today = new Date(new Date().setHours(9, 0, 0, 0))
 const emit = defineEmits(['update:visible', 'save'])
-
 const formRef = ref(null)
 const form = reactive({
   id: null,
@@ -105,7 +105,7 @@ const form = reactive({
   searchKeywords: '',
   commentContent: '',
   dailyLimit: 10,
-  startTime: '09:00',
+  startTime: today,
   sortOrder: '综合',
   skipRepeat: false,
   enabled: true
@@ -157,7 +157,7 @@ watch(
       form.searchKeywords = v.searchKeywords ?? ''
       form.commentContent = v.commentContent ?? ''
       form.dailyLimit = v.dailyLimit ?? 10
-      form.startTime = v.startTime ?? '09:00'
+      form.startTime = v.startTime ?? today
       form.sortOrder = v.sortOrder ?? '综合'
       form.skipRepeat = v.skipRepeat ?? false
       // 后端使用 status 字符串：'0' 表示启用
@@ -186,7 +186,7 @@ function onReset() {
     form.searchKeywords = v.searchKeywords ?? ''
     form.commentContent = v.commentContent ?? ''
     form.dailyLimit = v.dailyLimit ?? 10
-    form.startTime = v.startTime ?? '09:00'
+    form.startTime = v.startTime ?? today
     form.sortOrder = v.sortOrder ?? '综合'
     form.skipRepeat = v.skipRepeat ?? false
     form.enabled = v.status === undefined ? true : (v.status === '0')
@@ -199,7 +199,7 @@ function onReset() {
     form.searchKeywords = ''
     form.commentContent = ''
     form.dailyLimit = 10
-    form.startTime = '09:00'
+    form.startTime = today
     form.sortOrder = '综合'
     form.skipRepeat = false
     form.enabled = true

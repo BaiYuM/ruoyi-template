@@ -89,7 +89,7 @@
             <el-button class="ml-2" @click="cancelAdd">取消</el-button>
           </div>
 
-         <div>
+          <div>
             <el-button style="width: 100%; margin:8px 0;" @click="startAdd" round>+ 添加一行数据</el-button>
             <el-button style="width: 100%; margin-left: 0;" type="primary" @click="openAI('comment')" round>已有文案？ 使用AI润色</el-button>
           </div>
@@ -100,13 +100,8 @@
         <el-input-number v-model="localForm.dailyLimit" :min="1" />
       </el-form-item>
 
-     <el-form-item label="启动时间" prop="startTime">
-        <el-time-picker
-          v-model="localForm.startTime"
-          format="HH:mm"
-          value-format="HH:mm"
-          placeholder="请选择时间"
-        />
+       <el-form-item label="启动时间" prop="startTime">
+        <el-time-picker v-model="localForm.startTime" format="HH:mm" placeholder="请选择时间" />
       </el-form-item>
 
       <el-form-item label="跳过重复">
@@ -117,7 +112,7 @@
         <el-switch v-model="localForm.enabled" />
       </el-form-item>
 
-       <div style="text-align: left; margin-top: 12px">
+      <div style="text-align: left; margin-top: 12px">
         <el-button @click="onCancel" :disabled="props.saving" round>重置</el-button>
         <el-button type="primary" class="ml-2" @click="onSave" :loading="props.saving" :disabled="props.saving" round>提交</el-button>
       </div>
@@ -135,7 +130,7 @@ const props = defineProps({
   isEditing: { type: Boolean, default: false },
 });
 const emit = defineEmits(["update:visible", "save"]);
-
+const today = new Date(new Date().setHours(9, 0, 0, 0))
 const visibleLocal = ref(props.visible);
 const localFormRef = ref(null);
 
@@ -148,7 +143,7 @@ const localForm = reactive({
   commentRegion: "",
   privateMessage: "",
   dailyLimit: 10,
-  startTime: "09:00",
+  startTime: today,
   skipRepeat: false,
   enabled: true,
 });
@@ -290,7 +285,7 @@ watch(
       localForm.commentRegion = v.commentRegion ?? "";
       localForm.privateMessage = v.privateMessage ?? "";
       localForm.dailyLimit = v.dailyLimit ?? 10;
-      localForm.startTime = v.startTime ?? "09:00";
+      localForm.startTime = v.startTime ?? today;
       localForm.skipRepeat = v.skipRepeat ?? false;
       localForm.enabled = v.enabled ?? !v.isClosed;
     }
@@ -311,7 +306,7 @@ function onCancel() {
   segments.value = []
   shareSegments.value = []
   localForm.dailyLimit = 10
-  localForm.startTime = '09:00'
+  localForm.startTime = today
   localForm.skipRepeat = false
   localForm.enabled = true
   visibleLocal.value = false
