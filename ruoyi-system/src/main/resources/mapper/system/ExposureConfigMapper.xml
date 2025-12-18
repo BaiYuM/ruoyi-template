@@ -8,6 +8,7 @@
     <result column="platform" property="platform" />
     <result column="account" property="account" />
     <result column="config_type" property="configType" />
+    <result column="exposure_type" property="exposureType" />
     <result column="search_keywords" property="searchKeywords" />
     <result column="comment_content" property="commentContent" />
     <result column="daily_limit" property="dailyLimit" />
@@ -20,7 +21,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time
+    id, name, platform, account, config_type, exposure_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time
   </sql>
 
   <select id="selectExposureById" resultMap="BaseResultMap" parameterType="java.lang.Long">
@@ -55,13 +56,14 @@
       <if test="name != null and name != ''">AND name LIKE CONCAT('%', #{name}, '%')</if>
       <if test="platform != null and platform != ''">AND platform = #{platform}</if>
       <if test="configType != null and configType != ''">AND config_type = #{configType}</if>
+      <if test="exposureType != null and exposureType != ''">AND exposure_type = #{exposureType}</if>
     </where>
     ORDER BY create_time DESC
   </select>
 
   <insert id="insertExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
-    INSERT INTO exposure_config (name, platform, account, config_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time)
-    VALUES (#{name}, #{platform}, #{account}, #{configType}, #{searchKeywords}, #{commentContent}, #{dailyLimit}, #{startTime}, #{sortOrder}, #{skipRepeat}, #{status}, #{createBy}, #{createTime})
+    INSERT INTO exposure_config (name, platform, account, config_type, exposure_type, search_keywords, comment_content, daily_limit, start_time, sort_order, skip_repeat, status, create_by, create_time)
+    VALUES (#{name}, #{platform}, #{account}, #{configType}, #{exposureType}, #{searchKeywords}, #{commentContent}, #{dailyLimit}, #{startTime}, #{sortOrder}, #{skipRepeat}, #{status}, #{createBy}, #{createTime})
   </insert>
 
   <update id="updateExposure" parameterType="com.ruoyi.system.domain.ExposureConfig">
@@ -71,6 +73,7 @@
       <if test="platform != null">platform = #{platform},</if>
       <if test="account != null">account = #{account},</if>
       <if test="configType != null">config_type = #{configType},</if>
+      <if test="exposureType != null">exposure_type = #{exposureType},</if>
       <if test="searchKeywords != null">search_keywords = #{searchKeywords},</if>
       <if test="commentContent != null">comment_content = #{commentContent},</if>
       <if test="dailyLimit != null">daily_limit = #{dailyLimit},</if>

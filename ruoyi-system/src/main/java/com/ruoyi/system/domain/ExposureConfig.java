@@ -21,6 +21,8 @@ public class ExposureConfig extends BaseEntity
 
     private String configType;
 
+    private String exposureType;
+
     private String searchKeywords;
 
     private String commentContent;
@@ -73,6 +75,14 @@ public class ExposureConfig extends BaseEntity
 
     public void setConfigType(String configType) {
         this.configType = configType;
+    }
+
+    public String getExposureType() {
+        return exposureType;
+    }
+
+    public void setExposureType(String exposureType) {
+        this.exposureType = exposureType;
     }
 
     public String getSearchKeywords() {
@@ -139,6 +149,7 @@ public class ExposureConfig extends BaseEntity
             .append("platform", getPlatform())
             .append("account", getAccount())
             .append("configType", getConfigType())
+            .append("exposureType", getExposureType())
             .append("searchKeywords", getSearchKeywords())
             .append("dailyLimit", getDailyLimit())
             .append("startTime", getStartTime())

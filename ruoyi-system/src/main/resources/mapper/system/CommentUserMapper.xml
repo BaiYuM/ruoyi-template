@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CommentUserMapper">
+
+  <resultMap id="BaseResultMap" type="com.ruoyi.system.domain.CommentUser">
+    <id column="id" property="id" />
+    <result column="user_id" property="userId" />
+    <result column="avatar" property="avatar" />
+    <result column="nickname" property="nickname" />
+    <result column="signature" property="signature" />
+    <result column="location" property="location" />
+    <result column="follower_count" property="followerCount" />
+    <result column="following_count" property="followingCount" />
+    <result column="like_count" property="likeCount" />
+    <result column="video_count" property="videoCount" />
+    <result column="platform" property="platform" />
+    <result column="account" property="account" />
+    <result column="gender" property="gender" />
+    <result column="age" property="age" />
+    <result column="verified" property="verified" />
+    <result column="level" property="level" />
+    <result column="create_by" property="createBy" />
+    <result column="create_time" property="createTime" />
+    <result column="update_by" property="updateBy" />
+    <result column="update_time" property="updateTime" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, user_id, avatar, nickname, signature, location, follower_count, following_count, like_count, video_count, platform, account, gender, age, verified, level, create_by, create_time, update_by, update_time
+  </sql>
+
+  <select id="selectCommentUserById" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM comment_user
+    WHERE id = #{id}
+  </select>
+
+  <select id="selectCommentUserList" resultMap="BaseResultMap" parameterType="com.ruoyi.system.domain.CommentUser">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM comment_user
+    <where>
+      <if test="userId != null">AND user_id = #{userId}</if>
+      <if test="avatar != null and avatar != ''">AND avatar LIKE CONCAT('%', #{avatar}, '%')</if>
+      <if test="nickname != null and nickname != ''">AND nickname LIKE CONCAT('%', #{nickname}, '%')</if>
+      <if test="signature != null and signature != ''">AND signature LIKE CONCAT('%', #{signature}, '%')</if>
+      <if test="location != null and location != ''">AND location LIKE CONCAT('%', #{location}, '%')</if>
+      <if test="followerCount != null">AND follower_count >= #{followerCount}</if>
+      <if test="followingCount != null">AND following_count >= #{followingCount}</if>
+      <if test="likeCount != null">AND like_count >= #{likeCount}</if>
+      <if test="videoCount != null">AND video_count >= #{videoCount}</if>
+      <if test="platform != null and platform != ''">AND platform = #{platform}</if>
+      <if test="account != null and account != ''">AND account LIKE CONCAT('%', #{account}, '%')</if>
+      <if test="gender != null and gender != ''">AND gender = #{gender}</if>
+      <if test="age != null">AND age = #{age}</if>
+      <if test="verified != null and verified != ''">AND verified = #{verified}</if>
+      <if test="level != null and level != ''">AND level = #{level}</if>
+      <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+        AND date_format(create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+      </if>
+      <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+        AND date_format(create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+      </if>
+    </where>
+    ORDER BY create_time DESC
+  </select>
+
+  <insert id="insertCommentUser" parameterType="com.ruoyi.system.domain.CommentUser" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO comment_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">user_id,</if>
+      <if test="avatar != null">avatar,</if>
+      <if test="nickname != null">nickname,</if>
+      <if test="signature != null">signature,</if>
+      <if test="location != null">location,</if>
+      <if test="followerCount != null">follower_count,</if>
+      <if test="followingCount != null">following_count,</if>
+      <if test="likeCount != null">like_count,</if>
+      <if test="videoCount != null">video_count,</if>
+      <if test="platform != null">platform,</if>
+      <if test="account != null">account,</if>
+      <if test="gender != null">gender,</if>
+      <if test="age != null">age,</if>
+      <if test="verified != null">verified,</if>
+      <if test="level != null">level,</if>
+      <if test="createBy != null">create_by,</if>
+      create_time,
+      <if test="updateBy != null">update_by,</if>
+      update_time
+    </trim>
+    <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">#{userId},</if>
+      <if test="avatar != null">#{avatar},</if>
+      <if test="nickname != null">#{nickname},</if>
+      <if test="signature != null">#{signature},</if>
+      <if test="location != null">#{location},</if>
+      <if test="followerCount != null">#{followerCount},</if>
+      <if test="followingCount != null">#{followingCount},</if>
+      <if test="likeCount != null">#{likeCount},</if>
+      <if test="videoCount != null">#{videoCount},</if>
+      <if test="platform != null">#{platform},</if>
+      <if test="account != null">#{account},</if>
+      <if test="gender != null">#{gender},</if>
+      <if test="age != null">#{age},</if>
+      <if test="verified != null">#{verified},</if>
+      <if test="level != null">#{level},</if>
+      <if test="createBy != null">#{createBy},</if>
+      NOW(),
+      <if test="updateBy != null">#{updateBy},</if>
+      NOW()
+    </trim>
+  </insert>
+
+  <update id="updateCommentUser" parameterType="com.ruoyi.system.domain.CommentUser">
+    UPDATE comment_user
+    <set>
+      <if test="userId != null">user_id = #{userId},</if>
+      <if test="avatar != null">avatar = #{avatar},</if>
+      <if test="nickname != null">nickname = #{nickname},</if>
+      <if test="signature != null">signature = #{signature},</if>
+      <if test="location != null">location = #{location},</if>
+      <if test="followerCount != null">follower_count = #{followerCount},</if>
+      <if test="followingCount != null">following_count = #{followingCount},</if>
+      <if test="likeCount != null">like_count = #{likeCount},</if>
+      <if test="videoCount != null">video_count = #{videoCount},</if>
+      <if test="platform != null">platform = #{platform},</if>
+      <if test="account != null">account = #{account},</if>
+      <if test="gender != null">gender = #{gender},</if>
+      <if test="age != null">age = #{age},</if>
+      <if test="verified != null">verified = #{verified},</if>
+      <if test="level != null">level = #{level},</if>
+      <if test="updateBy != null">update_by = #{updateBy},</if>
+      update_time = NOW()
+    </set>
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteCommentUserById" parameterType="java.lang.Long">
+    DELETE FROM comment_user WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteCommentUserByIds" parameterType="java.lang.String">
+    DELETE FROM comment_user WHERE id IN
+    <foreach item="id" collection="array" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </delete>
+
+  <select id="selectCommentUserByUserId" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM comment_user
+    WHERE user_id = #{userId}
+  </select>
+
+  <select id="selectCommentUserByPlatformAndAccount" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM comment_user
+    WHERE platform = #{param1} AND account = #{param2}
+  </select>
+
+</mapper>
