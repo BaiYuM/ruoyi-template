@@ -50,7 +50,19 @@ function apply() {
 </script>
 
 <style scoped>
-.ai-helper { gap: 16px; }
 .chat-box .message { display:flex; gap:8px; align-items:flex-start; }
 .chat-box .avatar { width:36px; height:36px; border-radius:4px; background:#f2f2f2; display:flex; align-items:center; justify-content:center }
+.ai-helper {
+  display: flex;
+  flex-direction: row;   /* 明确横向 */
+  gap: 16px;
+}
+.ai-chat {
+  flex: 1 1 0;           /* 占剩余宽度 */
+  min-width: 0;          /* 防止被内容撑爆 */
+}
+.ai-keywords {
+  flex: 0 0 33.3333%;    /* 固定 1/3 */
+  max-width: 33.3333%;
+}
 </style>

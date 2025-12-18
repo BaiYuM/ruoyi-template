@@ -31,7 +31,7 @@
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-          <div style="margin-right: 8px;">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
           <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
           <!-- <el-button class="ml-2" @click="downloadTemplate">下载模板</el-button>
           <el-button class="ml-2" @click="openImport">导入模板</el-button> -->
@@ -60,16 +60,19 @@
     </el-card>
 
     <DirectionalConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" :saving="bulkSaving" @save="onConfigSave" />
+    <ExposureStatsDialog v-model:visible="statsVisible" />
+  
   </div>
 </template>
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, getCurrentInstance, onBeforeUnmount } from 'vue'
 import { getDirectionalList, saveDirectionalConfig, uploadDirectionalFileAsync, downloadDirectionalTemplate } from '@/api/exposure'
 import MyTable from '@/components/myTable/MyTable.vue'
 import DirectionalConfigDrawer from './DirectionalConfigDrawer.vue'
 import PageHeader from '@/components/PageHeader'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import ExposureStatsDialog from "./ExposureStatsDialog.vue";
 
 const filters = reactive({ platform: '', configType: '' })
 const platformOptions = [
@@ -82,7 +85,8 @@ const platformOptions = [
 const pageConfig = reactive({ tableData: [] })
 const pagination = reactive({ pageSize: 10, currentPage: 1, pageSizes: [10, 20, 50], total: 0 })
 const loading = ref(false)
-
+const statsVisible = ref(false);
+const triggeringIds = ref(new Set());
 // drawer
 const drawerVisible = ref(false)
 const editingData = reactive({})
@@ -100,6 +104,28 @@ const columns = [
 ]
 
 const fileInputRef = ref(null)
+
+let unmounted = false
+onBeforeUnmount(() => (unmounted = true))
+
+async function manualTriggerDirectional(row) {
+  const id = row.id
+  // 1. 保护性写法，防止组件已卸载
+  if (unmounted) return
+  triggeringIds.value.add(id)
+
+  try {
+    await apiTriggerDirectional(id)   // 你的接口
+    ElMessage.success('已触发')
+  } catch (e) {
+    ElMessage.error('触发失败')
+  } finally {
+    // 2. 组件可能已销毁，再判断一次
+    if (!unmounted) {
+      triggeringIds.value.delete(id)
+    }
+  }
+}
 
 function downloadTemplate() {
   // try server first
@@ -134,6 +160,10 @@ function downloadTemplate() {
 
 function openImport() {
   if (fileInputRef.value) fileInputRef.value.click()
+}
+
+function openStats() {
+  statsVisible.value = true;
 }
 
 function handleFileChange(e) {

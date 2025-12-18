@@ -30,7 +30,7 @@
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-           <div style="margin-right: 8px;">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
           <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
         </div>
         <div class="toolbar-right"></div>
@@ -55,7 +55,7 @@
         </MyTable>
       </div>
     </el-card>
-
+    <ExposureStatsDialog v-model:visible="statsVisible" />
     <LinkConfigDrawer v-model:visible="drawerVisible" :config="editingData" :platform-options="platformOptions" :is-editing="isEditing" :saving="bulkSaving" @save="onConfigSave" />
   </div>
 </template>
@@ -67,6 +67,7 @@ import LinkConfigDrawer from './LinkConfigDrawer.vue'
 import PageHeader from '@/components/PageHeader'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import ExposureStatsDialog from "./ExposureStatsDialog.vue";
 
 const filters = reactive({ platform: '', keyword: '' })
 const platformOptions = [
@@ -79,7 +80,8 @@ const platformOptions = [
 const pageConfig = reactive({ tableData: [] })
 const pagination = reactive({ pageSize: 10, currentPage: 1, pageSizes: [10, 20, 50], total: 0 })
 const loading = ref(false)
-
+const statsVisible = ref(false);
+const triggeringIds = ref(new Set());
 // drawer
 const drawerVisible = ref(false)
 const editingData = reactive({})
@@ -113,6 +115,10 @@ function fetchList(params) {
     pagination.total = res.total || (res.rows ? res.rows.length : 0)
     pagination.currentPage = page
   }).catch(() => { loading.value = false })
+}
+
+function openStats() {
+  statsVisible.value = true;
 }
 
 function resetSearch() {

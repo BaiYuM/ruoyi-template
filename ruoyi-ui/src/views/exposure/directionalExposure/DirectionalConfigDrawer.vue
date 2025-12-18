@@ -84,7 +84,7 @@
       </el-form-item>
 
       <el-form-item label="启动时间" prop="startTime">
-        <el-input v-model="localForm.startTime" placeholder="09:00" />
+        <el-time-picker v-model="localForm.startTime" format="HH:mm" placeholder="请选择时间" />
       </el-form-item>
 
       <el-form-item label="跳过重复">
@@ -114,7 +114,7 @@ const props = defineProps({
   isEditing: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:visible', 'save'])
-
+const today = new Date(new Date().setHours(9, 0, 0, 0))
 const visibleLocal = ref(props.visible)
 const localFormRef = ref(null)
 
@@ -126,7 +126,7 @@ const localForm = reactive({
   configType: '评论',
   commentContent: '',
   dailyLimit: 10,
-  startTime: '09:00',
+  startTime: today,
   skipRepeat: false,
   enabled: true
 })
@@ -262,7 +262,7 @@ watch(
       localForm.configType = v.configType ?? '评论'
       localForm.commentContent = v.commentContent ?? ''
       localForm.dailyLimit = v.dailyLimit ?? 10
-      localForm.startTime = v.startTime ?? '09:00'
+      localForm.startTime = v.startTime ?? today
       localForm.skipRepeat = v.skipRepeat ?? false
       localForm.enabled = v.enabled ?? !v.isClosed
     }
@@ -279,7 +279,7 @@ function onCancel() {
   localForm.configType = '评论'
   localForm.commentContent = ''
   localForm.dailyLimit = 10
-  localForm.startTime = '09:00'
+  localForm.startTime = today
   localForm.skipRepeat = false
   localForm.enabled = true
 }

@@ -1,6 +1,6 @@
 <template>
-  <el-dialog :model-value="visible" title="自动曝光设置" width="420px" @close="$emit('update:visible', false)">
-    <el-form :model="form" label-width="120px">
+  <el-dialog :model-value="visible" title="自动曝光设置" width="450px" @close="$emit('update:visible', false)">
+    <el-form :model="form" label-width="120px" label-position="top">
         <el-form-item label="曝光间隔（秒）" required>
           <div class="range-input">
             <el-input-number v-model="form.min" :min="1" :max="9999" style="width:100px" class="range-number" />
@@ -11,8 +11,10 @@
       </el-form>
 
     <template #footer>
-      <el-button @click="onReset">重置</el-button>
-      <el-button type="primary" @click="onSubmit">提交</el-button>
+      <div style="text-align: left;">
+        <el-button @click="onReset" round>重置</el-button>
+        <el-button type="primary" @click="onSubmit" round>提交</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
