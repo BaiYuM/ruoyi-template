@@ -5,14 +5,14 @@
 <mapper namespace="com.ruoyi.system.mapper.ExposureEventMapper">
 
   <insert id="insertExposureEvent" parameterType="com.ruoyi.system.domain.ExposureEvent" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO exposure_event (config_id, account, platform, exposure_time, exposure_count, create_time)
-    VALUES (#{configId}, #{account}, #{platform}, #{exposureTime}, #{exposureCount}, #{createTime})
+    INSERT INTO exposure_event (config_id, account, platform, exposure_type, exposure_time, exposure_count, create_time)
+    VALUES (#{configId}, #{account}, #{platform}, #{exposureType}, #{exposureTime}, #{exposureCount}, #{createTime})
   </insert>
 
   <!-- 原子 upsert，依赖唯一索引 (config_id, account, platform) -->
   <insert id="upsertExposureEvent" parameterType="com.ruoyi.system.domain.ExposureEvent">
-    INSERT INTO exposure_event (config_id, account, platform, exposure_time, create_time, exposure_count)
-    VALUES (#{configId}, #{account}, #{platform}, #{exposureTime}, #{createTime}, #{exposureCount})
+    INSERT INTO exposure_event (config_id, account, platform, exposure_type, exposure_time, create_time, exposure_count)
+    VALUES (#{configId}, #{account}, #{platform}, #{exposureType}, #{exposureTime}, #{createTime}, #{exposureCount})
     ON DUPLICATE KEY UPDATE exposure_count = exposure_count + VALUES(exposure_count), exposure_time = VALUES(exposure_time)
   </insert>
 

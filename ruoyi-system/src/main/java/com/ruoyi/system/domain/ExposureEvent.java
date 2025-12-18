@@ -11,6 +11,7 @@ public class ExposureEvent
     private Long configId;
     private String account;
     private String platform;
+    private String exposureType;
     private Date exposureTime;
     private Integer exposureCount;
     private Date createTime;
@@ -26,6 +27,9 @@ public class ExposureEvent
 
     public String getPlatform() { return platform; }
     public void setPlatform(String platform) { this.platform = platform; }
+
+    public String getExposureType() { return exposureType; }
+    public void setExposureType(String exposureType) { this.exposureType = exposureType; }
 
     public Date getExposureTime() { return exposureTime; }
     public void setExposureTime(Date exposureTime) { this.exposureTime = exposureTime; }
