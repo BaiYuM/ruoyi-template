@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.exposure;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,9 +25,10 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
-import com.ruoyi.system.domain.ExposureConfig;
 import com.ruoyi.system.service.IExposureConfigService;
-
+import com.ruoyi.system.mapper.ExposureEventMapper;
+import com.ruoyi.system.service.IExposureExecutorService;
+import com.ruoyi.system.domain.ExposureConfig;
 /**
  * 曝光配置Controller
  */
@@ -41,6 +44,48 @@ public class ExposureConfigController extends BaseController
 
     @Autowired
     private ISysConfigService configService;
+
+    @Autowired
+    private ExposureEventMapper eventMapper;
+
+    @Autowired
+    private IExposureExecutorService exposureExecutorService;
+
+    // 统一的曝光配置API接口
+    @PreAuthorize("@ss.hasPermi('exposure:config:list')")
+    @ApiOperation("获取曝光配置列表（分页/筛选）- 统一接口")
+    @GetMapping("/exposure/config/list")
+    public TableDataInfo getExposureList(ExposureConfig exposure)
+    {
+        try {
+            startPage();
+        } catch (Exception ignored) {
+        }
+        List<ExposureConfig> list = exposureService.selectExposureList(exposure);
+        return getDataTable(list);
+    }
+
+    @PreAuthorize("@ss.hasPermi('exposure:config:add')")
+    @Log(title = "曝光配置", businessType = BusinessType.INSERT)
+    @ApiOperation("创建或更新曝光配置 - 统一接口")
+    @PostMapping("/exposure/config/save")
+    public AjaxResult saveExposure(@Validated @RequestBody ExposureConfig exposure)
+    {
+        try {
+            exposure.setCreateBy(getUsername());
+        } catch (Exception ignored) {
+        }
+        AjaxResult result;
+        if (exposure.getId() == null) {
+            int r = exposureService.insertExposure(exposure);
+            result = toAjax(r);
+        } else {
+            int r = exposureService.updateExposure(exposure);
+            result = toAjax(r);
+        }
+        result.put("success", result.isSuccess());
+        return result;
+    }
 
     @PreAuthorize("@ss.hasPermi('exposure:auto:list')")
     @ApiOperation("获取自动曝光配置列表（分页/筛选）")
@@ -255,6 +300,53 @@ public class ExposureConfigController extends BaseController
             return ok;
         } catch (Exception e) {
             AjaxResult err = AjaxResult.error("保存失败: " + e.getMessage());
+            err.put("success", err.isSuccess());
+            return err;
+        }
+    }
+
+    @PreAuthorize("@ss.hasPermi('exposure:config:trigger')")
+    @ApiOperation("手动触发曝光配置")
+    @PostMapping("/exposure/config/trigger/{configId}")
+    public AjaxResult triggerExposure(@PathVariable Long configId) {
+        try {
+            // 获取配置信息
+            ExposureConfig config = exposureService.selectExposureById(configId);
+            if (config == null) {
+                AjaxResult err = AjaxResult.error("配置不存在");
+                err.put("success", err.isSuccess());
+                return err;
+            }
+
+            // 执行曝光逻辑（复用自动曝光的执行器）
+            boolean executed = exposureExecutorService.executeExposure(config);
+            if (executed) {
+                // 记录曝光事件
+                ExposureEvent event = new ExposureEvent();
+                event.setConfigId(configId);
+                event.setAccount(config.getAccount());
+                event.setPlatform(config.getPlatform());
+                event.setExposureType(config.getExposureType()); // 从配置中获取曝光类型
+                event.setExposureTime(new Date());
+                event.setCreateTime(new Date());
+                event.setExposureCount(1);
+
+                // 先尝试增量更新，若未匹配到任何行再执行 upsert
+                int updated = eventMapper.incrementSingleRowByConfigOrAccountPlatform(configId, config.getAccount(), config.getPlatform(), 1, new Date());
+                if (updated == 0) {
+                    eventMapper.upsertExposureEvent(event);
+                }
+
+                AjaxResult ok = AjaxResult.success("曝光执行成功");
+                ok.put("success", ok.isSuccess());
+                return ok;
+            } else {
+                AjaxResult err = AjaxResult.error("曝光执行失败");
+                err.put("success", err.isSuccess());
+                return err;
+            }
+        } catch (Exception e) {
+            AjaxResult err = AjaxResult.error("触发曝光失败：" + e.getMessage());
             err.put("success", err.isSuccess());
             return err;
         }

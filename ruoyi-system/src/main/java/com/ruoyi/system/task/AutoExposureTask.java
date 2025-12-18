@@ -79,6 +79,7 @@ public class AutoExposureTask {
                                     ev.setConfigId(cfg.getId());
                                     ev.setAccount(account);
                                     ev.setPlatform(platform);
+                                    ev.setExposureType(cfg.getExposureType()); // 从配置中获取曝光类型
                                     ev.setExposureTime(now);
                                     ev.setCreateTime(now);
                                     ev.setExposureCount(1);
