@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ExpirationAiMapper">
+    
+    <resultMap type="com.ruoyi.system.domain.ExpirationAi" id="ExpirationAiResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="expirationDate"    column="expiration_date"    />
+        <result property="openAi"    column="open_ai"    />
+        <result property="funds"    column="funds"    />
+        <result property="workPeriodType"    column="work_period_type"    />
+        <result property="workPeriodStart"    column="work_period_start"    />
+        <result property="workPeriodEnd"    column="work_period_end"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="updateBy"    column="update_by"    />
+    </resultMap>
+
+    <sql id="selectExpirationAiVo">
+        select id, user_id, expiration_date, open_ai, funds, work_period_type, work_period_start, work_period_end, create_time, create_by, update_time, update_by from expiration_ai
+    </sql>
+
+    <select id="selectExpirationAiList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiResult">
+        <include refid="selectExpirationAiVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="expirationDate != null "> and expiration_date = #{expirationDate}</if>
+            <if test="openAi != null "> and open_ai = #{openAi}</if>
+            <if test="funds != null "> and funds = #{funds}</if>
+            <if test="workPeriodType != null "> and work_period_type = #{workPeriodType}</if>
+            <if test="workPeriodStart != null "> and work_period_start = #{workPeriodStart}</if>
+            <if test="workPeriodEnd != null "> and work_period_end = #{workPeriodEnd}</if>
+        </where>
+    </select>
+    
+    <select id="selectExpirationAiById" parameterType="Long" resultMap="ExpirationAiResult">
+        <include refid="selectExpirationAiVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertExpirationAi" parameterType="com.ruoyi.system.domain.ExpirationAi">
+        insert into expiration_ai
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="expirationDate != null">expiration_date,</if>
+            <if test="openAi != null">open_ai,</if>
+            <if test="funds != null">funds,</if>
+            <if test="workPeriodType != null">work_period_type,</if>
+            <if test="workPeriodStart != null">work_period_start,</if>
+            <if test="workPeriodEnd != null">work_period_end,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="updateBy != null">update_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="expirationDate != null">#{expirationDate},</if>
+            <if test="openAi != null">#{openAi},</if>
+            <if test="funds != null">#{funds},</if>
+            <if test="workPeriodType != null">#{workPeriodType},</if>
+            <if test="workPeriodStart != null">#{workPeriodStart},</if>
+            <if test="workPeriodEnd != null">#{workPeriodEnd},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateExpirationAi" parameterType="com.ruoyi.system.domain.ExpirationAi">
+        update expiration_ai
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="expirationDate != null">expiration_date = #{expirationDate},</if>
+            <if test="openAi != null">open_ai = #{openAi},</if>
+            <if test="funds != null">funds = #{funds},</if>
+            <if test="workPeriodType != null">work_period_type = #{workPeriodType},</if>
+            <if test="workPeriodStart != null">work_period_start = #{workPeriodStart},</if>
+            <if test="workPeriodEnd != null">work_period_end = #{workPeriodEnd},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteExpirationAiById" parameterType="Long">
+        delete from expiration_ai where id = #{id}
+    </delete>
+
+    <delete id="deleteExpirationAiByIds" parameterType="String">
+        delete from expiration_ai where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
