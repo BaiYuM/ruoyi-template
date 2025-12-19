@@ -1,9 +1,6 @@
 package com.ruoyi.web.controller.exposure;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +26,11 @@ import com.ruoyi.system.service.IExposureConfigService;
 import com.ruoyi.system.mapper.ExposureEventMapper;
 import com.ruoyi.system.service.IExposureExecutorService;
 import com.ruoyi.system.domain.ExposureConfig;
+import com.ruoyi.system.domain.ExposureEvent;
+import java.util.List;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 /**
  * 曝光配置Controller
  */
@@ -50,6 +52,19 @@ public class ExposureConfigController extends BaseController
 
     @Autowired
     private IExposureExecutorService exposureExecutorService;
+
+    // 格式化 startTime 为 HH:MM 格式
+    private void formatStartTime(ExposureConfig exposure) {
+        if (exposure.getStartTime() != null && !exposure.getStartTime().isEmpty()) {
+            try {
+                // 如果是 ISO 字符串，解析为 Instant，然后格式化
+                Instant instant = Instant.parse(exposure.getStartTime());
+                exposure.setStartTime(String.format("%02d:%02d", instant.atZone(java.time.ZoneId.of("UTC")).getHour(), instant.atZone(java.time.ZoneId.of("UTC")).getMinute()));
+            } catch (Exception e) {
+                // 如果已经是 HH:MM 格式或解析失败，保持原样
+            }
+        }
+    }
 
     // 统一的曝光配置API接口
     @PreAuthorize("@ss.hasPermi('exposure:config:list')")
@@ -75,6 +90,7 @@ public class ExposureConfigController extends BaseController
             exposure.setCreateBy(getUsername());
         } catch (Exception ignored) {
         }
+        formatStartTime(exposure);
         AjaxResult result;
         if (exposure.getId() == null) {
             int r = exposureService.insertExposure(exposure);
@@ -119,6 +135,7 @@ public class ExposureConfigController extends BaseController
             exposure.setCreateBy(getUsername());
         } catch (Exception ignored) {
         }
+        formatStartTime(exposure);
         AjaxResult result;
         if (exposure.getId() == null) {
             int r = exposureService.insertExposure(exposure);
@@ -152,6 +169,7 @@ public class ExposureConfigController extends BaseController
             exposure.setCreateBy(getUsername());
         } catch (Exception ignored) {
         }
+        formatStartTime(exposure);
         AjaxResult result;
         if (exposure.getId() == null) {
             int r = exposureService.insertExposure(exposure);
