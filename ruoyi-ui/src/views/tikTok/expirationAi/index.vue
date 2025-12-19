@@ -1,53 +1,25 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="主表外键" prop="userId">
+      <el-form-item label="抖音昵称" prop="userId">
         <el-input
           v-model="queryParams.userId"
-          placeholder="请输入主表外键"
+          placeholder="请输入"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="授权到期时间" prop="expirationDate">
-        <el-date-picker clearable
-          v-model="queryParams.expirationDate"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择授权到期时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="是否配置ai客服" prop="openAi">
-        <el-input
-          v-model="queryParams.openAi"
-          placeholder="请输入是否配置ai客服"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="留资提取" prop="funds">
-        <el-input
-          v-model="queryParams.funds"
-          placeholder="请输入留资提取"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="工作时间段开始" prop="workPeriodStart">
-        <el-date-picker clearable
-          v-model="queryParams.workPeriodStart"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择工作时间段开始">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="工作时间段结束" prop="workPeriodEnd">
-        <el-date-picker clearable
-          v-model="queryParams.workPeriodEnd"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择工作时间段结束">
-        </el-date-picker>
+      <el-form-item label="创建时间" prop="workPeriodStart">
+        <el-date-picker
+            v-model="range"
+            type="daterange"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            range-separator="→"
+            unlink-panels
+            :picker-options="pickerOptions"
+            @change="onRangeChange"
+          />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -99,26 +71,21 @@
 
     <el-table v-loading="loading" :data="expirationAiList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="id" align="center" prop="id" />
-      <el-table-column label="主表外键" align="center" prop="userId" />
-      <el-table-column label="授权到期时间" align="center" prop="expirationDate" width="180">
+      <el-table-column label="账号信息" align="center" prop="userId" />
+            <el-table-column label="授权到期时间" align="center" prop="expirationDate" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.expirationDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="是否配置ai客服" align="center" prop="openAi" />
+      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+        <el-table-column label="AI智能客服" align="center" prop="openAi" />
       <el-table-column label="留资提取" align="center" prop="funds" />
-      <el-table-column label="工作时段类型：0=全天,1=时间区间" align="center" prop="workPeriodType" />
-      <el-table-column label="工作时间段开始" align="center" prop="workPeriodStart" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.workPeriodStart, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="工作时间段结束" align="center" prop="workPeriodEnd" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.workPeriodEnd, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column label="工作时段" align="center" prop="workPeriodType" />
+
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['expirationAi:expirationAi:edit']">修改</el-button>
@@ -215,7 +182,7 @@ const data = reactive({
 })
 
 const { queryParams, form, rules } = toRefs(data)
-
+function onRangeChange() { loadData() }
 /** 查询ai客服配置列表 */
 function getList() {
   loading.value = true
