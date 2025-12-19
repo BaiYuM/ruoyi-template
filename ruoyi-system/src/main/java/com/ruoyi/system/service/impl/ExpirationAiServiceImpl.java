@@ -45,6 +45,11 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
         return expirationAiMapper.selectExpirationAiList(expirationAi);
     }
 
+    @Override
+    public List<ExpirationAi> selectExpirationAiWithUserList(ExpirationAi expirationAi) {
+        return expirationAiMapper.selectExpirationAiWithUserList(expirationAi);
+    }
+
     /**
      * 新增授权账号配置
      * 

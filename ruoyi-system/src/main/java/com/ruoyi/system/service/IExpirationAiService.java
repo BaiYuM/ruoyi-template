@@ -29,6 +29,10 @@ public interface IExpirationAiService
     public List<ExpirationAi> selectExpirationAiList(ExpirationAi expirationAi);
 
     /**
+     * 查询ai客服账号配置列表
+     */
+    public List<ExpirationAi> selectExpirationAiWithUserList(ExpirationAi expirationAi);
+    /**
      * 新增ai客服配置
      * 
      * @param expirationAi ai客服配置

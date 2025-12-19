@@ -1,7 +1,10 @@
 package com.ruoyi.system.domain;
 
+import java.sql.Time;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
@@ -13,6 +16,8 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * @author ruoyi
  * @date 2025-12-19
  */
+@Getter
+@Setter
 public class ExpirationAi extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -42,14 +47,28 @@ public class ExpirationAi extends BaseEntity
     private Integer workPeriodType;
 
     /** 工作时间段开始 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "工作时间段开始", width = 30, dateFormat = "yyyy-MM-dd")
-    private Date workPeriodStart;
+    @JsonFormat(pattern = "HH:mm:ss")
+    @Excel(name = "工作时间段开始", width = 30, dateFormat = "HH:mm:ss")
+    private Time workPeriodStart;
 
     /** 工作时间段结束 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "工作时间段结束", width = 30, dateFormat = "yyyy-MM-dd")
-    private Date workPeriodEnd;
+    @JsonFormat(pattern = "HH:mm:ss")
+    @Excel(name = "工作时间段结束", width = 30, dateFormat = "HH:mm:ss")
+    private Time workPeriodEnd;
+    
+    /** 用户昵称（用于接收前端传来的nickName参数） */
+    private String nickName;
+    
+    /** 用户头像 */
+    private String avatar;
+
+    /** 查询：创建时间-开始（用于接收前端日期范围） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date beginCreateTime;
+
+    /** 查询：创建时间-结束（用于接收前端日期范围） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date endCreateTime;
 
     public void setId(Long id) 
     {
@@ -111,24 +130,44 @@ public class ExpirationAi extends BaseEntity
         return workPeriodType;
     }
 
-    public void setWorkPeriodStart(Date workPeriodStart) 
+    public void setWorkPeriodStart(Time workPeriodStart) 
     {
         this.workPeriodStart = workPeriodStart;
     }
 
-    public Date getWorkPeriodStart() 
+    public Time getWorkPeriodStart() 
     {
         return workPeriodStart;
     }
 
-    public void setWorkPeriodEnd(Date workPeriodEnd) 
+    public void setWorkPeriodEnd(Time workPeriodEnd) 
     {
         this.workPeriodEnd = workPeriodEnd;
     }
 
-    public Date getWorkPeriodEnd() 
+    public Time getWorkPeriodEnd() 
     {
         return workPeriodEnd;
+    }
+    
+    public void setNickName(String nickName) 
+    {
+        this.nickName = nickName;
+    }
+
+    public String getNickName() 
+    {
+        return nickName;
+    }
+    
+    public void setAvatar(String avatar) 
+    {
+        this.avatar = avatar;
+    }
+
+    public String getAvatar() 
+    {
+        return avatar;
     }
 
     @Override
@@ -142,6 +181,8 @@ public class ExpirationAi extends BaseEntity
             .append("workPeriodType", getWorkPeriodType())
             .append("workPeriodStart", getWorkPeriodStart())
             .append("workPeriodEnd", getWorkPeriodEnd())
+            .append("nickName", getNickName())
+            .append("avatar", getAvatar())
             .append("createTime", getCreateTime())
             .append("createBy", getCreateBy())
             .append("updateTime", getUpdateTime())
