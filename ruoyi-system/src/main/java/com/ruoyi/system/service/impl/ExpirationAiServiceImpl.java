@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * ai客服配置Service业务层处理
+ * 授权账号配置Service业务层处理
  * 
  * @author ruoyi
  * @date 2025-12-19
@@ -22,10 +22,10 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     private ExpirationAiMapper expirationAiMapper;
 
     /**
-     * 查询ai客服配置
+     * 查询授权账号配置
      * 
-     * @param id ai客服配置主键
-     * @return ai客服配置
+     * @param id 授权账号配置主键
+     * @return 授权账号配置
      */
     @Override
     public ExpirationAi selectExpirationAiById(Long id)
@@ -34,10 +34,10 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     }
 
     /**
-     * 查询ai客服配置列表
+     * 查询授权账号配置列表
      * 
-     * @param expirationAi ai客服配置
-     * @return ai客服配置
+     * @param expirationAi 授权账号配置
+     * @return 授权账号配置
      */
     @Override
     public List<ExpirationAi> selectExpirationAiList(ExpirationAi expirationAi)
@@ -46,9 +46,9 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     }
 
     /**
-     * 新增ai客服配置
+     * 新增授权账号配置
      * 
-     * @param expirationAi ai客服配置
+     * @param expirationAi 授权账号配置
      * @return 结果
      */
     @Override
@@ -59,9 +59,9 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     }
 
     /**
-     * 修改ai客服配置
+     * 修改授权账号配置
      * 
-     * @param expirationAi ai客服配置
+     * @param expirationAi 授权账号配置
      * @return 结果
      */
     @Override
@@ -72,9 +72,9 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     }
 
     /**
-     * 批量删除ai客服配置
+     * 批量删除授权账号配置
      * 
-     * @param ids 需要删除的ai客服配置主键
+     * @param ids 需要删除的授权账号配置主键
      * @return 结果
      */
     @Override
@@ -84,9 +84,9 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
     }
 
     /**
-     * 删除ai客服配置信息
+     * 删除授权账号配置信息
      * 
-     * @param id ai客服配置主键
+     * @param id 授权账号配置主键
      * @return 结果
      */
     @Override

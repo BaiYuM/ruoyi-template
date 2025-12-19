@@ -59,4 +59,5 @@ public interface IExpirationAiService
      * @return 结果
      */
     public int deleteExpirationAiById(Long id);
+
 }

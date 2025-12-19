@@ -322,7 +322,7 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('expirationAi/expirationAi/export', {
+  proxy.download('aiCuServer/expirationAi/export', {
     ...queryParams.value
   }, `expirationAi_${new Date().getTime()}.xlsx`)
 }

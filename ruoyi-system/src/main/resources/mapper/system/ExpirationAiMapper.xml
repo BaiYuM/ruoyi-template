@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.ExpirationAiMapper">
     
-    <resultMap type="com.ruoyi.system.domain.ExpirationAi" id="ExpirationAiResult">
+    <resultMap type="ExpirationAi" id="ExpirationAiResult">
         <result property="id"    column="id"    />
         <result property="userId"    column="user_id"    />
         <result property="expirationDate"    column="expiration_date"    />
@@ -16,12 +16,16 @@
         <result property="updateTime"    column="update_time"    />
         <result property="updateBy"    column="update_by"    />
     </resultMap>
-
+    
+    <resultMap id="ExpirationAiCommentUserResult" type="ExpirationAi" extends="ExpirationAiResult">
+        <collection property="commentUserList" ofType="CommentUser" column="id" select="selectCommentUserList" />
+    </resultMap>
+    
     <sql id="selectExpirationAiVo">
         select id, user_id, expiration_date, open_ai, funds, work_period_type, work_period_start, work_period_end, create_time, create_by, update_time, update_by from expiration_ai
     </sql>
 
-    <select id="selectExpirationAiList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiResult">
+    <select id="selectExpirationAiList" parameterType="ExpirationAi" resultMap="ExpirationAiResult">
         <include refid="selectExpirationAiVo"/>
         <where>  
             <if test="userId != null "> and user_id = #{userId}</if>
@@ -39,7 +43,7 @@
         where id = #{id}
     </select>
 
-    <insert id="insertExpirationAi" parameterType="com.ruoyi.system.domain.ExpirationAi">
+    <insert id="insertExpirationAi" parameterType="ExpirationAi">
         insert into expiration_ai
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">id,</if>
@@ -71,7 +75,7 @@
          </trim>
     </insert>
 
-    <update id="updateExpirationAi" parameterType="com.ruoyi.system.domain.ExpirationAi">
+    <update id="updateExpirationAi" parameterType="ExpirationAi">
         update expiration_ai
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>

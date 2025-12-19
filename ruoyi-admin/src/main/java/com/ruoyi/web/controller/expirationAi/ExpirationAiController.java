@@ -24,7 +24,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
- * ai客服配置Controller
+ * 授权账号配置Controller
  * 
  * @author ruoyi
  * @date 2025-12-19
@@ -37,7 +37,7 @@ public class ExpirationAiController extends BaseController
     private IExpirationAiService expirationAiService;
 
     /**
-     * 查询ai客服配置列表
+     * 查询授权账号配置列表
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:list')")
     @GetMapping("/list")
@@ -49,20 +49,20 @@ public class ExpirationAiController extends BaseController
     }
 
     /**
-     * 导出ai客服配置列表
+     * 导出授权账号配置列表
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:export')")
-    @Log(title = "ai客服配置", businessType = BusinessType.EXPORT)
+    @Log(title = "授权账号配置", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, ExpirationAi expirationAi)
     {
         List<ExpirationAi> list = expirationAiService.selectExpirationAiList(expirationAi);
         ExcelUtil<ExpirationAi> util = new ExcelUtil<ExpirationAi>(ExpirationAi.class);
-        util.exportExcel(response, list, "ai客服配置数据");
+        util.exportExcel(response, list, "授权账号配置数据");
     }
 
     /**
-     * 获取ai客服配置详细信息
+     * 获取授权账号配置详细信息
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:query')")
     @GetMapping(value = "/{id}")
@@ -72,10 +72,10 @@ public class ExpirationAiController extends BaseController
     }
 
     /**
-     * 新增ai客服配置
+     * 新增授权账号配置
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:add')")
-    @Log(title = "ai客服配置", businessType = BusinessType.INSERT)
+    @Log(title = "授权账号配置", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody ExpirationAi expirationAi)
     {
@@ -83,10 +83,10 @@ public class ExpirationAiController extends BaseController
     }
 
     /**
-     * 修改ai客服配置
+     * 修改授权账号配置
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:edit')")
-    @Log(title = "ai客服配置", businessType = BusinessType.UPDATE)
+    @Log(title = "授权账号配置", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody ExpirationAi expirationAi)
     {
@@ -94,10 +94,10 @@ public class ExpirationAiController extends BaseController
     }
 
     /**
-     * 删除ai客服配置
+     * 删除授权账号配置
      */
     @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:remove')")
-    @Log(title = "ai客服配置", businessType = BusinessType.DELETE)
+    @Log(title = "授权账号配置", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
