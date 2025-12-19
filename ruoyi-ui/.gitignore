@@ -21,3 +21,4 @@ selenium-debug.log
 
 package-lock.json
 yarn.lock
+../ruoyi-admin/src/main/resources/application.yml
