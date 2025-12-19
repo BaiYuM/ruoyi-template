@@ -37,7 +37,7 @@ public class FaGroupChatController extends BaseController
     /**
      * 查询群聊基础信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:chat:list')")
+    @PreAuthorize("@ss.hasPermi('group:chat:list')")
     @GetMapping("/list")
     public TableDataInfo list(FaGroupChat faGroupChat)
     {
@@ -49,7 +49,7 @@ public class FaGroupChatController extends BaseController
     /**
      * 导出群聊基础信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:chat:export')")
+    @PreAuthorize("@ss.hasPermi('groupMember:chat:export')")
     @Log(title = "群聊基础信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, FaGroupChat faGroupChat)
@@ -62,7 +62,7 @@ public class FaGroupChatController extends BaseController
     /**
      * 获取群聊基础信息详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:chat:query')")
+    @PreAuthorize("@ss.hasPermi('group:chat:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {

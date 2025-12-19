@@ -30,7 +30,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
  * @date 2025-12-19
  */
 @RestController
-@RequestMapping("/expirationAi/expirationAi")
+@RequestMapping("/aiCuServer/expirationAi")
 public class ExpirationAiController extends BaseController
 {
     @Autowired
@@ -39,7 +39,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 查询ai客服配置列表
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:list')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:list')")
     @GetMapping("/list")
     public TableDataInfo list(ExpirationAi expirationAi)
     {
@@ -51,7 +51,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 导出ai客服配置列表
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:export')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:export')")
     @Log(title = "ai客服配置", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, ExpirationAi expirationAi)
@@ -64,7 +64,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 获取ai客服配置详细信息
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:query')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -74,7 +74,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 新增ai客服配置
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:add')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:add')")
     @Log(title = "ai客服配置", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody ExpirationAi expirationAi)
@@ -85,7 +85,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 修改ai客服配置
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:edit')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:edit')")
     @Log(title = "ai客服配置", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody ExpirationAi expirationAi)
@@ -96,7 +96,7 @@ public class ExpirationAiController extends BaseController
     /**
      * 删除ai客服配置
      */
-    @PreAuthorize("@ss.hasPermi('expirationAi:expirationAi:remove')")
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:remove')")
     @Log(title = "ai客服配置", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)

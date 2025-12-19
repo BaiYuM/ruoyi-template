@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询ai客服配置列表
 export function listExpirationAi(query) {
   return request({
-    url: '/expirationAi/expirationAi/list',
+    url: '/aiCuServer/expirationAi/list',
     method: 'get',
     params: query
   })
@@ -12,7 +12,7 @@ export function listExpirationAi(query) {
 // 查询ai客服配置详细
 export function getExpirationAi(id) {
   return request({
-    url: '/expirationAi/expirationAi/' + id,
+    url: '/aiCuServer/expirationAi/' + id,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getExpirationAi(id) {
 // 新增ai客服配置
 export function addExpirationAi(data) {
   return request({
-    url: '/expirationAi/expirationAi',
+    url: '/aiCuServer/expirationAi',
     method: 'post',
     data: data
   })
@@ -29,7 +29,7 @@ export function addExpirationAi(data) {
 // 修改ai客服配置
 export function updateExpirationAi(data) {
   return request({
-    url: '/expirationAi/expirationAi',
+    url: '/aiCuServer/expirationAi',
     method: 'put',
     data: data
   })
@@ -38,7 +38,7 @@ export function updateExpirationAi(data) {
 // 删除ai客服配置
 export function delExpirationAi(id) {
   return request({
-    url: '/expirationAi/expirationAi/' + id,
+    url: '/aiCuServer/expirationAi/' + id,
     method: 'delete'
   })
 }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AiConfigMapper">
+    
+    <resultMap type="AiConfig" id="AiConfigResult">
+        <result property="id"    column="id"    />
+        <result property="expirationId"    column="expiration_id"    />
+        <result property="name"    column="name"    />
+        <result property="prompt"    column="prompt"    />
+        <result property="knowledgeBase"    column="knowledge_base"    />
+        <result property="count"    column="count"    />
+        <result property="level"    column="level"    />
+        <result property="status"    column="status"    />
+        <result property="aiModel"    column="ai_model"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAiConfigVo">
+        select id, expiration_id, name, prompt, knowledge_base, count, level, status, ai_model, create_time from ai_config
+    </sql>
+
+    <select id="selectAiConfigList" parameterType="AiConfig" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        <where>  
+            <if test="expirationId != null "> and expiration_id = #{expirationId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="prompt != null  and prompt != ''"> and prompt = #{prompt}</if>
+            <if test="knowledgeBase != null  and knowledgeBase != ''"> and knowledge_base = #{knowledgeBase}</if>
+            <if test="count != null  and count != ''"> and count = #{count}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="aiModel != null "> and ai_model = #{aiModel}</if>
+        </where>
+    </select>
+    
+    <select id="selectAiConfigById" parameterType="Long" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAiConfig" parameterType="AiConfig">
+        insert into ai_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="expirationId != null">expiration_id,</if>
+            <if test="name != null">name,</if>
+            <if test="prompt != null">prompt,</if>
+            <if test="knowledgeBase != null">knowledge_base,</if>
+            <if test="count != null">count,</if>
+            <if test="level != null">level,</if>
+            <if test="status != null">status,</if>
+            <if test="aiModel != null">ai_model,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="expirationId != null">#{expirationId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="prompt != null">#{prompt},</if>
+            <if test="knowledgeBase != null">#{knowledgeBase},</if>
+            <if test="count != null">#{count},</if>
+            <if test="level != null">#{level},</if>
+            <if test="status != null">#{status},</if>
+            <if test="aiModel != null">#{aiModel},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAiConfig" parameterType="AiConfig">
+        update ai_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="expirationId != null">expiration_id = #{expirationId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="prompt != null">prompt = #{prompt},</if>
+            <if test="knowledgeBase != null">knowledge_base = #{knowledgeBase},</if>
+            <if test="count != null">count = #{count},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="aiModel != null">ai_model = #{aiModel},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAiConfigById" parameterType="Long">
+        delete from ai_config where id = #{id}
+    </delete>
+
+    <delete id="deleteAiConfigByIds" parameterType="String">
+        delete from ai_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
