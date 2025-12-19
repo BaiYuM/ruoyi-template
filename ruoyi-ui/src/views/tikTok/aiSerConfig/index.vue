@@ -1,299 +1,258 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="授权用户表" prop="expirationId">
-        <el-input
-          v-model="queryParams.expirationId"
-          placeholder="请输入授权用户表"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="ai名称" prop="name">
-        <el-input
-          v-model="queryParams.name"
-          placeholder="请输入ai名称"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="携带上下文轮数" prop="count">
-        <el-input
-          v-model="queryParams.count"
-          placeholder="请输入携带上下文轮数"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="严谨程度" prop="level">
-        <el-input
-          v-model="queryParams.level"
-          placeholder="请输入严谨程度"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="ai模型" prop="aiModel">
-        <el-input
-          v-model="queryParams.aiModel"
-          placeholder="请输入ai模型"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-          v-hasPermi="['tikTok:aiSerConfig:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="Edit"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['tikTok:aiSerConfig:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['tikTok:aiSerConfig:remove']"
-        >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="Download"
-          @click="handleExport"
-          v-hasPermi="['tikTok:aiSerConfig:export']"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <el-table v-loading="loading" :data="aiconfigList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="id" align="center" prop="id" />
-      <el-table-column label="授权用户表" align="center" prop="expirationId" />
-      <el-table-column label="ai名称" align="center" prop="name" />
-      <el-table-column label="提示词" align="center" prop="prompt" />
-      <el-table-column label="知识库" align="center" prop="knowledgeBase" />
-      <el-table-column label="携带上下文轮数" align="center" prop="count" />
-      <el-table-column label="严谨程度" align="center" prop="level" />
-      <el-table-column label="状态" align="center" prop="status" />
-      <el-table-column label="ai模型" align="center" prop="aiModel" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['tikTok:aiSerConfig:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['tikTok:aiSerConfig:remove']">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
-    <pagination
-      v-show="total>0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
-
-    <!-- 添加或修改AI客服配置对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="aiconfigRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="授权用户表" prop="expirationId">
-          <el-input v-model="form.expirationId" placeholder="请输入授权用户表" />
-        </el-form-item>
-        <el-form-item label="ai名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入ai名称" />
-        </el-form-item>
-        <el-form-item label="提示词" prop="prompt">
-          <el-input v-model="form.prompt" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="知识库" prop="knowledgeBase">
-          <el-input v-model="form.knowledgeBase" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="携带上下文轮数" prop="count">
-          <el-input v-model="form.count" placeholder="请输入携带上下文轮数" />
-        </el-form-item>
-        <el-form-item label="严谨程度" prop="level">
-          <el-input v-model="form.level" placeholder="请输入严谨程度" />
-        </el-form-item>
-        <el-form-item label="ai模型" prop="aiModel">
-          <el-input v-model="form.aiModel" placeholder="请输入ai模型" />
-        </el-form-item>
+  <div class="page-wrapper">
+    <!-- 1. 筛选卡片 -->
+    <el-card shadow="never" class="search-card mb-4">
+      <el-form :model="filters" label-width="80px" class="search-form">
+        <el-row :gutter="16">
+          <el-col :span="6">
+            <el-form-item label="配置名称">
+              <el-input
+                v-model="filters.name"
+                placeholder="请输入配置名称"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="授权账号">
+              <el-input
+                v-model="filters.expiration_id"
+                placeholder="请输入授权账号"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="创建时间">
+              <el-date-picker
+                v-model="filters.createTime"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="4" class="search-actions">
+            <el-button round @click="resetSearch">重置</el-button>
+            <el-button type="primary" round @click="fetchList">查询</el-button>
+          </el-col>
+        </el-row>
       </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+    </el-card>
+
+    <!-- 2. 表格卡片 -->
+    <el-card shadow="never">
+      <template #header>
+        <div class="card-header">
+          <span></span>
+          <el-button type="primary" :icon="Plus" round @click="openAddConfigDialog">添加配置</el-button>
         </div>
       </template>
-    </el-dialog>
+
+      <el-table :data="tableData" v-loading="loading" size="small">
+        <el-table-column prop="name" label="配置名称" min-width="120" />
+        <el-table-column prop="expiration_id" label="授权账号" min-width="120" />
+        <el-table-column prop="prompt" label="提示词" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="knowledge_base" label="知识库" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="count" label="携带上下文数" />
+        <el-table-column prop="level" label="严谨程度" />
+        <el-table-column prop="ai_model" label="AI模型" />
+        <el-table-column prop="create_time" label="创建时间" />
+        <el-table-column prop="status" label="状态" align="center">
+          <template #default="{ row }">
+            <el-switch v-model="row.status" @change="() => toggleStatus(row)" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right" align="center">
+          <template #default="{ row }">
+            <!-- 编辑按钮：铅笔图标 + 跳转传ID -->
+            <el-button link type="primary" @click="() => editConfig(row)" :icon="Edit" circle />
+            <!-- 删除按钮：垃圾桶图标 -->
+            <el-button link type="danger" @click="() => deleteConfig(row)" :icon="Delete" circle />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 3. 分页（右侧） -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pager.page"
+          v-model:page-size="pager.size"
+          :total="pager.total"
+          layout="total, prev, pager, next, jumper, sizes"
+          :page-sizes="[10, 20, 50]"
+          @size-change="fetchList"
+          @current-change="fetchList"
+        />
+      </div>
+    </el-card>
   </div>
 </template>
 
-<script setup name="Aiconfig">
-import { listAiconfig, getAiconfig, delAiconfig, addAiconfig, updateAiconfig } from "@/api/aiSerConfig/aiconfig"
+<script setup lang="js">
+import { reactive, ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus,Delete,Edit } from '@element-plus/icons-vue'
+// 引入Vue Router（确保已安装并配置）
+import { useRouter } from 'vue-router'
 
-const { proxy } = getCurrentInstance()
+// 初始化路由实例
+const router = useRouter()
 
-const aiconfigList = ref([])
-const open = ref(false)
-const loading = ref(true)
-const showSearch = ref(true)
-const ids = ref([])
-const single = ref(true)
-const multiple = ref(true)
-const total = ref(0)
-const title = ref("")
-
-const data = reactive({
-  form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    expirationId: null,
-    name: null,
-    prompt: null,
-    knowledgeBase: null,
-    count: null,
-    level: null,
-    status: null,
-    aiModel: null,
-  },
-  rules: {
-  }
+/* 1. 检索条件（匹配数据库字段） */
+const filters = reactive({
+  name: '', // 配置名称
+  expiration_id: '', // 授权账号
+  createTime: [] // 创建时间范围
 })
 
-const { queryParams, form, rules } = toRefs(data)
+/* 2. 分页 & 表格（数据映射数据库字段） */
+const loading = ref(false)
+const tableData = ref([])
+const pager = reactive({ page: 1, size: 10, total: 0 })
 
-/** 查询AI客服配置列表 */
-function getList() {
-  loading.value = true
-  listAiconfig(queryParams.value).then(response => {
-    aiconfigList.value = response.rows
-    total.value = response.total
-    loading.value = false
+/* 3. 新增配置 - 跳转到详情页（无ID） */
+function openAddConfigDialog() {
+  // 跳转到aiConfigDetail页面（新增模式，无ID参数）
+  router.push({
+     path: '/tiktok/aiSerConfig/detail/index', // 需与你的路由表中aiConfigDetail的path一致
+    query: { type: 'add' } // 标记为新增模式
   })
 }
 
-// 取消按钮
-function cancel() {
-  open.value = false
-  reset()
-}
-
-// 表单重置
-function reset() {
-  form.value = {
-    id: null,
-    expirationId: null,
-    name: null,
-    prompt: null,
-    knowledgeBase: null,
-    count: null,
-    level: null,
-    status: null,
-    aiModel: null,
-    createTime: null
-  }
-  proxy.resetForm("aiconfigRef")
-}
-
-/** 搜索按钮操作 */
-function handleQuery() {
-  queryParams.value.pageNum = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef")
-  handleQuery()
-}
-
-// 多选框选中数据
-function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.id)
-  single.value = selection.length != 1
-  multiple.value = !selection.length
-}
-
-/** 新增按钮操作 */
-function handleAdd() {
-  reset()
-  open.value = true
-  title.value = "添加AI客服配置"
-}
-
-/** 修改按钮操作 */
-function handleUpdate(row) {
-  reset()
-  const _id = row.id || ids.value
-  getAiconfig(_id).then(response => {
-    form.value = response.data
-    open.value = true
-    title.value = "修改AI客服配置"
-  })
-}
-
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["aiconfigRef"].validate(valid => {
-    if (valid) {
-      if (form.value.id != null) {
-        updateAiconfig(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功")
-          open.value = false
-          getList()
-        })
-      } else {
-        addAiconfig(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功")
-          open.value = false
-          getList()
-        })
-      }
+/* 4. 编辑配置 - 跳转到详情页（传ID） */
+function editConfig(row) {
+  // 跳转到aiConfigDetail页面（编辑模式，携带ID参数）
+  router.push({
+   path: '/tiktok/aiSerConfig/detail/index', // 需与你的路由表中aiConfigDetail的path一致
+    query: {
+      type: 'edit', // 标记为编辑模式
+      id: row.id // 传递当前行的ID
     }
   })
 }
 
-/** 删除按钮操作 */
-function handleDelete(row) {
-  const _ids = row.id || ids.value
-  proxy.$modal.confirm('是否确认删除AI客服配置编号为"' + _ids + '"的数据项？').then(function() {
-    return delAiconfig(_ids)
-  }).then(() => {
-    getList()
-    proxy.$modal.msgSuccess("删除成功")
-  }).catch(() => {})
+/* 5. 列表数据请求（模拟接口，实际需对接后端） */
+function fetchList() {
+  loading.value = true
+  setTimeout(() => {
+    // 模拟数据库返回的结构
+    tableData.value = [
+      {
+        id: 1,
+        name: '客服自动回复',
+        expiration_id: 'DouMaster',
+        prompt: '#角色任务 你的主要任务是作为抖音平台的...',
+        knowledge_base: '主流平台可选择，单平台价格1280元；',
+        count: '-',
+        level: '-',
+        ai_model: '-',
+        create_time: '2025-11-14 14:01:00',
+        status: true
+      },
+      {
+        id: 2,
+        name: '智能自动回复',
+        expiration_id: 'Dou大师',
+        prompt: '#角色任务 你的主要任务是作为抖音平台的...',
+        knowledge_base: '涵盖多种主流平台，单平台价格为1280元',
+        count: '-',
+        level: '-',
+        ai_model: '-',
+        create_time: '2025-11-12 10:27:39',
+        status: true
+      },
+      {
+        id: 3,
+        name: '平台代运营',
+        expiration_id: '添澎科技',
+        prompt: '#角色任务 作为AI自动客服专家，您的核心...',
+        knowledge_base: '平台代运营价格为单平台包月1280元；',
+        count: '-',
+        level: '-',
+        ai_model: '-',
+        create_time: '2025-11-10 09:15:22',
+        status: true
+      }
+    ]
+    pager.total = tableData.value.length
+    loading.value = false
+  }, 300)
 }
 
-/** 导出按钮操作 */
-function handleExport() {
-  proxy.download('aiSerConfig/aiconfig/export', {
-    ...queryParams.value
-  }, `aiconfig_${new Date().getTime()}.xlsx`)
+/* 6. 功能按钮 */
+function resetSearch() {
+  Object.assign(filters, { name: '', expiration_id: '', createTime: [] })
+  pager.page = 1
+  fetchList()
 }
 
-getList()
+// 切换状态（启用/禁用）
+function toggleStatus(row) {
+  ElMessage.success(`状态已${row.status ? '启用' : '关闭'}`)
+  // 实际项目中需调用接口更新状态
+}
+
+// 删除配置（添加确认提示）
+function deleteConfig(row) {
+  ElMessageBox.confirm(
+    `确定要删除配置【${row.name}】吗？此操作不可撤销！`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    // 确认删除逻辑
+    tableData.value = tableData.value.filter(item => item.id !== row.id)
+    pager.total = tableData.value.length
+    ElMessage.success('配置删除成功')
+    // 实际项目中需调用接口删除数据
+  }).catch(() => {
+    // 取消删除
+    ElMessage.info('已取消删除操作')
+  })
+}
+
+// 初始化加载数据
+onMounted(() => fetchList())
 </script>
+
+<style scoped>
+.page-wrapper {
+  margin: 20px;
+  padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 40px);
+}
+
+.search-form .el-form-item {
+  margin-bottom: 0;
+}
+
+.search-actions {
+  text-align: right;
+  line-height: 32px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-right: 10px;
+}
+
+/* 调整图标按钮间距 */
+:deep(.el-table-column--fixed-right .el-button) {
+  margin: 0 2px;
+}
+</style>

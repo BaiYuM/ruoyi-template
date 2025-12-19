@@ -1,7 +1,6 @@
 import { createWebHistory, createRouter } from 'vue-router'
 /* Layout */
 import Layout from '@/layout'
-
 /**
  * Note: 路由配置项
  *
@@ -81,6 +80,35 @@ export const constantRoutes = [
         component: () => import('@/views/system/user/profile/index'),
         name: 'Profile',
         meta: { title: '个人中心', icon: 'user' }
+      }
+    ]
+  },
+   // 新增：AI客服配置列表页
+  {
+    path: '/tiktok/aiSerConfig',
+    component: Layout,
+    meta: { title: 'AI客服配置', icon: 'setting' }, // 侧边栏显示的标题和图标（可自定义）
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/tiktok/aiSerConfig/index.vue'), // 对应你的列表页路径
+        name: 'AiSerConfig',
+        meta: { title: '配置列表', icon: 'list', affix: false }
+      }
+    ]
+  },
+
+  // 新增：AI客服配置详情页（隐藏在侧边栏，通过列表页跳转）
+  {
+    path: '/tiktok/aiSerConfig/detail',
+    component: Layout,
+    hidden: true, // 不在侧边栏显示，仅通过列表页跳转访问
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/tiktok/aiSerConfig/aiConfigDetail.vue'), // 对应你的详情页路径
+        name: 'AiConfigDetail',
+        meta: { title: '配置详情', activeMenu: '/tiktok/aiSerConfig' } // activeMenu 用于跳转后高亮侧边栏的“配置列表”
       }
     ]
   }
