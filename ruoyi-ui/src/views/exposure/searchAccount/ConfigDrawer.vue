@@ -1,9 +1,5 @@
 <template>
   <el-drawer v-model="visibleLocal" title="保存配置" direction="rtl" size="420px" class="config-drawer">
-    <div class="drawer-header" style="padding:12px 20px">
-      <!-- <h3 style="margin:0;color:#333">{{ isEditing ? '编辑配置' : '新增配置' }}</h3> -->
-    </div>
-
     <el-form ref="localFormRef" :rules="rules" label-width="auto" label-position="top" :model="localForm" class="drawer-form">
       <el-form-item label="配置名称" prop="name">
         <el-input v-model="localForm.name" maxlength="20" placeholder="请输入配置名称" />
@@ -58,7 +54,6 @@ const props = defineProps({
   visible: { type: Boolean, default: false },
   config: { type: Object, default: () => ({}) },
   platformOptions: { type: Array, default: () => [] },
-  isEditing: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:visible', 'save'])
 const today = new Date(new Date().setHours(9, 0, 0, 0))
@@ -91,6 +86,7 @@ const rules = {
 watch(() => props.visible, v => (visibleLocal.value = v))
 watch(visibleLocal, v => emit('update:visible', v))
 
+
 // when config changes, copy to localForm to show
 watch(
   () => props.config,
@@ -113,7 +109,6 @@ watch(
 
 
 function onCancel() {
-  // reset to defaults
   localForm.id = null
   localForm.name = ''
   localForm.platform = ''

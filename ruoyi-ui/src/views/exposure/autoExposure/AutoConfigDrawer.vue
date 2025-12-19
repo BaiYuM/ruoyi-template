@@ -80,7 +80,7 @@
       </div>
     </el-form>
 
-    <AIHelperDialog v-model:visible="aiVisible" :mode="aiMode" @apply="onAIApply" />
+    <AIHelperDialog v-if="aiVisible" v-model:visible="aiVisible" :mode="aiMode" @apply="onAIApply"/>
   </el-drawer>
 </template>
 
@@ -94,6 +94,7 @@ const props = defineProps({
   platformOptions: { type: Array, default: () => [] },
   isEditing: { type: Boolean, default: false }
 })
+
 const today = new Date(new Date().setHours(9, 0, 0, 0))
 const emit = defineEmits(['update:visible', 'save'])
 const formRef = ref(null)

@@ -31,8 +31,8 @@
         </div>
 
         <div class="search-actions">
-          <el-button type="primary" :icon="Search" @click="fetchUserList">搜索</el-button>
-          <el-button @click="resetSearch">重置</el-button>
+          <el-button @click="resetSearch" round>重置</el-button>
+          <el-button type="primary" :icon="Search" @click="fetchUserList" round>查询</el-button>
         </div>
       </div>
     </el-card>
@@ -41,7 +41,7 @@
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px; cursor: pointer;" @click="openStats">曝光统计</div>
           <el-button type="primary" :icon="Plus" @click="openCreate">添加配置</el-button>
           <!-- <el-button class="ml-2" type="danger" @click="ElMessage.info('批量停用（mock）')">批量停用</el-button>
           <el-button class="ml-2" type="success" @click="ElMessage.info('批量启用（mock）')">批量启用</el-button> -->
@@ -60,7 +60,7 @@
           :handle-disable="onDisableUser"
           :handle-enable="onEnableUser"
           :handle-selection-change="rows => (selectedRows.value = rows)"
-          :rowClickable="true"
+          :row-clickable="true"
         >
           <template #customOperation="{ row }">
             <div class="flex flex-nowrap">

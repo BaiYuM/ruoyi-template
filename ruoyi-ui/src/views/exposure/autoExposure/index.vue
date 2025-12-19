@@ -207,8 +207,8 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
           </div>
 
           <div class="search-actions compact-actions">
-            <el-button type="primary" @click="fetchList">查询</el-button>
-            <el-button @click="resetSearch">重置</el-button>
+            <el-button @click="resetSearch" round>重置</el-button>
+            <el-button type="primary" @click="fetchList" round>查询</el-button>
           </div>
         </div>
       </div>
@@ -217,7 +217,7 @@ onMounted(() => fetchList({ page: 1, pageSize: pagination.pageSize }));
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar flex items-center mb-4">
         <div class="toolbar-left">
-          <div class="ml-2" style="margin-right: 20px;" @click="openStats">曝光统计</div>
+          <div class="ml-2" style="margin-right: 20px; cursor: pointer;" @click="openStats">曝光统计</div>
           <div class="ml-2" style="margin-right: 20px;" @click="openSettings">自动曝光设置</div>
           <el-button   type="primary" :icon="Plus" @click="openCreate"
             >添加配置</el-button>
