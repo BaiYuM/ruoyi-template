@@ -17,13 +17,38 @@
         <result property="updateBy"    column="update_by"    />
     </resultMap>
 
+    <resultMap type="com.ruoyi.system.domain.ExpirationAi" id="ExpirationAiCommentUserResult" extends="ExpirationAiResult">
+        <result property="nickName" column="user_name"/>
+        <result property="avatar" column="avatar"/>
+    </resultMap>
+
     <sql id="selectExpirationAiVo">
         select id, user_id, expiration_date, open_ai, funds, work_period_type, work_period_start, work_period_end, create_time, create_by, update_time, update_by from expiration_ai
+    </sql>
+    
+    <sql id="selectExpirationAiWithUser">
+        SELECT 
+            ea.id,
+            ea.user_id,
+            ea.expiration_date,
+            ea.open_ai,
+            ea.funds,
+            ea.work_period_type,
+            ea.work_period_start,
+            ea.work_period_end,
+            ea.create_time,
+            ea.create_by,
+            ea.update_time,
+            ea.update_by,
+            cu.nickname as user_name,
+            cu.avatar as avatar
+        FROM expiration_ai ea
+        LEFT JOIN comment_user cu ON cu.id = ea.user_id
     </sql>
 
     <select id="selectExpirationAiList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiResult">
         <include refid="selectExpirationAiVo"/>
-        <where>  
+        <where>
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="expirationDate != null "> and expiration_date = #{expirationDate}</if>
             <if test="openAi != null "> and open_ai = #{openAi}</if>
@@ -31,6 +56,24 @@
             <if test="workPeriodType != null "> and work_period_type = #{workPeriodType}</if>
             <if test="workPeriodStart != null "> and work_period_start = #{workPeriodStart}</if>
             <if test="workPeriodEnd != null "> and work_period_end = #{workPeriodEnd}</if>
+            <if test="beginCreateTime != null"> and create_time &gt;= #{beginCreateTime} </if>
+            <if test="endCreateTime != null"> and create_time &lt;= #{endCreateTime} </if>
+        </where>
+    </select>
+
+    <select id="selectExpirationAiWithUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiCommentUserResult">
+        <include refid="selectExpirationAiWithUser"/>
+        <where>
+            <if test="userId != null"> AND ea.user_id = #{userId}</if>
+            <if test="expirationDate != null"> AND ea.expiration_date = #{expirationDate}</if>
+            <if test="openAi != null"> AND ea.open_ai = #{openAi}</if>
+            <if test="funds != null"> AND ea.funds = #{funds}</if>
+            <if test="workPeriodType != null"> AND ea.work_period_type = #{workPeriodType}</if>
+            <if test="workPeriodStart != null"> AND ea.work_period_start = #{workPeriodStart}</if>
+            <if test="workPeriodEnd != null"> AND ea.work_period_end = #{workPeriodEnd}</if>
+            <if test="nickName != null and nickName != ''"> AND cu.nickname LIKE concat('%', #{nickName}, '%')</if>
+            <if test="beginCreateTime != null"> AND ea.create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null"> AND ea.create_time &lt;= #{endCreateTime}</if>
         </where>
     </select>
     

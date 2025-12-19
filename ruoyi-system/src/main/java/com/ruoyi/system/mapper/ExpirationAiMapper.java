@@ -30,6 +30,11 @@ public interface ExpirationAiMapper
     public List<ExpirationAi> selectExpirationAiList(ExpirationAi expirationAi);
 
     /**
+     * 查询ai客服配置账号列表
+     */
+    public List<ExpirationAi> selectExpirationAiWithUserList(ExpirationAi expirationAi);
+
+    /**
      * 新增ai客服配置
      * 
      * @param expirationAi ai客服配置
