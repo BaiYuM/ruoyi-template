@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaGroupChatMsgReadMapper">
+    
+    <resultMap type="FaGroupChatMsgRead" id="FaGroupChatMsgReadResult">
+        <result property="id"    column="id"    />
+        <result property="msgId"    column="msg_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="readTime"    column="read_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectFaGroupChatMsgReadVo">
+        select id, msg_id, user_id, read_time, del_flag from fa_group_chat_msg_read
+    </sql>
+
+    <select id="selectFaGroupChatMsgReadList" parameterType="FaGroupChatMsgRead" resultMap="FaGroupChatMsgReadResult">
+        <include refid="selectFaGroupChatMsgReadVo"/>
+        <where>  
+            <if test="msgId != null "> and msg_id = #{msgId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="readTime != null "> and read_time = #{readTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaGroupChatMsgReadById" parameterType="Long" resultMap="FaGroupChatMsgReadResult">
+        <include refid="selectFaGroupChatMsgReadVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaGroupChatMsgRead" parameterType="FaGroupChatMsgRead">
+        insert into fa_group_chat_msg_read
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="msgId != null">msg_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="readTime != null">read_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="msgId != null">#{msgId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="readTime != null">#{readTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaGroupChatMsgRead" parameterType="FaGroupChatMsgRead">
+        update fa_group_chat_msg_read
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="msgId != null">msg_id = #{msgId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="readTime != null">read_time = #{readTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaGroupChatMsgReadById" parameterType="Long">
+        delete from fa_group_chat_msg_read where id = #{id}
+    </delete>
+
+    <delete id="deleteFaGroupChatMsgReadByIds" parameterType="String">
+        delete from fa_group_chat_msg_read where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

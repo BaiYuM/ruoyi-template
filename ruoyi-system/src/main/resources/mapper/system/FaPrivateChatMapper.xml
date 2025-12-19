@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaPrivateChatMapper">
+    
+    <resultMap type="FaPrivateChat" id="FaPrivateChatResult">
+        <result property="id"    column="id"    />
+        <result property="userId1"    column="user_id1"    />
+        <result property="userId2"    column="user_id2"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="lastMsgId"    column="last_msg_id"    />
+        <result property="isBlocked"    column="is_blocked"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectFaPrivateChatVo">
+        select id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag from fa_private_chat
+    </sql>
+
+    <select id="selectFaPrivateChatList" parameterType="FaPrivateChat" resultMap="FaPrivateChatResult">
+        <include refid="selectFaPrivateChatVo"/>
+        <where>  
+            <if test="userId1 != null "> and user_id1 = #{userId1}</if>
+            <if test="userId2 != null "> and user_id2 = #{userId2}</if>
+            <if test="lastMsgId != null "> and last_msg_id = #{lastMsgId}</if>
+            <if test="isBlocked != null "> and is_blocked = #{isBlocked}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaPrivateChatById" parameterType="Long" resultMap="FaPrivateChatResult">
+        <include refid="selectFaPrivateChatVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
+        insert into fa_private_chat
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="userId1 != null">user_id1,</if>
+            <if test="userId2 != null">user_id2,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="lastMsgId != null">last_msg_id,</if>
+            <if test="isBlocked != null">is_blocked,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="userId1 != null">#{userId1},</if>
+            <if test="userId2 != null">#{userId2},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="lastMsgId != null">#{lastMsgId},</if>
+            <if test="isBlocked != null">#{isBlocked},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaPrivateChat" parameterType="FaPrivateChat">
+        update fa_private_chat
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId1 != null">user_id1 = #{userId1},</if>
+            <if test="userId2 != null">user_id2 = #{userId2},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="lastMsgId != null">last_msg_id = #{lastMsgId},</if>
+            <if test="isBlocked != null">is_blocked = #{isBlocked},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaPrivateChatById" parameterType="Long">
+        delete from fa_private_chat where id = #{id}
+    </delete>
+
+    <delete id="deleteFaPrivateChatByIds" parameterType="String">
+        delete from fa_private_chat where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
