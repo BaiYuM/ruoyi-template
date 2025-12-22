@@ -38,7 +38,7 @@ public class DouyinUserServiceImpl implements IDouyinUserService
             return null;
         }
 
-        CommentUser commentUser = commentUserMapper.selectCommentUserByUserId(id);
+        CommentUser commentUser = commentUserMapper.selectCommentUserById(id);
 
         DouyinUserVO vo = new DouyinUserVO();
         vo.setFaUser(faUser);
@@ -68,7 +68,7 @@ public class DouyinUserServiceImpl implements IDouyinUserService
         List<DouyinUserVO> result = new ArrayList<>();
 
         for (FaUser faUser : faUserList) {
-            CommentUser commentUser = commentUserMapper.selectCommentUserByUserId(faUser.getId());
+            CommentUser commentUser = commentUserMapper.selectCommentUserById(faUser.getId());
 
             DouyinUserVO vo = new DouyinUserVO();
             vo.setFaUser(faUser);
@@ -185,7 +185,7 @@ public class DouyinUserServiceImpl implements IDouyinUserService
             return null;
         }
 
-        CommentUser commentUser = commentUserMapper.selectCommentUserByUserId(faUser.getId());
+        CommentUser commentUser = commentUserMapper.selectCommentUserById(faUser.getId());
 
         DouyinUserVO vo = new DouyinUserVO();
         vo.setFaUser(faUser);
@@ -209,7 +209,7 @@ public class DouyinUserServiceImpl implements IDouyinUserService
             return null;
         }
 
-        CommentUser commentUser = commentUserMapper.selectCommentUserByUserId(faUser.getId());
+        CommentUser commentUser = commentUserMapper.selectCommentUserById(faUser.getId());
 
         DouyinUserVO vo = new DouyinUserVO();
         vo.setFaUser(faUser);
@@ -233,7 +233,7 @@ public class DouyinUserServiceImpl implements IDouyinUserService
             return null;
         }
 
-        CommentUser commentUser = commentUserMapper.selectCommentUserByUserId(faUser.getId());
+        CommentUser commentUser = commentUserMapper.selectCommentUserById(faUser.getId());
 
         DouyinUserVO vo = new DouyinUserVO();
         vo.setFaUser(faUser);

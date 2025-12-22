@@ -58,4 +58,6 @@ public interface CommentUserMapper
      * @return 结果
      */
     public int deleteCommentUserByIds(Long[] ids);
+
+    CommentUser selectCommentUserByPlatformAndAccount(String platform, String account);
 }

@@ -92,28 +92,28 @@ public class DouyinUserVO
     /**
      * 获取粉丝数
      */
-    public Integer getFollowerCount() {
+    public long getFollowerCount() {
         return commentUser != null ? commentUser.getFollowerCount() : 0;
     }
 
     /**
      * 获取关注数
      */
-    public Integer getFollowingCount() {
+    public long getFollowingCount() {
         return commentUser != null ? commentUser.getFollowingCount() : 0;
     }
 
     /**
      * 获取获赞数
      */
-    public Integer getLikeCount() {
+    public long getLikeCount() {
         return commentUser != null ? commentUser.getLikeCount() : 0;
     }
 
     /**
      * 获取视频数
      */
-    public Integer getVideoCount() {
+    public long getVideoCount() {
         return commentUser != null ? commentUser.getVideoCount() : 0;
     }
 
@@ -154,14 +154,14 @@ public class DouyinUserVO
     /**
      * 获取性别
      */
-    public String getGender() {
-        return commentUser != null ? commentUser.getGender() : "";
+    public Integer getGender() {
+        return commentUser != null ? commentUser.getGender() : null;
     }
 
     /**
      * 获取年龄
      */
-    public Integer getAge() {
+    public long getAge() {
         return commentUser != null ? commentUser.getAge() : null;
     }
 
