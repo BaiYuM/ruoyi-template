@@ -1,20 +1,22 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+
+import com.ruoyi.system.domain.FaPrivateChatMsgRead;
+import com.ruoyi.system.mapper.FaPrivateChatMsgReadMapper;
+import com.ruoyi.system.service.IFaPrivateChatMsgReadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ruoyi.system.mapper.FaPrivateChatMsgReadMapper;
-import com.ruoyi.system.domain.FaPrivateChatMsgRead;
-import com.ruoyi.system.service.IFaPrivateChatMsgReadService;
+
 
 /**
  * 私聊消息已读Service业务层处理
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 @Service
-public class FaPrivateChatMsgReadServiceImpl implements IFaPrivateChatMsgReadService 
+public class FaPrivateChatMsgReadServiceImpl implements IFaPrivateChatMsgReadService
 {
     @Autowired
     private FaPrivateChatMsgReadMapper faPrivateChatMsgReadMapper;

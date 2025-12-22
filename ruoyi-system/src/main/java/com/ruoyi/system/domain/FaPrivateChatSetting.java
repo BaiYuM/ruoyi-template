@@ -9,7 +9,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * 私聊设置对象 fa_private_chat_setting
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public class FaPrivateChatSetting extends BaseEntity
 {

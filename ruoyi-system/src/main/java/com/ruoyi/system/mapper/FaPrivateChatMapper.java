@@ -1,14 +1,17 @@
 package com.ruoyi.system.mapper;
 
-import java.util.List;
-import java.util.Map;
 import com.ruoyi.system.domain.FaPrivateChat;
+import com.ruoyi.system.domain.FaPrivateChatMsg;
+import io.lettuce.core.dynamic.annotation.Param;
+
+import java.util.List;
+
 
 /**
  * 私聊会话Mapper接口
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public interface FaPrivateChatMapper 
 {
@@ -61,24 +64,27 @@ public interface FaPrivateChatMapper
     public int deleteFaPrivateChatByIds(Long[] ids);
 
     /**
-     * 查询72小时内的会话列表
-     * @param account 抖音号
+     * 查询最近会话
+     * 
+     * @param account 抖音账号
      * @param hours 时间范围（小时）
-     * @param limit 最大条数
-     * @return 会话集合
+     * @param limit 限制条数
+     * @return 会话列表
      */
-    List<FaPrivateChat> selectRecentSessions(String account, int hours, int limit);
+    public List<FaPrivateChat> selectRecentSessions(@Param("account") String account, int hours, int limit);
 
     /**
-     * 查询会话的聊天信息
+     * 查询会话消息
+     * 
      * @param sessionId 会话ID
-     * @return 聊天信息集合
+     * @return 消息列表
      */
-    List<Map<String, Object>> selectSessionMessages(Long sessionId);
+    public List<FaPrivateChatMsg> selectSessionMessages(Long sessionId);
 
     /**
-     * 查询所有评论用户的抖音号
-     * @return 抖音号列表
+     * 查询评论用户账号列表
+     * 
+     * @return 抖音账号列表
      */
-    List<String> selectCommentUserAccounts();
+    public List<String> selectCommentUserAccounts();
 }

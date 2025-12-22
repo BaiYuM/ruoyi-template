@@ -1,13 +1,14 @@
 package com.ruoyi.system.mapper;
 
-import java.util.List;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
+
+import java.util.List;
 
 /**
  * 私聊消息Mapper接口
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public interface FaPrivateChatMsgMapper 
 {
