@@ -53,3 +53,4 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+../ruoyi-admin/src/main/resources/application.yml
