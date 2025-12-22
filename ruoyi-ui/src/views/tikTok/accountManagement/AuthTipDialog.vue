@@ -50,9 +50,7 @@
 </template>
 
 <script setup lang="js">
-// Vue3.3+ 无需导入 defineProps/defineEmits
 import { ref, watch } from 'vue'
-// 正确导入 Element Plus 图标
 import { WarningFilled } from '@element-plus/icons-vue'
 
 // 接收外部传入的显示状态（v-model 绑定）

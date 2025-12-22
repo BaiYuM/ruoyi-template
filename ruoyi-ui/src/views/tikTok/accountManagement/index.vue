@@ -5,9 +5,9 @@
       <el-form :model="filters" label-width="80px" class="search-form">
         <el-row :gutter="16">
           <el-col :span="6">
-            <el-form-item label="抖音昵称">
+            <el-form-item label="用户昵称">
               <el-input
-                v-model="filters.nickname"
+                v-model="filters.nickName"
                 placeholder="请输入昵称"
                 clearable
               />
@@ -16,11 +16,12 @@
           <el-col :span="8">
             <el-form-item label="创建时间">
               <el-date-picker
-                v-model="filters.createTime"
+                v-model="filters.createTimeRange"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
+                value-format="YYYY-MM-DD"
                 style="width: 100%"
               />
             </el-form-item>
@@ -43,25 +44,46 @@
       </template>
 
       <el-table :data="tableData" v-loading="loading" size="small">
-        <el-table-column prop="awemeId" label="账号信息" min-width="140">
+        <el-table-column label="账号信息" min-width="140">
           <template #default="{ row }">
             <div class="account-info">
-              <span class="info-id">{{ row.awemeId }}</span>
-              <span class="info-name">{{ row.nickname }}</span>
+              <span class="info-id">ID: {{ row.id }}</span>
+              <span class="info-name">{{ row.nickName || '未设置昵称' }}</span>
+              <el-avatar
+                v-if="row.avatar"
+                :src="row.avatar"
+                :size="24"
+                style="margin-left: 8px;"
+              />
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="expireTime" label="授权到期时间" />
+        <el-table-column prop="expirationDate" label="授权到期时间" />
         <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column prop="workPeriod" label="工作时段" />
+        <el-table-column label="工作时段">
+          <template #default="{ row }">
+            <span v-if="row.workPeriodType === 0">全天</span>
+            <span v-else>{{ row.workPeriodStart }} - {{ row.workPeriodEnd }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="AI智能客服" fixed="right" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.aiEnable" @change="() => toggleAi(row)" />
+            <el-switch 
+              v-model="row.openAi" 
+              :active-value="1" 
+              :inactive-value="0"
+              @change="() => toggleAi(row)" 
+            />
           </template>
         </el-table-column>
         <el-table-column label="留资提取" fixed="right" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.leadEnable" @change="() => toggleLead(row)" />
+            <el-switch 
+              v-model="row.funds" 
+              :active-value="1" 
+              :inactive-value="0"
+              @change="() => toggleFunds(row)" 
+            />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="80" fixed="right" align="center">
@@ -101,13 +123,14 @@
 <script setup lang="js">
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 // 仅导入用到的图标和组件
 import { Plus, Delete } from '@element-plus/icons-vue'
 import AuthTipDialog from './AuthTipDialog.vue'
 
 const filters = reactive({
-  nickname: '',
-  createTime: []
+  nickName: '',
+  createTimeRange: []
 })
 
 const loading = ref(false)
@@ -128,69 +151,121 @@ const handleAuthTipClose = () => {
   console.log('提示弹窗已关闭')
 }
 
-const fetchList = () => {
+const fetchList = async () => {
   loading.value = true
-  setTimeout(() => {
-    tableData.value = [
-      {
-        awemeId: 'DouMaster',
-        nickname: 'Dou大师',
-        expireTime: '2026-02-12 14:00:00',
-        createTime: '2025-11-14 14:01:00',
-        workPeriod: '全天',
-        aiEnable: true,
-        leadEnable: true
-      },
-      {
-        awemeId: 'TechTian',
-        nickname: '添澎科技',
-        expireTime: '2026-02-10 10:09:38',
-        createTime: '2025-11-12 10:27:39',
-        workPeriod: '全天',
-        aiEnable: true,
-        leadEnable: false
-      }
-    ]
-    pager.total = tableData.value.length
+  try {
+    // 构建请求参数
+    const params = {
+      page: pager.page,
+      size: pager.size,
+      nickName: filters.nickName,
+    }
+    
+    // 添加时间范围参数
+    if (filters.createTimeRange && filters.createTimeRange.length === 2) {
+      params.beginCreateTime = filters.createTimeRange[0]
+      params.endCreateTime = filters.createTimeRange[1]
+    }
+    
+    // 调用接口
+    const response = await axios.get('/aiCuServer/expirationAi/list', { params })
+    
+    if (response.data && response.data.success) {
+      // 假设接口返回数据格式为 { success: true, data: { list: [], total: 0 } }
+      tableData.value = response.data.data.list || []
+      pager.total = response.data.data.total || 0
+      
+      // 转换字段类型（如果后端返回的是字符串）
+      tableData.value.forEach(item => {
+        item.openAi = Number(item.openAi) || 0
+        item.funds = Number(item.funds) || 0
+        item.workPeriodType = Number(item.workPeriodType) || 0
+      })
+    } else {
+      ElMessage.error(response.data?.message || '获取数据失败')
+    }
+  } catch (error) {
+    console.error('获取数据失败:', error)
+    ElMessage.error('获取数据失败，请稍后重试')
+  } finally {
     loading.value = false
-  }, 300)
+  }
 }
 
 /* 5. 功能方法 */
 // 重置筛选条件
 const resetSearch = () => {
-  Object.assign(filters, { nickname: '', createTime: [] })
+  Object.assign(filters, { nickName: '', createTimeRange: [] })
   pager.page = 1
   fetchList()
 }
 
 // 切换AI智能客服状态
-const toggleAi = (row) => {
-  ElMessage.success(`AI智能客服已${row.aiEnable ? '开启' : '关闭'}`)
+const toggleAi = async (row) => {
+  try {
+    const newValue = row.openAi === 1 ? 0 : 1
+    // 调用更新接口（假设为POST /aiCuServer/expirationAi/updateOpenAi）
+    await axios.post('/aiCuServer/expirationAi/updateOpenAi', {
+      id: row.id,
+      openAi: newValue
+    })
+    
+    ElMessage.success(`AI智能客服已${row.openAi === 1 ? '开启' : '关闭'}`)
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    ElMessage.error('更新失败，请稍后重试')
+    // 恢复原状态
+    row.openAi = row.openAi === 1 ? 0 : 1
+  }
 }
 
 // 切换留资提取状态
-const toggleLead = (row) => {
-  ElMessage.success(`留资提取已${row.leadEnable ? '开启' : '关闭'}`)
+const toggleFunds = async (row) => {
+  try {
+    const newValue = row.funds === 1 ? 0 : 1
+    // 调用更新接口（假设为POST /aiCuServer/expirationAi/updateFunds）
+    await axios.post('/aiCuServer/expirationAi/updateFunds', {
+      id: row.id,
+      funds: newValue
+    })
+    
+    ElMessage.success(`留资提取已${row.funds === 1 ? '开启' : '关闭'}`)
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    ElMessage.error('更新失败，请稍后重试')
+    // 恢复原状态
+    row.funds = row.funds === 1 ? 0 : 1
+  }
 }
 
 // 删除账号
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    '此操作将永久删除该授权账号，是否继续？',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    tableData.value = tableData.value.filter(item => item.awemeId !== row.awemeId)
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      '此操作将永久删除该授权账号，是否继续？',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // 调用删除接口（假设为DELETE /aiCuServer/expirationAi/{id}）
+    await axios.delete(`/aiCuServer/expirationAi/${row.id}`)
+    
+    // 从列表中移除
+    tableData.value = tableData.value.filter(item => item.id !== row.id)
     pager.total = tableData.value.length
     ElMessage.success('删除成功!')
-  }).catch(() => {
-    ElMessage.info('已取消删除')
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败，请稍后重试')
+    } else {
+      ElMessage.info('已取消删除')
+    }
+  }
 }
 
 // 初始化加载数据
@@ -222,17 +297,19 @@ onMounted(() => fetchList())
 
 .account-info {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
 .info-id {
   font-weight: 600;
+  color: #999;
+  font-size: 12px;
 }
 
 .info-name {
-  color: #666;
-  font-size: 12px;
+  color: #333;
+  font-size: 14px;
 }
 
 .pagination-wrapper {
@@ -244,10 +321,10 @@ onMounted(() => fetchList())
 
 /* 删除按钮样式 */
 .delete-btn {
-  color: #409eff !important; /* 蓝色 */
+  color: #409eff !important;
 }
 
 .delete-btn:hover {
-  color: #66b1ff !important; /* hover浅蓝 */
+  color: #66b1ff !important;
 }
 </style>
