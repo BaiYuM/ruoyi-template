@@ -53,8 +53,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="level != null  and level != ''"> and level = #{level}</if>
             <if test="status != null "> and status = #{status}</if>
             <if test="aiModel != null "> and ai_model = #{aiModel}</if>
-            <if test="beginCreateTime != null"> and create_time &gt;= #{beginCreateTime}</if>
-            <if test="endCreateTime != null"> and create_time &lt;= #{endCreateTime}</if>
+            <if test="beginCreateTime != null and beginCreateTime != ''"> and create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null and endCreateTime != ''"> and create_time &lt;= #{endCreateTime}</if>
         </where>
     </select>
     
@@ -70,8 +70,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null "> AND ac.status = #{status}</if>
             <if test="aiModel != null "> AND ac.ai_model = #{aiModel}</if>
             <if test="nickName != null and nickName != ''"> AND cu.nickname LIKE concat('%', #{nickName}, '%')</if>
-            <if test="beginCreateTime != null"> AND ac.create_time &gt;= #{beginCreateTime}</if>
-            <if test="endCreateTime != null"> AND ac.create_time &lt;= #{endCreateTime}</if>
+            <if test="beginCreateTime != null and beginCreateTime != ''"> AND ac.create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null and endCreateTime != ''"> AND ac.create_time &lt;= #{endCreateTime}</if>
         </where>
     </select>
     
