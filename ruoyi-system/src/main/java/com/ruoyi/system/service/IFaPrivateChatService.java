@@ -1,14 +1,16 @@
 package com.ruoyi.system.service;
 
-import java.util.List;
-import java.util.Map;
 import com.ruoyi.system.domain.FaPrivateChat;
+import com.ruoyi.system.domain.FaPrivateChatMsg;
+import io.lettuce.core.dynamic.annotation.Param;
+
+import java.util.List;
 
 /**
  * 私聊会话Service接口
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public interface IFaPrivateChatService 
 {
@@ -59,26 +61,29 @@ public interface IFaPrivateChatService
      * @return 结果
      */
     public int deleteFaPrivateChatById(Long id);
-
+    
     /**
-     * 获取抖音号列表
-     * @return 抖音号集合
+     * 获取评论用户账号列表
+     *
+     * @return 抖音账号列表
      */
-    List<String> getCommentUserAccounts();
-
+    public List<String> getCommentUserAccounts();
+    
     /**
-     * 获取72小时内的会话列表
-     * @param account 抖音号
+     * 获取最近会话列表
+     * 
+     * @param account 抖音账号
      * @param hours 时间范围（小时）
-     * @param limit 最大条数
-     * @return 会话集合
+     * @param limit 限制条数
+     * @return 会话列表
      */
-    List<FaPrivateChat> getRecentSessions(String account, int hours, int limit);
-
+    public List<FaPrivateChat> getRecentSessions( String account, int hours, int limit);
+    
     /**
-     * 获取会话的聊天信息
+     * 获取会话消息列表
+     * 
      * @param sessionId 会话ID
-     * @return 聊天信息集合
+     * @return 消息列表
      */
-    List<Map<String, Object>> getSessionMessages(Long sessionId);
+    public List<FaPrivateChatMsg> getSessionMessages(Long sessionId);
 }

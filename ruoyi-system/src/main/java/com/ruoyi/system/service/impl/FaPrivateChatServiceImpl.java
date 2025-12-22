@@ -1,22 +1,25 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
-import java.util.Map;
 import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.uuid.IdUtils;
+import com.ruoyi.system.domain.FaPrivateChat;
+import com.ruoyi.system.domain.FaPrivateChatMsg;
+import com.ruoyi.system.mapper.FaPrivateChatMapper;
+import com.ruoyi.system.service.IFaPrivateChatService;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ruoyi.system.mapper.FaPrivateChatMapper;
-import com.ruoyi.system.domain.FaPrivateChat;
-import com.ruoyi.system.service.IFaPrivateChatService;
+
 
 /**
  * 私聊会话Service业务层处理
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 @Service
-public class FaPrivateChatServiceImpl implements IFaPrivateChatService 
+public class FaPrivateChatServiceImpl implements IFaPrivateChatService
 {
     @Autowired
     private FaPrivateChatMapper faPrivateChatMapper;
@@ -54,6 +57,10 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     @Override
     public int insertFaPrivateChat(FaPrivateChat faPrivateChat)
     {
+        // 使用雪花算法生成ID
+        if (faPrivateChat.getId() == null) {
+            faPrivateChat.setId(IdUtils.getSnowflakeId());
+        }
         faPrivateChat.setCreateTime(DateUtils.getNowDate());
         return faPrivateChatMapper.insertFaPrivateChat(faPrivateChat);
     }
@@ -94,11 +101,11 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     {
         return faPrivateChatMapper.deleteFaPrivateChatById(id);
     }
-
+    
     /**
-     * 获取抖音号列表
+     * 获取评论用户账号列表
      *
-     * @return 抖音号列表
+     * @return 抖音账号列表
      */
     @Override
     public List<String> getCommentUserAccounts() {
@@ -106,10 +113,10 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     }
 
     /**
-     * 获取会话列表
+     * 获取最近会话列表
      *
-     * @param account 账号
-     * @param hours 最近几小时
+     * @param account 抖音账号
+     * @param hours 时间范围（小时）
      * @param limit 限制条数
      * @return 会话列表
      */
@@ -119,13 +126,13 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     }
 
     /**
-     * 获取聊天信息
+     * 获取会话消息列表
      *
      * @param sessionId 会话ID
-     * @return 聊天信息
+     * @return 消息列表
      */
     @Override
-    public List<Map<String, Object>> getSessionMessages(Long sessionId) {
+    public List<FaPrivateChatMsg> getSessionMessages(Long sessionId) {
         return faPrivateChatMapper.selectSessionMessages(sessionId);
     }
 }

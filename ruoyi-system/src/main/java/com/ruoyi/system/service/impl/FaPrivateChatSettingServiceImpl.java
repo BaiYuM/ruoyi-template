@@ -2,20 +2,21 @@ package com.ruoyi.system.service.impl;
 
 import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.system.domain.FaPrivateChatSetting;
+import com.ruoyi.system.mapper.FaPrivateChatSettingMapper;
+import com.ruoyi.system.service.IFaPrivateChatSettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ruoyi.system.mapper.FaPrivateChatSettingMapper;
-import com.ruoyi.system.domain.FaPrivateChatSetting;
-import com.ruoyi.system.service.IFaPrivateChatSettingService;
+
 
 /**
  * 私聊设置Service业务层处理
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 @Service
-public class FaPrivateChatSettingServiceImpl implements IFaPrivateChatSettingService 
+public class FaPrivateChatSettingServiceImpl implements IFaPrivateChatSettingService
 {
     @Autowired
     private FaPrivateChatSettingMapper faPrivateChatSettingMapper;

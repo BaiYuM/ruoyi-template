@@ -11,7 +11,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * 私聊消息对象 fa_private_chat_msg
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public class FaPrivateChatMsg extends BaseEntity
 {

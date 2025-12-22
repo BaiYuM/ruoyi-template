@@ -33,13 +33,41 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectFaPrivateChatVo"/>
         where id = #{id}
     </select>
-    <select id="selectRecentSessions" resultType="com.ruoyi.system.domain.FaPrivateChat"></select>
-    <select id="selectSessionMessages" resultType="java.util.Map"></select>
+    
+    <!-- 查询最近会话 -->
+    <select id="selectRecentSessions" resultMap="FaPrivateChatResult">
+        SELECT DISTINCT pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag
+        FROM fa_private_chat pc
+        JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id
+        JOIN comment_user cu ON (pc.user_id1 = cu.user_id OR pc.user_id2 = cu.user_id)
+        WHERE cu.account = #{account}
+          AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
+          AND pc.del_flag = 0
+          AND pcm.del_flag = 0
+        ORDER BY pcm.send_time DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 查询会话消息 -->
+    <select id="selectSessionMessages" resultType="com.ruoyi.system.domain.FaPrivateChatMsg">
+        SELECT id, chat_id, sender_id, receiver_id, msg_type, msg_content, send_time, is_recalled, recall_time, del_flag
+        FROM fa_private_chat_msg
+        WHERE chat_id = #{sessionId}
+          AND del_flag = 0
+        ORDER BY send_time ASC
+    </select>
+    
+    <!-- 查询评论用户账号列表 -->
+    <select id="selectCommentUserAccounts" resultType="java.lang.String">
+        SELECT DISTINCT account
+        FROM comment_user
+        WHERE account IS NOT NULL AND account != ''
+    </select>
 
     <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
         insert into fa_private_chat
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="id != null">id,</if>
+            id,
             <if test="userId1 != null">user_id1,</if>
             <if test="userId2 != null">user_id2,</if>
             <if test="createTime != null">create_time,</if>
@@ -49,7 +77,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="delFlag != null">del_flag,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="id != null">#{id},</if>
+            #{id},
             <if test="userId1 != null">#{userId1},</if>
             <if test="userId2 != null">#{userId2},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -84,6 +112,4 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
-
-
 </mapper>

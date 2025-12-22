@@ -1,13 +1,15 @@
 package com.ruoyi.system.service;
 
-import java.util.List;
 import com.ruoyi.system.domain.FaPrivateChatSetting;
+
+import java.util.List;
+
 
 /**
  * 私聊设置Service接口
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public interface IFaPrivateChatSettingService 
 {

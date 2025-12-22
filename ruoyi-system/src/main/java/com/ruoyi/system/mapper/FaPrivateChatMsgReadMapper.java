@@ -1,13 +1,15 @@
 package com.ruoyi.system.mapper;
 
-import java.util.List;
 import com.ruoyi.system.domain.FaPrivateChatMsgRead;
+
+import java.util.List;
+
 
 /**
  * 私聊消息已读Mapper接口
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public interface FaPrivateChatMsgReadMapper 
 {

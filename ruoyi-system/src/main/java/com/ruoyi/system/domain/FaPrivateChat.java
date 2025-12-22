@@ -9,7 +9,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * 私聊会话对象 fa_private_chat
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 public class FaPrivateChat extends BaseEntity
 {
@@ -18,8 +18,8 @@ public class FaPrivateChat extends BaseEntity
     /** 会话ID（雪花算法） */
     private Long id;
 
-    /** 用户1 ID（关联sys_user.id，约定user_id1 < user_id2 避免重复会话） */
-    @Excel(name = "用户1 ID", readConverterExp = "关=联sys_user.id，约定user_id1,<=,u=ser_id2,避=免重复会话")
+    /** 用户1 ID（关联sys_user.id，约定user_id1 &lt; user_id2 避免重复会话） */
+    @Excel(name = "用户1 ID", readConverterExp = "关=联sys_user.id，约定user_id1,&=lt;,u=ser_id2,避=免重复会话")
     private Long userId1;
 
     /** 用户2 ID（关联sys_user.id） */

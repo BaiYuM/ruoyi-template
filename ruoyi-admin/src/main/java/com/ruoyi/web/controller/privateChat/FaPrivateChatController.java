@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.system.domain.FaPrivateChat;
+import com.ruoyi.system.domain.FaPrivateChatMsg;
 import com.ruoyi.system.service.IFaPrivateChatService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,7 +134,7 @@ public class FaPrivateChatController extends BaseController
     @PreAuthorize("@ss.hasPermi('privateChat:private_chat:messages')")
     @GetMapping("/messages")
     public AjaxResult getMessages(@RequestParam Long sessionId) {
-        List<Map<String, Object>> messages = faPrivateChatService.getSessionMessages(sessionId);
+        List<FaPrivateChatMsg> messages = faPrivateChatService.getSessionMessages(sessionId);
         return success(messages);
     }
 }
