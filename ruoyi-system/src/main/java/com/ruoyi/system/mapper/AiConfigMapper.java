@@ -26,6 +26,14 @@ public interface AiConfigMapper
      * @return AI客服配置集合
      */
     public List<AiConfig> selectAiConfigList(AiConfig aiConfig);
+    
+    /**
+     * 查询AI客服配置列表（关联comment_user）
+     * 
+     * @param aiConfig AI客服配置
+     * @return AI客服配置集合
+     */
+    public List<AiConfig> selectAiConfigWithCommentUserList(AiConfig aiConfig);
 
     /**
      * 新增AI客服配置

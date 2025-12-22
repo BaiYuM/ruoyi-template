@@ -19,6 +19,13 @@ public class AiConfigServiceImpl implements IAiConfigService
 {
     @Autowired
     private AiConfigMapper aiConfigMapper;
+    
+    /**
+     * 查询AI客服配置列表（关联comment_user）
+     * 
+     * @param aiConfig AI客服配置
+     * @return AI客服配置
+     */
 
     /**
      * 查询AI客服配置
@@ -42,6 +49,17 @@ public class AiConfigServiceImpl implements IAiConfigService
     public List<AiConfig> selectAiConfigList(AiConfig aiConfig)
     {
         return aiConfigMapper.selectAiConfigList(aiConfig);
+    }
+    
+    /**
+     * 查询AI客服配置列表（关联comment_user）
+     * 
+     * @param aiConfig AI客服配置
+     * @return AI客服配置
+     */
+    public List<AiConfig> selectAiConfigWithCommentUserList(AiConfig aiConfig)
+    {
+        return aiConfigMapper.selectAiConfigWithCommentUserList(aiConfig);
     }
 
     /**

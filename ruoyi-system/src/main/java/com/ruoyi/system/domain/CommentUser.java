@@ -118,6 +118,34 @@ public class CommentUser extends BaseEntity
     @Excel(name = "互动评分")
     private Long interactionScore;
 
+    /** 粉丝数 */
+    @Excel(name = "粉丝数")
+    private Long followerCount;
+
+    /** 关注数 */
+    @Excel(name = "关注数")
+    private Long followingCount;
+
+    /** 获赞数 */
+    @Excel(name = "获赞数")
+    private Long likeCountTotal;
+
+    /** 视频数 */
+    @Excel(name = "视频数")
+    private Long videoCount;
+
+    /** 签名 */
+    @Excel(name = "签名")
+    private String signature;
+
+    /** 认证状态 */
+    @Excel(name = "认证状态")
+    private String verified;
+
+    /** 用户等级 */
+    @Excel(name = "用户等级")
+    private String level;
+
     /** 最后分类时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "最后分类时间", width = 30, dateFormat = "yyyy-MM-dd")
@@ -373,6 +401,76 @@ public class CommentUser extends BaseEntity
         return interactionScore;
     }
 
+    public void setFollowerCount(Long followerCount)
+    {
+        this.followerCount = followerCount;
+    }
+
+    public Long getFollowerCount()
+    {
+        return followerCount;
+    }
+
+    public void setFollowingCount(Long followingCount)
+    {
+        this.followingCount = followingCount;
+    }
+
+    public Long getFollowingCount()
+    {
+        return followingCount;
+    }
+
+    public void setLikeCountTotal(Long likeCountTotal)
+    {
+        this.likeCountTotal = likeCountTotal;
+    }
+
+    public Long getLikeCountTotal()
+    {
+        return likeCountTotal;
+    }
+
+    public void setVideoCount(Long videoCount)
+    {
+        this.videoCount = videoCount;
+    }
+
+    public Long getVideoCount()
+    {
+        return videoCount;
+    }
+
+    public void setSignature(String signature)
+    {
+        this.signature = signature;
+    }
+
+    public String getSignature()
+    {
+        return signature;
+    }
+
+    public void setVerified(String verified)
+    {
+        this.verified = verified;
+    }
+
+    public String getVerified()
+    {
+        return verified;
+    }
+
+    public void setLevel(String level)
+    {
+        this.level = level;
+    }
+
+    public String getLevel()
+    {
+        return level;
+    }
+
     public void setLastClassifiedTime(Date lastClassifiedTime)
     {
         this.lastClassifiedTime = lastClassifiedTime;
@@ -415,6 +513,13 @@ public class CommentUser extends BaseEntity
                 .append("likeCount", getLikeCount())
                 .append("shareCount", getShareCount())
                 .append("interactionScore", getInteractionScore())
+                .append("followerCount", getFollowerCount())
+                .append("followingCount", getFollowingCount())
+                .append("likeCountTotal", getLikeCountTotal())
+                .append("videoCount", getVideoCount())
+                .append("signature", getSignature())
+                .append("verified", getVerified())
+                .append("level", getLevel())
                 .append("lastClassifiedTime", getLastClassifiedTime())
                 .toString();
     }

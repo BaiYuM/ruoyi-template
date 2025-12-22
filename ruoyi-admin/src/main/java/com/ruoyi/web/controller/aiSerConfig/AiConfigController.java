@@ -45,6 +45,18 @@ public class AiConfigController extends BaseController
         List<AiConfig> list = aiConfigService.selectAiConfigList(aiConfig);
         return getDataTable(list);
     }
+    
+    /**
+     * 查询AI客服配置列表（关联comment_user）
+     */
+    @PreAuthorize("@ss.hasPermi('tikTok:aiSerConfig:list')")
+    @GetMapping("/listWithCommentUser")
+    public TableDataInfo listWithCommentUser(AiConfig aiConfig)
+    {
+        startPage();
+        List<AiConfig> list = aiConfigService.selectAiConfigWithCommentUserList(aiConfig);
+        return getDataTable(list);
+    }
 
     /**
      * 导出AI客服配置列表
