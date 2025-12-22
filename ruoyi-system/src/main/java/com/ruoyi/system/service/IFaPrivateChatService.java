@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+import java.util.Map;
 import com.ruoyi.system.domain.FaPrivateChat;
 
 /**
@@ -58,4 +59,26 @@ public interface IFaPrivateChatService
      * @return 结果
      */
     public int deleteFaPrivateChatById(Long id);
+
+    /**
+     * 获取抖音号列表
+     * @return 抖音号集合
+     */
+    List<String> getCommentUserAccounts();
+
+    /**
+     * 获取72小时内的会话列表
+     * @param account 抖音号
+     * @param hours 时间范围（小时）
+     * @param limit 最大条数
+     * @return 会话集合
+     */
+    List<FaPrivateChat> getRecentSessions(String account, int hours, int limit);
+
+    /**
+     * 获取会话的聊天信息
+     * @param sessionId 会话ID
+     * @return 聊天信息集合
+     */
+    List<Map<String, Object>> getSessionMessages(Long sessionId);
 }

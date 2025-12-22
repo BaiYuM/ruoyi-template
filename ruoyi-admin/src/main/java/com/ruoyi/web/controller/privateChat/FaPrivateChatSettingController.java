@@ -1,7 +1,10 @@
-package com.ruoyi.web.controller.fachat;
+package com.ruoyi.web.controller.privateChat;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.system.domain.FaPrivateChatSetting;
+import com.ruoyi.system.service.IFaPrivateChatSettingService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,8 +19,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
-import com.ruoyi.system.domain.FaPrivateChatSetting;
-import com.ruoyi.system.service.IFaPrivateChatSettingService;
+
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -25,10 +27,10 @@ import com.ruoyi.common.core.page.TableDataInfo;
  * 私聊设置Controller
  * 
  * @author ruoyi
- * @date 2025-12-19
+ * @date 2025-12-22
  */
 @RestController
-@RequestMapping("/private/setting")
+@RequestMapping("/privateChat/private_chat_setting")
 public class FaPrivateChatSettingController extends BaseController
 {
     @Autowired
@@ -37,7 +39,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 查询私聊设置列表
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:list')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:list')")
     @GetMapping("/list")
     public TableDataInfo list(FaPrivateChatSetting faPrivateChatSetting)
     {
@@ -49,7 +51,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 导出私聊设置列表
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:export')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:export')")
     @Log(title = "私聊设置", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, FaPrivateChatSetting faPrivateChatSetting)
@@ -62,7 +64,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 获取私聊设置详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:query')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -72,7 +74,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 新增私聊设置
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:add')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:add')")
     @Log(title = "私聊设置", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody FaPrivateChatSetting faPrivateChatSetting)
@@ -83,7 +85,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 修改私聊设置
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:edit')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:edit')")
     @Log(title = "私聊设置", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody FaPrivateChatSetting faPrivateChatSetting)
@@ -94,7 +96,7 @@ public class FaPrivateChatSettingController extends BaseController
     /**
      * 删除私聊设置
      */
-    @PreAuthorize("@ss.hasPermi('system:setting:remove')")
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat_setting:remove')")
     @Log(title = "私聊设置", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)

@@ -70,7 +70,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.28</version> <!-- 选择支持 Java 21 的版本 -->
+            <version>1.18.40</version> <!-- 选择支持 Java 21 的版本 -->
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -49,6 +49,15 @@ public class AiConfig extends BaseEntity
     /** ai模型 */
     @Excel(name = "ai模型")
     private Long aiModel;
+    
+    /** 用户昵称 */
+    private String nickName;
+    
+    /** 开始创建时间 */
+    private String beginCreateTime;
+    
+    /** 结束创建时间 */
+    private String endCreateTime;
 
     public void setId(Long id) 
     {
@@ -140,6 +149,36 @@ public class AiConfig extends BaseEntity
         return aiModel;
     }
 
+    public void setNickName(String nickName)
+    {
+        this.nickName = nickName;
+    }
+
+    public String getNickName()
+    {
+        return nickName;
+    }
+    
+    public void setBeginCreateTime(String beginCreateTime)
+    {
+        this.beginCreateTime = beginCreateTime;
+    }
+    
+    public String getBeginCreateTime()
+    {
+        return beginCreateTime;
+    }
+    
+    public void setEndCreateTime(String endCreateTime)
+    {
+        this.endCreateTime = endCreateTime;
+    }
+    
+    public String getEndCreateTime()
+    {
+        return endCreateTime;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -153,6 +192,7 @@ public class AiConfig extends BaseEntity
             .append("status", getStatus())
             .append("aiModel", getAiModel())
             .append("createTime", getCreateTime())
+            .append("nickName", getNickName())
             .toString();
     }
 }

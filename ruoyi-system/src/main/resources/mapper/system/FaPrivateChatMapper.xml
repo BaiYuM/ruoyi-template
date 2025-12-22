@@ -33,6 +33,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectFaPrivateChatVo"/>
         where id = #{id}
     </select>
+    <select id="selectRecentSessions" resultType="com.ruoyi.system.domain.FaPrivateChat"></select>
+    <select id="selectSessionMessages" resultType="java.util.Map"></select>
 
     <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
         insert into fa_private_chat
@@ -82,4 +84,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+
 </mapper>
