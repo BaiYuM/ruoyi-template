@@ -1,6 +1,7 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import com.ruoyi.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,5 +93,39 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     public int deleteFaPrivateChatById(Long id)
     {
         return faPrivateChatMapper.deleteFaPrivateChatById(id);
+    }
+
+    /**
+     * 获取抖音号列表
+     *
+     * @return 抖音号列表
+     */
+    @Override
+    public List<String> getCommentUserAccounts() {
+        return faPrivateChatMapper.selectCommentUserAccounts();
+    }
+
+    /**
+     * 获取会话列表
+     *
+     * @param account 账号
+     * @param hours 最近几小时
+     * @param limit 限制条数
+     * @return 会话列表
+     */
+    @Override
+    public List<FaPrivateChat> getRecentSessions(String account, int hours, int limit) {
+        return faPrivateChatMapper.selectRecentSessions(account, hours, limit);
+    }
+
+    /**
+     * 获取聊天信息
+     *
+     * @param sessionId 会话ID
+     * @return 聊天信息
+     */
+    @Override
+    public List<Map<String, Object>> getSessionMessages(Long sessionId) {
+        return faPrivateChatMapper.selectSessionMessages(sessionId);
     }
 }
