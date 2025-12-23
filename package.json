@@ -7,6 +7,7 @@
     "@vicons/utils": "^0.1.4",
     "dayjs": "^1.11.19",
     "naive-ui": "^2.43.2",
+    "sortablejs": "^1.15.6",
     "vicons": "^0.0.1",
     "vuedraggable": "^4.1.0"
   }

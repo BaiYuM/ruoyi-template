@@ -192,9 +192,9 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
         int rows = faPrivateChatMsgMapper.insertFaPrivateChatMsg(msg);
         
         // 2. 更新会话的最后一条消息ID和最后发送时间
-        if (rows > 0 && msg.getSessionId() != null) {
+        if (rows > 0 && msg.getChatId() != null) {
             FaPrivateChat chat = new FaPrivateChat();
-            chat.setId(msg.getSessionId());
+            chat.setId(msg.getChatId());
             chat.setLastMsgId(msg.getId());
             chat.setLastSendTime(msg.getCreateTime());
             faPrivateChatMapper.updateFaPrivateChat(chat);

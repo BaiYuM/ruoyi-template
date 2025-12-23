@@ -46,12 +46,12 @@ class DouyinUserServiceImplTest {
         CommentUser commentUser = new CommentUser();
         commentUser.setId(1L);
         commentUser.setUserId(1L);
-        commentUser.setFollowerCount(100);
-        commentUser.setFollowingCount(50);
+        commentUser.setFollowerCount(100L);
+        commentUser.setFollowingCount(50L);
 
         // 设置Mock行为
         when(faUserMapper.selectFaUserById(1L)).thenReturn(faUser);
-        when(commentUserMapper.selectCommentUserByUserId(1L)).thenReturn(commentUser);
+        when(commentUserMapper.selectCommentUserById(1L)).thenReturn(commentUser);
 
         // 执行测试
         DouyinUserVO result = service.selectDouyinUserById(1L);
@@ -66,7 +66,7 @@ class DouyinUserServiceImplTest {
 
         // 验证方法调用
         verify(faUserMapper, times(1)).selectFaUserById(1L);
-        verify(commentUserMapper, times(1)).selectCommentUserByUserId(1L);
+        verify(commentUserMapper, times(1)).selectCommentUserById(1L);
     }
 
     @Test
@@ -81,7 +81,7 @@ class DouyinUserServiceImplTest {
 
         // 设置Mock行为
         when(faUserMapper.selectFaUserByOpenId("open123")).thenReturn(faUser);
-        when(commentUserMapper.selectCommentUserByUserId(1L)).thenReturn(commentUser);
+        when(commentUserMapper.selectCommentUserById(1L)).thenReturn(commentUser);
 
         // 执行测试
         DouyinUserVO result = service.selectDouyinUserByOpenId("open123");
@@ -99,7 +99,7 @@ class DouyinUserServiceImplTest {
         faUser.setNickname("新用户");
 
         CommentUser commentUser = new CommentUser();
-        commentUser.setFollowerCount(0);
+        commentUser.setFollowerCount(0L);
 
         DouyinUserVO vo = new DouyinUserVO();
         vo.setFaUser(faUser);

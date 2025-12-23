@@ -19,8 +19,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <select id="selectFaClueList" parameterType="FaClue" resultMap="FaClueResult">
-        <include refIdentifier="selectFaClueVo"/>
-        <where>  
+        <include refid="selectFaClueVo"/>
+        <where>
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="clueLabel != null  and clueLabel != ''"> and clue_label like concat('%', #{clueLabel}, '%')</if>
             <if test="clueValue != null  and clueValue != ''"> and clue_value like concat('%', #{clueValue}, '%')</if>
@@ -29,7 +29,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
     
     <select id="selectFaClueById" parameterType="Long" resultMap="FaClueResult">
-        <include refIdentifier="selectFaClueVo"/>
+        <include refid="selectFaClueVo"/>
         where clue_id = #{clueId}
     </select>
         

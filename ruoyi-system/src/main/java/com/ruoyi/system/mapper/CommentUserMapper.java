@@ -60,4 +60,12 @@ public interface CommentUserMapper
     public int deleteCommentUserByIds(Long[] ids);
 
     CommentUser selectCommentUserByPlatformAndAccount(String platform, String account);
+    
+    /**
+     * 根据用户ID查询平台账户
+     * 
+     * @param userId 用户ID
+     * @return 平台账户
+     */
+    CommentUser selectCommentUserByUserId(Long userId);
 }

@@ -81,6 +81,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where platform = #{platform} and account = #{account}
     </select>
 
+    <select id="selectCommentUserByUserId" parameterType="Long" resultMap="CommentUserResult">
+        <include refid="selectCommentUserVo"/>
+        where user_id = #{userId}
+    </select>
+
     <insert id="insertCommentUser" parameterType="com.ruoyi.system.domain.CommentUser" useGeneratedKeys="true" keyProperty="id">
         insert into comment_user
         <trim prefix="(" suffix=")" suffixOverrides=",">
