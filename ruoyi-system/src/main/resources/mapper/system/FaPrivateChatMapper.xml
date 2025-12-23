@@ -13,10 +13,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="lastMsgId"    column="last_msg_id"    />
         <result property="isBlocked"    column="is_blocked"    />
         <result property="delFlag"    column="del_flag"    />
+        <result property="peerUserId"    column="peer_user_id" />
+        <result property="peerAccount"   column="peer_account" />
+        <result property="peerNickname"  column="peer_nickname" />
+        <result property="peerAvatar"    column="peer_avatar" />
+        <result property="peerFunds"     column="peer_funds" />
+        <result property="lastSendTime"  column="last_send_time" />
+        <result property="douyinId"       column="douyin_id" />
     </resultMap>
 
     <sql id="selectFaPrivateChatVo">
-        select id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag from fa_private_chat
+        select id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag,
+               peer_user_id, peer_account, peer_nickname, peer_avatar, peer_funds, last_send_time, douyin_id
+        from fa_private_chat
     </sql>
 
     <select id="selectFaPrivateChatList" parameterType="FaPrivateChat" resultMap="FaPrivateChatResult">
@@ -36,15 +45,42 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <!-- 查询最近会话 -->
     <select id="selectRecentSessions" resultMap="FaPrivateChatResult">
-        SELECT DISTINCT pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag
+        SELECT
+            pc.id,
+            pc.user_id1,
+            pc.user_id2,
+            pc.create_time,
+            pc.update_time,
+            pc.last_msg_id,
+            pc.is_blocked,
+            pc.del_flag,
+            peer.id AS peer_user_id,
+            peer.account AS peer_account,
+            peer.nickname AS peer_nickname,
+            peer.avatar AS peer_avatar,
+            ea_peer.funds AS peer_funds,
+            auth.account AS douyin_id,
+            MAX(pcm.send_time) AS last_send_time
         FROM fa_private_chat pc
-        JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id
-        JOIN comment_user cu ON (pc.user_id1 = cu.id OR pc.user_id2 = cu.id)
-        WHERE cu.account = #{account}
-          AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
-          AND pc.del_flag = 0
-          AND pcm.del_flag = 0
-        ORDER BY pcm.send_time DESC
+        JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id AND pcm.del_flag = 0
+        JOIN expiration_ai ea_auth ON (ea_auth.user_id = pc.user_id1 OR ea_auth.user_id = pc.user_id2)
+        JOIN comment_user auth ON auth.id = ea_auth.user_id
+        JOIN comment_user peer ON peer.id = IF(pc.user_id1 = auth.id, pc.user_id2, pc.user_id1)
+        LEFT JOIN expiration_ai ea_peer ON ea_peer.user_id = peer.id
+        <where>
+            <if test="account != null and account != ''">
+                AND auth.account = #{account}
+            </if>
+            <if test="funds != null">
+                AND ea_peer.funds = #{funds}
+            </if>
+            AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
+            AND pc.del_flag = 0
+        </where>
+        GROUP BY
+            pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag,
+            peer.id, peer.account, peer.nickname, peer.avatar, ea_peer.funds
+        ORDER BY last_send_time DESC
         LIMIT #{limit}
     </select>
     
@@ -59,9 +95,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <!-- 查询评论用户账号列表 -->
     <select id="selectCommentUserAccounts" resultType="java.lang.String">
-        SELECT DISTINCT account
-        FROM comment_user
-        WHERE account IS NOT NULL AND account != ''
+        SELECT DISTINCT cu.account
+        FROM expiration_ai ea
+        JOIN comment_user cu ON cu.id = ea.user_id
+        WHERE cu.account IS NOT NULL AND cu.account != ''
     </select>
 
     <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
@@ -74,6 +111,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time,</if>
             <if test="lastMsgId != null">last_msg_id,</if>
             <if test="isBlocked != null">is_blocked,</if>
+            <if test="peerUserId != null">peer_user_id,</if>
+            <if test="peerAccount != null and peerAccount != ''">peer_account,</if>
+            <if test="peerNickname != null and peerNickname != ''">peer_nickname,</if>
+            <if test="peerAvatar != null and peerAvatar != ''">peer_avatar,</if>
+            <if test="peerFunds != null">peer_funds,</if>
+            <if test="lastSendTime != null">last_send_time,</if>
+            <if test="douyinId != null and douyinId != ''">douyin_id,</if>
             <if test="delFlag != null">del_flag,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -84,6 +128,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">#{updateTime},</if>
             <if test="lastMsgId != null">#{lastMsgId},</if>
             <if test="isBlocked != null">#{isBlocked},</if>
+            <if test="peerUserId != null">#{peerUserId},</if>
+            <if test="peerAccount != null and peerAccount != ''">#{peerAccount},</if>
+            <if test="peerNickname != null and peerNickname != ''">#{peerNickname},</if>
+            <if test="peerAvatar != null and peerAvatar != ''">#{peerAvatar},</if>
+            <if test="peerFunds != null">#{peerFunds},</if>
+            <if test="lastSendTime != null">#{lastSendTime},</if>
+            <if test="douyinId != null and douyinId != ''">#{douyinId},</if>
             <if test="delFlag != null">#{delFlag},</if>
          </trim>
     </insert>
@@ -97,6 +148,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time = #{updateTime},</if>
             <if test="lastMsgId != null">last_msg_id = #{lastMsgId},</if>
             <if test="isBlocked != null">is_blocked = #{isBlocked},</if>
+            <if test="peerUserId != null">peer_user_id = #{peerUserId},</if>
+            <if test="peerAccount != null and peerAccount != ''">peer_account = #{peerAccount},</if>
+            <if test="peerNickname != null and peerNickname != ''">peer_nickname = #{peerNickname},</if>
+            <if test="peerAvatar != null and peerAvatar != ''">peer_avatar = #{peerAvatar},</if>
+            <if test="peerFunds != null">peer_funds = #{peerFunds},</if>
+            <if test="lastSendTime != null">last_send_time = #{lastSendTime},</if>
+            <if test="douyinId != null and douyinId != ''">douyin_id = #{douyinId},</if>
             <if test="delFlag != null">del_flag = #{delFlag},</if>
         </trim>
         where id = #{id}

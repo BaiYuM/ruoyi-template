@@ -24,12 +24,12 @@ public class FaPrivateChatMsg extends BaseEntity
     @Excel(name = "会话ID", readConverterExp = "关=联fa_private_chat.id")
     private Long chatId;
 
-    /** 发送人ID（关联sys_user.id） */
-    @Excel(name = "发送人ID", readConverterExp = "关=联sys_user.id")
+    /** 发送方抖音用户ID（关联 comment_user.id） */
+    @Excel(name = "发送方用户ID", readConverterExp = "关=联comment_user.id")
     private Long senderId;
 
-    /** 接收人ID（关联sys_user.id） */
-    @Excel(name = "接收人ID", readConverterExp = "关=联sys_user.id")
+    /** 接收方抖音用户ID（关联 comment_user.id） */
+    @Excel(name = "接收方用户ID", readConverterExp = "关=联comment_user.id")
     private Long receiverId;
 
     /** 消息类型（0=文本 1=图片 2=文件 3=语音） */

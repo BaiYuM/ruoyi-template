@@ -6,7 +6,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.system.domain.FaPrivateChat;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
+import com.ruoyi.system.domain.FaClue;
 import com.ruoyi.system.service.IFaPrivateChatService;
+import com.ruoyi.system.service.IFaClueService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +28,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
- * 私聊会话Controller
+ * 抖音私信会话Controller
  * 
  * @author ruoyi
  * @date 2025-12-22
@@ -37,6 +39,9 @@ public class FaPrivateChatController extends BaseController
 {
     @Autowired
     private IFaPrivateChatService faPrivateChatService;
+
+    @Autowired
+    private IFaClueService faClueService;
 
     /**
      * 查询私聊会话列表
@@ -118,12 +123,17 @@ public class FaPrivateChatController extends BaseController
 
     /**
      * 获取会话列表
-     * @param account 抖音号
+        *
+        * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
+        * account 参数表示“授权抖音号”（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
+        *
+        * @param account 授权抖音号（comment_user.account）
+        * @param funds 对方用户留资状态：0未留资，1已留资，不传则返回所有
      */
     @PreAuthorize("@ss.hasPermi('privateChat:private_chat:sessions')")
     @GetMapping("/sessions")
-    public AjaxResult getSessions(@RequestParam String account) {
-        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(account, 72, 2000);
+    public AjaxResult getSessions(@RequestParam(required = false) String account, @RequestParam(required = false) Integer funds) {
+        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(account, 72, funds, 2000);
         return success(sessions);
     }
 
@@ -136,5 +146,28 @@ public class FaPrivateChatController extends BaseController
     public AjaxResult getMessages(@RequestParam Long sessionId) {
         List<FaPrivateChatMsg> messages = faPrivateChatService.getSessionMessages(sessionId);
         return success(messages);
+    }
+    /**
+     * 获取关联线索
+     * @param userId 用户ID (对应 comment_user.id)
+     */
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat:query')")
+    @GetMapping("/clues")
+    public AjaxResult getClues(@RequestParam Long userId) {
+        FaClue query = new FaClue();
+        query.setUserId(userId);
+        List<FaClue> clues = faClueService.selectFaClueList(query);
+        return success(clues);
+    }
+
+    /**
+     * 发送私信消息
+     */
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat:add')")
+    @Log(title = "发送私信", businessType = BusinessType.INSERT)
+    @PostMapping("/send")
+    public AjaxResult send(@RequestBody FaPrivateChatMsg msg)
+    {
+        return toAjax(faPrivateChatService.sendMessage(msg));
     }
 }
