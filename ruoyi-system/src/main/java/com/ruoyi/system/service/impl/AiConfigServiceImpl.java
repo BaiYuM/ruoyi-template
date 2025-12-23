@@ -57,6 +57,7 @@ public class AiConfigServiceImpl implements IAiConfigService
      * @param aiConfig AI客服配置
      * @return AI客服配置
      */
+    @Override
     public List<AiConfig> selectAiConfigWithCommentUserList(AiConfig aiConfig)
     {
         return aiConfigMapper.selectAiConfigWithCommentUserList(aiConfig);

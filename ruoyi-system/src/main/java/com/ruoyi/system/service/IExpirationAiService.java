@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.ExpirationAi;
+import com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo;
 
 import java.util.List;
 
@@ -32,6 +33,22 @@ public interface IExpirationAiService
      * 查询ai客服账号配置列表
      */
     public List<ExpirationAi> selectExpirationAiWithUserList(ExpirationAi expirationAi);
+
+    /**
+     * 查询AI客服配置中授权账户（关联comment_user表）
+     * 
+     * @param expirationAi ai客服配置
+     * @return ai客服配置集合
+     */
+    public List<ExpirationAi> selectExpirationAiWithCommentUserList(ExpirationAi expirationAi);
+
+    /**
+     * 查询AI客服配置中授权账户（只返回account和nickName）
+     *
+     * @param expirationAi ai客服配置
+     * @return ai客服配置视图集合
+     */
+    public List<AiCustomerServiceConfigVo> selectAiCustomerServiceConfigList(ExpirationAi expirationAi);
     /**
      * 新增ai客服配置
      * 

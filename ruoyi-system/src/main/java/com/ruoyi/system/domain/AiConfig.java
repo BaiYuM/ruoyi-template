@@ -50,8 +50,14 @@ public class AiConfig extends BaseEntity
     @Excel(name = "ai模型")
     private Long aiModel;
     
+    /** 用户账号 */
+    private String account;
+    
     /** 用户昵称 */
     private String nickName;
+    
+    /** 用户头像 */
+    private String avatar;
     
     /** 开始创建时间 */
     private String beginCreateTime;
@@ -149,6 +155,16 @@ public class AiConfig extends BaseEntity
         return aiModel;
     }
 
+    public void setAccount(String account)
+    {
+        this.account = account;
+    }
+
+    public String getAccount()
+    {
+        return account;
+    }
+    
     public void setNickName(String nickName)
     {
         this.nickName = nickName;
@@ -157,6 +173,16 @@ public class AiConfig extends BaseEntity
     public String getNickName()
     {
         return nickName;
+    }
+    
+    public void setAvatar(String avatar)
+    {
+        this.avatar = avatar;
+    }
+
+    public String getAvatar()
+    {
+        return avatar;
     }
     
     public void setBeginCreateTime(String beginCreateTime)

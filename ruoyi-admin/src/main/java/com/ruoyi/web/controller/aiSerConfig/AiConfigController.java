@@ -59,6 +59,18 @@ public class AiConfigController extends BaseController
     }
 
     /**
+     * 查询AI客服配置中授权账户信息（通过expiration_id关联expiration_ai，再关联comment_user获取account和nickName）
+     */
+    @PreAuthorize("@ss.hasPermi('tikTok:aiSerConfig:list')")
+    @GetMapping("/authorizationAccounts")
+    public TableDataInfo authorizationAccounts(AiConfig aiConfig)
+    {
+        startPage();
+        List<AiConfig> list = aiConfigService.selectAiConfigWithCommentUserList(aiConfig);
+        return getDataTable(list);
+    }
+
+    /**
      * 导出AI客服配置列表
      */
     @PreAuthorize("@ss.hasPermi('tikTok:aiSerConfig:export')")
@@ -113,4 +125,6 @@ public class AiConfigController extends BaseController
     {
         return toAjax(aiConfigService.deleteAiConfigByIds(ids));
     }
+
+
 }

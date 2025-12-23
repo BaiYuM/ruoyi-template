@@ -5,6 +5,7 @@ import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.system.domain.ExpirationAi;
 import com.ruoyi.system.mapper.ExpirationAiMapper;
 import com.ruoyi.system.service.IExpirationAiService;
+import com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,9 +46,34 @@ public class ExpirationAiServiceImpl implements IExpirationAiService
         return expirationAiMapper.selectExpirationAiList(expirationAi);
     }
 
+    /**
+     * 查询授权账户头像，昵称及账户配置信息
+     */
     @Override
     public List<ExpirationAi> selectExpirationAiWithUserList(ExpirationAi expirationAi) {
         return expirationAiMapper.selectExpirationAiWithUserList(expirationAi);
+    }
+
+    /**
+     * 查询AI客服配置中授权账户（关联comment_user表）
+     *
+     * @param expirationAi 授权账号配置
+     * @return 授权账号配置集合
+     */
+    @Override
+    public List<ExpirationAi> selectExpirationAiWithCommentUserList(ExpirationAi expirationAi) {
+        return expirationAiMapper.selectExpirationAiWithCommentUserList(expirationAi);
+    }
+
+    /**
+     * 获取AI客服配置中授权账户（只返回account和nickName）
+     *
+     * @param expirationAi 授权账号配置
+     * @return 授权账号配置视图集合
+     */
+    @Override
+    public List<AiCustomerServiceConfigVo> selectAiCustomerServiceConfigList(ExpirationAi expirationAi) {
+        return expirationAiMapper.selectAiCustomerServiceConfigList(expirationAi);
     }
 
     /**
