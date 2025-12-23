@@ -2,12 +2,13 @@ package com.ruoyi.system.service.impl;
 
 import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.uuid.IdUtils;
 import com.ruoyi.system.domain.FaPrivateChat;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
 import com.ruoyi.system.mapper.FaPrivateChatMapper;
+import com.ruoyi.system.mapper.FaPrivateChatMsgMapper;
 import com.ruoyi.system.service.IFaPrivateChatService;
-import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,9 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
 {
     @Autowired
     private FaPrivateChatMapper faPrivateChatMapper;
+    
+    @Autowired
+    private FaPrivateChatMsgMapper faPrivateChatMsgMapper;
 
     /**
      * 查询私聊会话
@@ -33,7 +37,15 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     @Override
     public FaPrivateChat selectFaPrivateChatById(Long id)
     {
-        return faPrivateChatMapper.selectFaPrivateChatById(id);
+        FaPrivateChat faPrivateChat = faPrivateChatMapper.selectFaPrivateChatById(id);
+        // 加载最后一条消息的内容
+        if (faPrivateChat != null && faPrivateChat.getLastMsgId() != null) {
+            FaPrivateChatMsg msg = faPrivateChatMsgMapper.selectFaPrivateChatMsgById(faPrivateChat.getLastMsgId());
+            if (msg != null) {
+                faPrivateChat.setLastMsgContent(msg.getMsgContent());
+            }
+        }
+        return faPrivateChat;
     }
 
     /**
@@ -45,7 +57,16 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     @Override
     public List<FaPrivateChat> selectFaPrivateChatList(FaPrivateChat faPrivateChat)
     {
-        return faPrivateChatMapper.selectFaPrivateChatList(faPrivateChat);
+        List<FaPrivateChat> list = faPrivateChatMapper.selectFaPrivateChatList(faPrivateChat);
+        for (FaPrivateChat chat : list) {
+            if (chat.getLastMsgId() != null) {
+                FaPrivateChatMsg msg = faPrivateChatMsgMapper.selectFaPrivateChatMsgById(chat.getLastMsgId());
+                if (msg != null) {
+                    chat.setLastMsgContent(msg.getMsgContent());
+                }
+            }
+        }
+        return list;
     }
 
     /**
@@ -61,7 +82,7 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
         if (faPrivateChat.getId() == null) {
             faPrivateChat.setId(IdUtils.getSnowflakeId());
         }
-        faPrivateChat.setCreateTime(DateUtils.getNowDate());
+        faPrivateChat.setCreateBy(SecurityUtils.getUsername());
         return faPrivateChatMapper.insertFaPrivateChat(faPrivateChat);
     }
 
@@ -122,7 +143,17 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
      */
     @Override
     public List<FaPrivateChat> getRecentSessions(String account, int hours, int limit) {
-        return faPrivateChatMapper.selectRecentSessions(account, hours, limit);
+        List<FaPrivateChat> list = faPrivateChatMapper.selectRecentSessions(account, hours, limit);
+        // 为每个会话加载最后一条消息的内容
+        for (FaPrivateChat chat : list) {
+            if (chat.getLastMsgId() != null) {
+                FaPrivateChatMsg msg = faPrivateChatMsgMapper.selectFaPrivateChatMsgById(chat.getLastMsgId());
+                if (msg != null) {
+                    chat.setLastMsgContent(msg.getMsgContent());
+                }
+            }
+        }
+        return list;
     }
 
     /**

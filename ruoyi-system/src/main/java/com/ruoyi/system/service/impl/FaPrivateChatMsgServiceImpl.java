@@ -2,11 +2,16 @@ package com.ruoyi.system.service.impl;
 
 import java.util.List;
 
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.uuid.IdUtils;
+import com.ruoyi.system.domain.FaPrivateChat;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
 import com.ruoyi.system.mapper.FaPrivateChatMsgMapper;
 import com.ruoyi.system.service.IFaPrivateChatMsgService;
+import com.ruoyi.system.service.IFaPrivateChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -20,6 +25,9 @@ public class FaPrivateChatMsgServiceImpl implements IFaPrivateChatMsgService
 {
     @Autowired
     private FaPrivateChatMsgMapper faPrivateChatMsgMapper;
+    
+    @Autowired
+    private IFaPrivateChatService faPrivateChatService;
 
     /**
      * 查询私聊消息
@@ -52,9 +60,27 @@ public class FaPrivateChatMsgServiceImpl implements IFaPrivateChatMsgService
      * @return 结果
      */
     @Override
+    @Transactional
     public int insertFaPrivateChatMsg(FaPrivateChatMsg faPrivateChatMsg)
     {
-        return faPrivateChatMsgMapper.insertFaPrivateChatMsg(faPrivateChatMsg);
+        // 使用雪花算法生成ID
+        if (faPrivateChatMsg.getId() == null) {
+            faPrivateChatMsg.setId(IdUtils.getSnowflakeId());
+        }
+
+        
+        // 插入消息
+        int result = faPrivateChatMsgMapper.insertFaPrivateChatMsg(faPrivateChatMsg);
+        
+        // 更新会话的最后消息ID
+        if (result > 0 && faPrivateChatMsg.getChatId() != null) {
+            FaPrivateChat chat = new FaPrivateChat();
+            chat.setId(faPrivateChatMsg.getChatId());
+            chat.setLastMsgId(faPrivateChatMsg.getId());
+            faPrivateChatService.updateFaPrivateChat(chat);
+        }
+        
+        return result;
     }
 
     /**
@@ -64,9 +90,18 @@ public class FaPrivateChatMsgServiceImpl implements IFaPrivateChatMsgService
      * @return 结果
      */
     @Override
+    @Transactional
     public int updateFaPrivateChatMsg(FaPrivateChatMsg faPrivateChatMsg)
     {
-        return faPrivateChatMsgMapper.updateFaPrivateChatMsg(faPrivateChatMsg);
+        int result = faPrivateChatMsgMapper.updateFaPrivateChatMsg(faPrivateChatMsg);
+        // 更新会话的最后消息ID
+        if (result > 0 && faPrivateChatMsg.getChatId() != null) {
+            FaPrivateChat chat = new FaPrivateChat();
+            chat.setId(faPrivateChatMsg.getChatId());
+            chat.setLastMsgId(faPrivateChatMsg.getId());
+            faPrivateChatService.updateFaPrivateChat(chat);
+        }
+        return result;
     }
 
     /**
