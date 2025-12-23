@@ -56,12 +56,12 @@ public class ExpirationAi extends BaseEntity
     @JsonFormat(pattern = "HH:mm:ss")
     @Excel(name = "工作时间段结束", width = 30, dateFormat = "HH:mm:ss")
     private Time workPeriodEnd;
-    
-    /** 用户账号（关联comment_user表） */
+
+    /** 用户账号 */
     @Excel(name = "用户账号")
     private String account;
-    
-    /** 用户昵称（关联comment_user表） */
+
+    /** 用户昵称 */
     @Excel(name = "用户昵称")
     private String nickName;
     

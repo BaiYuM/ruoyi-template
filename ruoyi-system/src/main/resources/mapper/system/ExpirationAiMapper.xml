@@ -18,15 +18,15 @@
     </resultMap>
 
     <resultMap type="com.ruoyi.system.domain.ExpirationAi" id="ExpirationAiCommentUserResult" extends="ExpirationAiResult">
-        <result property="nickName" column="nick_name"/>
         <result property="account" column="account"/>
+        <result property="nickName" column="nickname"/>
         <result property="avatar" column="avatar"/>
     </resultMap>
     
     <resultMap type="com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo" id="AiCustomerServiceConfigResult">
-        <result property="id"    column="id"    />
-        <result property="account"    column="account"    />
-        <result property="nickName"    column="nick_name"    />
+        <result property="id"    column="id"/>
+        <result property="account"    column="account"/>
+        <result property="nickName"    column="nickname"/>
     </resultMap>
 
     <sql id="selectExpirationAiVo">
@@ -47,7 +47,7 @@
             ea.create_by,
             ea.update_time,
             ea.update_by,
-            cu.nickname as user_name,
+            cu.nickname,
             cu.avatar as avatar
         FROM expiration_ai ea
         LEFT JOIN comment_user cu ON cu.id = ea.user_id
@@ -68,7 +68,7 @@
         </where>
     </select>
 
-    <select id="selectExpirationAiWithUserList" parameterType="com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo" resultMap="ExpirationAiCommentUserResult">
+    <select id="selectExpirationAiWithUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiResult">
         <include refid="selectExpirationAiWithUser"/>
         <where>
             <if test="userId != null"> AND ea.user_id = #{userId}</if>
@@ -85,7 +85,7 @@
     </select>
     
 
-    <select id="selectExpirationAiWithCommentUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiCommentUserResult">
+    <select id="selectExpirationAiWithCommentUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiResult">
         SELECT 
             ea.id,
             ea.user_id,
@@ -100,7 +100,7 @@
             ea.update_time,
             ea.update_by,
             cu.account,
-            cu.nickname as user_name,
+            cu.nickname,
             cu.avatar
         FROM expiration_ai ea
         LEFT JOIN comment_user cu ON cu.id = ea.user_id
