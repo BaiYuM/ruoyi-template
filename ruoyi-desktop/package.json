@@ -1,0 +1,74 @@
+{
+  "name": "ruoyi-desktop",
+  "version": "2.0.0",
+  "description": "若依管理系统桌面版 + 自动化任务",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "vue:dev": "cd ../ruoyi-ui && npm run dev",
+    "vue:build": "cd ../ruoyi-ui && npm run build:prod",
+    "vue:install": "cd ../ruoyi-ui && npm install",
+    "vue:build:electron": "cd ../ruoyi-ui && cross-env ELECTRON=true npm run build:prod",
+    "electron:dev": "concurrently \"npm run vue:dev\" \"wait-on http://localhost:5173 && cross-env ELECTRON=true electron .\"",
+    "electron:serve": "cross-env ELECTRON=true electron .",
+    "build": "npm run vue:build:electron && electron-builder",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dev": "npm run electron:dev",
+    "automation:test": "node electron/automation-test.js"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0",
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "build": {
+    "appId": "com.ruoyi.desktop",
+    "productName": "若依管理系统桌面版",
+    "directories": {
+      "output": "dist_electron",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "../ruoyi-ui/dist/**/*",
+      "screenshots/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../ruoyi-ui/public",
+        "to": "public"
+      },
+      {
+        "from": "node_modules/puppeteer/.local-chromium",
+        "to": "chromium"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "若依管理系统"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png"
+    }
+  }
+}
