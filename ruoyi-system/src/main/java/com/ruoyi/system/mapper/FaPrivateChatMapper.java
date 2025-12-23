@@ -74,6 +74,7 @@ public interface FaPrivateChatMapper
      */
     public List<FaPrivateChat> selectRecentSessions(@Param("account") String account,
                                                     @Param("hours") int hours,
+                                                    @Param("funds") Integer funds,
                                                     @Param("limit") int limit);
 
     /**

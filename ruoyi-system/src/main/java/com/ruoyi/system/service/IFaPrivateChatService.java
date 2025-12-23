@@ -72,12 +72,16 @@ public interface IFaPrivateChatService
     /**
      * 获取最近会话列表
      * 
-     * @param account 抖音账号
+        * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
+        * account 参数表示“授权抖音号”（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
+        *
+        * @param account 授权抖音号（comment_user.account）
      * @param hours 时间范围（小时）
+        * @param funds 对方用户留资状态：0未留资，1已留资，null表示不过滤
      * @param limit 限制条数
      * @return 会话列表
      */
-    public List<FaPrivateChat> getRecentSessions( String account, int hours, int limit);
+    public List<FaPrivateChat> getRecentSessions( String account, int hours, Integer funds, int limit);
     
     /**
      * 获取会话消息列表

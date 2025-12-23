@@ -26,7 +26,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
- * 私聊会话Controller
+ * 抖音私信会话Controller
  * 
  * @author ruoyi
  * @date 2025-12-22
@@ -118,12 +118,17 @@ public class FaPrivateChatController extends BaseController
 
     /**
      * 获取会话列表
-     * @param account 抖音号
+        *
+        * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
+        * account 参数表示“授权抖音号”（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
+        *
+        * @param account 授权抖音号（comment_user.account）
+        * @param funds 对方用户留资状态：0未留资，1已留资，不传则返回所有
      */
     @PreAuthorize("@ss.hasPermi('privateChat:private_chat:sessions')")
     @GetMapping("/sessions")
-    public AjaxResult getSessions(@RequestParam String account) {
-        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(account, 72, 2000);
+    public AjaxResult getSessions(@RequestParam(required = false) String account, @RequestParam(required = false) Integer funds) {
+        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(account, 72, funds, 2000);
         return success(sessions);
     }
 
