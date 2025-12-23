@@ -23,13 +23,13 @@ public class FaClueServiceImpl implements IFaClueService
     /**
      * 查询关联线索
      * 
-     * @param clueId 关联线索ID
+     * @param id 关联线索ID
      * @return 关联线索
      */
     @Override
-    public FaClue selectFaClueById(Long clueId)
+    public FaClue selectFaClueById(Long id)
     {
-        return faClueMapper.selectFaClueById(clueId);
+        return faClueMapper.selectFaClueById(id);
     }
 
     /**
@@ -85,12 +85,12 @@ public class FaClueServiceImpl implements IFaClueService
     /**
      * 删除关联线索信息
      * 
-     * @param clueId 关联线索ID
+     * @param id 关联线索ID
      * @return 结果
      */
     @Override
-    public int deleteFaClueById(Long clueId)
+    public int deleteFaClueById(Long id)
     {
-        return faClueMapper.deleteFaClueById(clueId);
+        return faClueMapper.deleteFaClueById(id);
     }
 }

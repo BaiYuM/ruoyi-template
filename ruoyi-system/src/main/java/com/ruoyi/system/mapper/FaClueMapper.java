@@ -14,10 +14,10 @@ public interface FaClueMapper
     /**
      * 查询关联线索
      * 
-     * @param clueId 关联线索ID
+     * @param id 关联线索ID
      * @return 关联线索
      */
-    public FaClue selectFaClueById(Long clueId);
+    public FaClue selectFaClueById(Long id);
 
     /**
      * 查询关联线索列表
@@ -46,10 +46,10 @@ public interface FaClueMapper
     /**
      * 删除关联线索
      * 
-     * @param clueId 关联线索ID
+     * @param id 关联线索ID
      * @return 结果
      */
-    public int deleteFaClueById(Long clueId);
+    public int deleteFaClueById(Long id);
 
     /**
      * 批量删除关联线索

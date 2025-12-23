@@ -155,7 +155,7 @@ public class FaPrivateChatController extends BaseController
     @GetMapping("/clues")
     public AjaxResult getClues(@RequestParam Long userId) {
         FaClue query = new FaClue();
-        query.setUserId(userId);
+        query.setExpirationAiId(userId);
         List<FaClue> clues = faClueService.selectFaClueList(query);
         return success(clues);
     }

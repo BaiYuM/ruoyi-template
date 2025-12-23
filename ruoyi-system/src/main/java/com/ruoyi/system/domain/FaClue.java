@@ -17,12 +17,12 @@ public class FaClue extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 线索ID */
-    private Long clueId;
+    /** 主键 */
+    private Long id;
 
-    /** 用户ID(对应comment_user) */
-    @Excel(name = "用户ID(对应comment_user)")
-    private Long userId;
+    /** 过期AI ID */
+    @Excel(name = "过期AI ID")
+    private Long expirationAiId;
 
     /** 线索标签(如:手机号,微信号) */
     @Excel(name = "线索标签(如:手机号,微信号)")
@@ -36,23 +36,23 @@ public class FaClue extends BaseEntity
     @Excel(name = "线索类型")
     private String clueType;
 
-    public void setClueId(Long clueId) 
+    public void setId(Long id)
     {
-        this.clueId = clueId;
+        this.id = id;
     }
 
-    public Long getClueId() 
+    public Long getId()
     {
-        return clueId;
+        return id;
     }
-    public void setUserId(Long userId) 
+    public void setExpirationAiId(Long expirationAiId)
     {
-        this.userId = userId;
+        this.expirationAiId = expirationAiId;
     }
 
-    public Long getUserId() 
+    public Long getExpirationAiId()
     {
-        return userId;
+        return expirationAiId;
     }
     public void setClueLabel(String clueLabel) 
     {
@@ -85,8 +85,8 @@ public class FaClue extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("clueId", getClueId())
-            .append("userId", getUserId())
+            .append("id", getId())
+            .append("expirationAiId", getExpirationAiId())
             .append("clueLabel", getClueLabel())
             .append("clueValue", getClueValue())
             .append("clueType", getClueType())
