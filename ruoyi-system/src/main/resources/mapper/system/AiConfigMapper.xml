@@ -18,7 +18,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
     
     <resultMap type="AiConfig" id="AiConfigWithCommentUserResult" extends="AiConfigResult">
+        <result property="account" column="account" />
         <result property="nickName" column="nickname" />
+        <result property="avatar" column="avatar" />
     </resultMap>
 
     <sql id="selectAiConfigVo">
@@ -37,9 +39,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             ac.status,
             ac.ai_model,
             ac.create_time,
-            cu.nickname as nickname
+            cu.account,
+            cu.nickname,
+            cu.avatar
         FROM ai_config ac
-        LEFT JOIN comment_user cu ON cu.id = ac.expiration_id
+        LEFT JOIN expiration_ai ea ON ea.id = ac.expiration_id
+        LEFT JOIN comment_user cu ON cu.id = ea.user_id
     </sql>
 
     <select id="selectAiConfigList" parameterType="AiConfig" resultMap="AiConfigResult">

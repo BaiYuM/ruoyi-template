@@ -1,14 +1,15 @@
 package com.ruoyi.system.domain;
 
-import java.sql.Time;
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.util.Date;
+import java.sql.Time;
+import lombok.Getter;
+import lombok.Setter;
+import java.io.Serializable;
 
 /**
  * ai客服配置对象 expiration_ai
@@ -56,10 +57,15 @@ public class ExpirationAi extends BaseEntity
     @Excel(name = "工作时间段结束", width = 30, dateFormat = "HH:mm:ss")
     private Time workPeriodEnd;
     
-    /** 用户昵称（用于接收前端传来的nickName参数） */
+    /** 用户账号（关联comment_user表） */
+    @Excel(name = "用户账号")
+    private String account;
+    
+    /** 用户昵称（关联comment_user表） */
+    @Excel(name = "用户昵称")
     private String nickName;
     
-    /** 用户头像 */
+    /** 用户头像（关联comment_user表） */
     private String avatar;
 
     /** 查询：创建时间-开始（用于接收前端日期范围） */
@@ -150,6 +156,16 @@ public class ExpirationAi extends BaseEntity
         return workPeriodEnd;
     }
     
+    public void setAccount(String account) 
+    {
+        this.account = account;
+    }
+
+    public String getAccount() 
+    {
+        return account;
+    }
+    
     public void setNickName(String nickName) 
     {
         this.nickName = nickName;
@@ -181,6 +197,7 @@ public class ExpirationAi extends BaseEntity
             .append("workPeriodType", getWorkPeriodType())
             .append("workPeriodStart", getWorkPeriodStart())
             .append("workPeriodEnd", getWorkPeriodEnd())
+            .append("account", getAccount())
             .append("nickName", getNickName())
             .append("avatar", getAvatar())
             .append("createTime", getCreateTime())

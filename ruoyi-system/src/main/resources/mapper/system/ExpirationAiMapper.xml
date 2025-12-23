@@ -18,8 +18,15 @@
     </resultMap>
 
     <resultMap type="com.ruoyi.system.domain.ExpirationAi" id="ExpirationAiCommentUserResult" extends="ExpirationAiResult">
-        <result property="nickName" column="user_name"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="account" column="account"/>
         <result property="avatar" column="avatar"/>
+    </resultMap>
+    
+    <resultMap type="com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo" id="AiCustomerServiceConfigResult">
+        <result property="id"    column="id"    />
+        <result property="account"    column="account"    />
+        <result property="nickName"    column="nick_name"    />
     </resultMap>
 
     <sql id="selectExpirationAiVo">
@@ -61,7 +68,7 @@
         </where>
     </select>
 
-    <select id="selectExpirationAiWithUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiCommentUserResult">
+    <select id="selectExpirationAiWithUserList" parameterType="com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo" resultMap="ExpirationAiCommentUserResult">
         <include refid="selectExpirationAiWithUser"/>
         <where>
             <if test="userId != null"> AND ea.user_id = #{userId}</if>
@@ -77,9 +84,58 @@
         </where>
     </select>
     
+
+    <select id="selectExpirationAiWithCommentUserList" parameterType="com.ruoyi.system.domain.ExpirationAi" resultMap="ExpirationAiCommentUserResult">
+        SELECT 
+            ea.id,
+            ea.user_id,
+            ea.expiration_date,
+            ea.open_ai,
+            ea.funds,
+            ea.work_period_type,
+            ea.work_period_start,
+            ea.work_period_end,
+            ea.create_time,
+            ea.create_by,
+            ea.update_time,
+            ea.update_by,
+            cu.account,
+            cu.nickname as user_name,
+            cu.avatar
+        FROM expiration_ai ea
+        LEFT JOIN comment_user cu ON cu.id = ea.user_id
+        <where>
+            <if test="openAi != null"> AND ea.open_ai = #{openAi}</if>
+            <if test="userId != null"> AND ea.user_id = #{userId}</if>
+            <if test="expirationDate != null"> AND ea.expiration_date = #{expirationDate}</if>
+            <if test="funds != null"> AND ea.funds = #{funds}</if>
+            <if test="workPeriodType != null"> AND ea.work_period_type = #{workPeriodType}</if>
+            <if test="workPeriodStart != null"> AND ea.work_period_start = #{workPeriodStart}</if>
+            <if test="workPeriodEnd != null"> AND ea.work_period_end = #{workPeriodEnd}</if>
+            <if test="beginCreateTime != null"> AND ea.create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null"> AND ea.create_time &lt;= #{endCreateTime}</if>
+        </where>
+        ORDER BY ea.create_time DESC
+    </select>
+    
     <select id="selectExpirationAiById" parameterType="Long" resultMap="ExpirationAiResult">
         <include refid="selectExpirationAiVo"/>
         where id = #{id}
+    </select>
+
+    <!-- 新增查询：查询AI客服配置中授权账户，只返回account和nickname -->
+    <select id="selectAiCustomerServiceConfigList" parameterType="com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo" resultMap="AiCustomerServiceConfigResult">
+        SELECT 
+            ea.id,
+            cu.account,
+            cu.nickname
+        FROM expiration_ai ea
+        LEFT JOIN comment_user cu ON cu.id = ea.user_id
+        <where>
+            <if test="openAi != null"> AND ea.open_ai = #{openAi}</if>
+
+        </where>
+        ORDER BY ea.create_time DESC
     </select>
 
     <insert id="insertExpirationAi" parameterType="com.ruoyi.system.domain.ExpirationAi">

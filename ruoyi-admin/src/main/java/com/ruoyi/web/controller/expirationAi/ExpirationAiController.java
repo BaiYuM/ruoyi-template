@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.system.domain.ExpirationAi;
 import com.ruoyi.system.service.IExpirationAiService;
+import com.ruoyi.system.domain.vo.AiCustomerServiceConfigVo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,7 +67,6 @@ public class ExpirationAiController extends BaseController
                                                   @RequestParam(value = "createTime", required = false) String[] createTime,
                                                   @RequestBody(required = false) Map<String, Object> body)
     {
-        // 优先使用 query param，如果没有则尝试从 JSON body 中读取 createTime 字段（数组：[begin, end]）
         if (createTime != null && createTime.length == 2) {
             expirationAi.setBeginCreateTime(DateUtils.parseDate(createTime[0]));
             expirationAi.setEndCreateTime(DateUtils.parseDate(createTime[1]));
@@ -89,6 +89,20 @@ public class ExpirationAiController extends BaseController
 
         startPage();
         List<ExpirationAi> list = expirationAiService.selectExpirationAiWithUserList(expirationAi);
+        return getDataTable(list);
+    }
+
+    /**
+     * 查询AI客服配置中授权账户（只返回account和nickName），只查询open_ai为1的数据
+     */
+    @PreAuthorize("@ss.hasPermi('tikTok:expirationAi:list')")
+    @GetMapping("/aiCustomerServiceConfig")
+    public TableDataInfo aiCustomerServiceConfigList(ExpirationAi expirationAi)
+    {
+        // 设置openAi为1，只查询AI客服开启的账户
+        expirationAi.setOpenAi(1);
+        startPage();
+        List<AiCustomerServiceConfigVo> list = expirationAiService.selectAiCustomerServiceConfigList(expirationAi);
         return getDataTable(list);
     }
 
