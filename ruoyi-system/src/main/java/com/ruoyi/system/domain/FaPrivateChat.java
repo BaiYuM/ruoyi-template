@@ -30,6 +30,10 @@ public class FaPrivateChat extends BaseEntity
     @Excel(name = "最后一条消息ID", readConverterExp = "关=联fa_private_chat_msg.id")
     private Long lastMsgId;
 
+    /** 最后一条消息内容 */
+    @Excel(name = "最后一条消息内容")
+    private String lastMsgContent;
+
     /** 是否拉黑（0=否 1=user1拉黑user2 2=user2拉黑user1） */
     @Excel(name = "是否拉黑", readConverterExp = "0==否,1==user1拉黑user2,2==user2拉黑user1")
     private Long isBlocked;
@@ -77,6 +81,16 @@ public class FaPrivateChat extends BaseEntity
         return lastMsgId;
     }
 
+    public void setLastMsgContent(String lastMsgContent) 
+    {
+        this.lastMsgContent = lastMsgContent;
+    }
+
+    public String getLastMsgContent() 
+    {
+        return lastMsgContent;
+    }
+
     public void setIsBlocked(Long isBlocked) 
     {
         this.isBlocked = isBlocked;
@@ -106,6 +120,7 @@ public class FaPrivateChat extends BaseEntity
             .append("createTime", getCreateTime())
             .append("updateTime", getUpdateTime())
             .append("lastMsgId", getLastMsgId())
+            .append("lastMsgContent", getLastMsgContent())
             .append("isBlocked", getIsBlocked())
             .append("delFlag", getDelFlag())
             .toString();

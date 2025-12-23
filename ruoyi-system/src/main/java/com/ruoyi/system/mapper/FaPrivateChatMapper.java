@@ -2,7 +2,8 @@ package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.FaPrivateChat;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.apache.ibatis.annotations.Param;
+
 
 import java.util.List;
 
@@ -71,7 +72,9 @@ public interface FaPrivateChatMapper
      * @param limit 限制条数
      * @return 会话列表
      */
-    public List<FaPrivateChat> selectRecentSessions(@Param("account") String account, int hours, int limit);
+    public List<FaPrivateChat> selectRecentSessions(@Param("account") String account,
+                                                    @Param("hours") int hours,
+                                                    @Param("limit") int limit);
 
     /**
      * 查询会话消息

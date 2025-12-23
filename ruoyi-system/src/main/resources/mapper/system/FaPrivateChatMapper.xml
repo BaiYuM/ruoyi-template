@@ -39,7 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SELECT DISTINCT pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag
         FROM fa_private_chat pc
         JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id
-        JOIN comment_user cu ON (pc.user_id1 = cu.user_id OR pc.user_id2 = cu.user_id)
+        JOIN comment_user cu ON (pc.user_id1 = cu.id OR pc.user_id2 = cu.id)
         WHERE cu.account = #{account}
           AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
           AND pc.del_flag = 0
