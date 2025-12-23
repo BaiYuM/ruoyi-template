@@ -23,9 +23,9 @@
             class="config-form"
           >
             <!-- 授权账号 -->
-            <el-form-item label="*授权账号" prop="expiration_id">
+            <el-form-item label="*授权账号" prop="expirationId">
               <el-select 
-                v-model="formData.expiration_id" 
+                v-model="formData.expirationId" 
                 placeholder="请选择"
                 class="gray-input"
                 :loading="accountLoading"
@@ -33,7 +33,7 @@
                 <el-option 
                   v-for="account in accountOptions" 
                   :key="account.id" 
-                  :label="account.nickName" 
+                  :label="account.account" 
                   :value="account.id.toString()" 
                 />
               </el-select>
@@ -64,9 +64,9 @@
             </el-form-item>
 
             <!-- 知识库 -->
-            <el-form-item label="知识库" prop="knowledge_base">
+            <el-form-item label="知识库" prop="knowledgeBase">
               <el-input
-                v-model="formData.knowledge_base"
+                v-model="formData.knowledgeBase"
                 type="textarea"
                 placeholder="请输入"
                 :rows="4"
@@ -121,6 +121,8 @@
             <el-form-item label="启用配置">
               <el-switch
                 v-model="formData.status"
+                :active-value="1"
+                :inactive-value="0"
                 active-color="#ff2d55"
                 inactive-color="#c0ccda"
                 :style="{ '--el-switch-width': '40px' }"
@@ -237,13 +239,13 @@ const isEdit = computed(() => !!route.query.id)
 
 // ========== 表单数据 ==========
 const formData = reactive({
-  expiration_id: '', // 授权账号id
+  expirationId: '', // 授权账号id
   name: '', // 配置名称
   prompt: '', // 提示词
-  knowledge_base: '', // 知识库
+  knowledgeBase: '', // 知识库
   count: 5, // 携带上下文轮数（默认5）
   level: 1, // 严苛指数（默认1）
-  status: true // 启用配置（默认开启）
+  status: 1 // 启用配置（默认开启，1表示开启）
 })
 
 // ========== 预览调试数据 ==========
@@ -259,7 +261,7 @@ const accountOptions = ref([])
 
 // ========== 表单校验规则 ==========
 const formRules = reactive({
-  expiration_id: [{ required: true, message: '请选择授权账号', trigger: 'change' }],
+  expirationId: [{ required: true, message: '请选择授权账号', trigger: 'change' }],
   name: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
   prompt: [{ required: true, message: '请输入提示词', trigger: 'blur' }]
 })
@@ -310,17 +312,36 @@ const initEditData = async () => {
       if (response.code === 200) {
         const data = response.data || {}
         
+        console.log('获取到的编辑数据:', data)
+        
         // 逐个赋值给reactive对象
         Object.keys(formData).forEach(key => {
-          if (data[key] !== undefined) {
-            // 特别处理expiration_id，确保是字符串类型
-            if (key === 'expiration_id') {
+          // 处理knowledge_base字段转换为knowledgeBase
+          if (key === 'knowledgeBase' && data['knowledge_base'] !== undefined) {
+            formData[key] = data['knowledge_base']
+          }
+          // 处理其他字段
+          else if (data[key] !== undefined) {
+            // 特别处理expirationId，确保是字符串类型
+            if (key === 'expirationId') {
               formData[key] = data[key] ? data[key].toString() : ''
-            } else {
+            }
+            // 确保count和level是数字类型
+            else if (key === 'count' || key === 'level') {
+              formData[key] = Number(data[key])
+              console.log(`设置 ${key}:`, formData[key], '类型:', typeof formData[key])
+            }
+            // 确保status是数字类型
+            else if (key === 'status') {
+              formData[key] = Number(data[key])
+            }
+            else {
               formData[key] = data[key]
             }
           }
         })
+        
+        console.log('设置后的表单数据:', formData)
       } else {
         ElMessage.error(response.msg || '获取数据失败')
         router.back()
@@ -342,11 +363,12 @@ const goBack = () => {
 const resetForm = () => {
   if (formRef.value) {
     formRef.value.resetFields()
-    // 重置非表单字段（如开关）
-    formData.status = true
+    // 重置非表单字段
+    formData.status = 1 // 重置为开启状态
     formData.count = 5
     formData.level = 1
-    formData.expiration_id = ''
+    formData.expirationId = ''
+    formData.knowledgeBase = ''
   }
 }
 
@@ -360,16 +382,18 @@ const submitForm = async () => {
     try {
       let response
       
-      // 准备提交数据
+      // 准备提交数据 - 确保数字类型正确
       const submitData = {
-        expiration_id: formData.expiration_id, // id作为字符串存入数据库
+        expirationId: formData.expirationId,
         name: formData.name,
         prompt: formData.prompt,
-        knowledge_base: formData.knowledge_base,
-        count: formData.count,
-        level: formData.level,
-        status: formData.status ? 1 : 0 // 转换为数字
+        knowledge_base: formData.knowledgeBase, // 注意：接口可能是knowledge_base
+        count: Number(formData.count), // 确保是数字
+        level: Number(formData.level), // 确保是数字
+        status: Number(formData.status) // 确保是数字，1=开启，0=关闭
       }
+      
+      console.log('提交的数据:', submitData)
       
       if (isEdit.value) {
         // 编辑模式 - 使用PUT
@@ -429,26 +453,9 @@ const sendDebug = async () => {
   previewContent.value += userQuestion
   
   try {
-    // 这里可以调用实际的调试接口（如果需要）
     // 模拟AI回复
     const aiReply = `<div class="msg-ai">已收到你的问题："${debugInput.value}"，我会根据配置的提示词和知识库为你解答~</div>`
     previewContent.value += aiReply
-    
-    // 如果有实际调试接口，可以这样调用：
-    /*
-    const response = await request({
-      url: 'aiSerConfig/debug',
-      method: 'POST',
-      data: {
-        question: debugInput.value,
-        config_id: route.query.id || ''
-      }
-    })
-    
-    if (response.code === 200) {
-      previewContent.value += `<div class="msg-ai">${response.data.reply}</div>`
-    }
-    */
   } catch (error) {
     const errorReply = `<div class="msg-ai">抱歉，调试服务暂时不可用，请稍后再试。</div>`
     previewContent.value += errorReply
@@ -525,7 +532,7 @@ onMounted(async () => {
   --el-input-bg-color: #f5f7fa;
   --el-input-border-color: #e5e6eb;
   --el-input-text-color: #333;
-  --el-input-placeholder-color: #999;
+  --el-input-placeholder-color: '#999';
 }
 
 /* 预览调试区域输入框组 */

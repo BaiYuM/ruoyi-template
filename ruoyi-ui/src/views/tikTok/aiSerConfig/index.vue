@@ -16,7 +16,7 @@
           <el-col :span="6">
             <el-form-item label="授权账号">
               <el-input
-                v-model="filters.nickName"
+                v-model="filters.account"
                 placeholder="请输入授权账号"
                 clearable
               />
@@ -54,15 +54,11 @@
 
       <el-table :data="tableData" v-loading="loading" size="small">
         <el-table-column prop="name" label="配置名称" min-width="120" />
-        <el-table-column prop="nickName" label="授权账号" min-width="120" />
+        <el-table-column prop="account" label="授权账号" min-width="120" />
         <el-table-column prop="prompt" label="提示词" min-width="200" show-overflow-tooltip />
         <el-table-column prop="knowledgeBase" label="知识库" min-width="180" show-overflow-tooltip />
         <el-table-column prop="count" label="携带上下文数" />
-        <el-table-column prop="level" label="严谨程度">
-          <template #default="{ row }">
-            {{ levelMap[row.level] || row.level }}
-          </template>
-        </el-table-column>
+        <el-table-column prop="level" label="严谨程度" />
         <el-table-column prop="aiModel" label="AI模型">
           <template #default="{ row }">
             {{ aiModelMap[row.aiModel] || row.aiModel }}
@@ -115,15 +111,8 @@ const router = useRouter()
 
 const filters = reactive({
   name: '',
-  nickName: '', 
+  account: '', 
   createTime: [] 
-})
-
-// 严谨程度映射
-const levelMap = ref({
-  '1': '宽松',
-  '2': '中等',
-  '3': '严谨'
 })
 
 // AI模型映射
@@ -145,10 +134,10 @@ const queryParams = computed(() => {
     pageNum: pager.page,
     pageSize: pager.size,
     name: filters.name || undefined,
-    nickName: filters.nickName || undefined,
+    account: filters.account || undefined,
   }
   
-  // 处理创建时间范围 - 修复这里
+  // 处理创建时间范围
   if (filters.createTime && filters.createTime.length === 2) {
     params.beginCreateTime = filters.createTime[0]
     params.endCreateTime = filters.createTime[1]
@@ -189,18 +178,21 @@ async function fetchList() {
   loading.value = true
   try {
     // 使用封装的request请求
-    const data = await request({
-      url: '/aiSerConfig/aiconfig/list',
+    const response = await request({
+      url: '/aiSerConfig/aiconfig/listWithCommentUser',
       method: 'GET',
       params: queryParams.value
     })
     
+    console.log('查询参数:', queryParams.value)
+    console.log('接口响应:', response)
+    
     // 根据实际API返回结构调整
-    if (data.code === 200) {
-      tableData.value = data.rows || []
-      pager.total = data.total || 0
+    if (response.code === 200) {
+      tableData.value = response.rows || response.data || []
+      pager.total = response.total || 0
     } else {
-      ElMessage.error(data.msg || '获取数据失败')
+      ElMessage.error(response.msg || '获取数据失败')
       tableData.value = []
       pager.total = 0
     }
@@ -216,7 +208,7 @@ async function fetchList() {
 
 /* 6. 重置搜索 */
 function resetSearch() {
-  Object.assign(filters, { name: '', nickName: '', createTime: [] })
+  Object.assign(filters, { name: '', account: '', createTime: [] })
   pager.page = 1
   fetchList()
 }
@@ -226,7 +218,7 @@ async function toggleStatus(row) {
   const originalStatus = row.status == 1 ? 0 : 1
 
   try {
-    const data = await request({
+    const response = await request({
       url: `/aiSerConfig/aiconfig`,
       method: 'PUT',
       data: {
@@ -235,10 +227,10 @@ async function toggleStatus(row) {
       }
     })
     
-    if (data.code !== 200) {
-     // 如果请求失败，回滚状态
+    if (response.code !== 200) {
+      // 如果请求失败，回滚状态
       row.status = originalStatus
-      ElMessage.error(data.msg || '状态更新失败')
+      ElMessage.error(response.msg || '状态更新失败')
     }
   } catch (error) {
     console.error('状态更新失败:', error)
@@ -262,17 +254,17 @@ async function deleteConfig(row) {
     )
     
     // 使用封装的request请求
-    const data = await request({
+    const response = await request({
       url: `/aiSerConfig/aiconfig/${row.id}`,
       method: 'DELETE'
     })
     
-    if (data.code === 200) {
+    if (response.code === 200) {
       ElMessage.success('配置删除成功')
       // 重新获取列表
       fetchList()
     } else {
-      ElMessage.error(data.msg || '删除失败')
+      ElMessage.error(response.msg || '删除失败')
     }
     
   } catch (error) {
