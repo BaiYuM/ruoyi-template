@@ -44,17 +44,19 @@
       </template>
 
       <el-table :data="tableData" v-loading="loading" size="small">
-        <el-table-column label="账号信息" min-width="140">
+        <el-table-column label="账号信息" min-width="160">
           <template #default="{ row }">
             <div class="account-info">
-              <span class="info-id">ID: {{ row.id }}</span>
-              <span class="info-name">{{ row.nickName || '未设置昵称' }}</span>
               <el-avatar
-                v-if="row.avatar"
                 :src="row.avatar"
-                :size="24"
-                style="margin-left: 8px;"
-              />
+                :size="32"
+                class="avatar"
+              >
+                <span v-if="!row.avatar">{{ row.nickName?.charAt(0) || '用' }}</span>
+              </el-avatar>
+              <div class="account-text">
+                <div class="nickname">{{ row.nickName || '未设置昵称' }}</div>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -70,8 +72,8 @@
           <template #default="{ row }">
             <el-switch 
               v-model="row.openAi" 
-              :active-value="1" 
-              :inactive-value="0"
+              :active-value="0" 
+              :inactive-value="1"
               @change="() => toggleAi(row)" 
             />
           </template>
@@ -80,8 +82,8 @@
           <template #default="{ row }">
             <el-switch 
               v-model="row.funds" 
-              :active-value="1" 
-              :inactive-value="0"
+              :active-value="0" 
+              :inactive-value="1"
               @change="() => toggleFunds(row)" 
             />
           </template>
@@ -123,7 +125,8 @@
 <script setup lang="js">
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+// 导入封装的request请求
+import request from '@/utils/request'
 // 仅导入用到的图标和组件
 import { Plus, Delete } from '@element-plus/icons-vue'
 import AuthTipDialog from './AuthTipDialog.vue'
@@ -167,13 +170,14 @@ const fetchList = async () => {
       params.endCreateTime = filters.createTimeRange[1]
     }
     
-    // 调用接口
-    const response = await axios.get('/aiCuServer/expirationAi/list', { params })
-    
-    if (response.data && response.data.success) {
-      // 假设接口返回数据格式为 { success: true, data: { list: [], total: 0 } }
-      tableData.value = response.data.data.list || []
-      pager.total = response.data.data.total || 0
+    const response = await request({
+      url: '/aiCuServer/expirationAi/getExpirationAiInfo',
+      method: 'get',
+      params
+    })
+    if (response && response.code == 200) {
+      tableData.value = response.rows || []
+      pager.total = response.total || 0
       
       // 转换字段类型（如果后端返回的是字符串）
       tableData.value.forEach(item => {
@@ -182,7 +186,7 @@ const fetchList = async () => {
         item.workPeriodType = Number(item.workPeriodType) || 0
       })
     } else {
-      ElMessage.error(response.data?.message || '获取数据失败')
+      ElMessage.error(response?.message || '获取数据失败')
     }
   } catch (error) {
     console.error('获取数据失败:', error)
@@ -204,13 +208,15 @@ const resetSearch = () => {
 const toggleAi = async (row) => {
   try {
     const newValue = row.openAi === 1 ? 0 : 1
-    // 调用更新接口（假设为POST /aiCuServer/expirationAi/updateOpenAi）
-    await axios.post('/aiCuServer/expirationAi/updateOpenAi', {
-      id: row.id,
-      openAi: newValue
+    await request({
+      url: 'aiCuServer/expirationAi',
+      method: 'put',
+      data: {
+        id: row.id,
+        openAi: newValue
+      }
     })
     
-    ElMessage.success(`AI智能客服已${row.openAi === 1 ? '开启' : '关闭'}`)
   } catch (error) {
     console.error('更新状态失败:', error)
     ElMessage.error('更新失败，请稍后重试')
@@ -223,13 +229,15 @@ const toggleAi = async (row) => {
 const toggleFunds = async (row) => {
   try {
     const newValue = row.funds === 1 ? 0 : 1
-    // 调用更新接口（假设为POST /aiCuServer/expirationAi/updateFunds）
-    await axios.post('/aiCuServer/expirationAi/updateFunds', {
-      id: row.id,
-      funds: newValue
+    await request({
+      url: 'aiCuServer/expirationAi',
+      method: 'put',
+      data: {
+        id: row.id,
+        funds: newValue
+      }
     })
     
-    ElMessage.success(`留资提取已${row.funds === 1 ? '开启' : '关闭'}`)
   } catch (error) {
     console.error('更新状态失败:', error)
     ElMessage.error('更新失败，请稍后重试')
@@ -251,8 +259,10 @@ const handleDelete = async (row) => {
       }
     )
     
-    // 调用删除接口（假设为DELETE /aiCuServer/expirationAi/{id}）
-    await axios.delete(`/aiCuServer/expirationAi/${row.id}`)
+    await request({
+      url: `aiCuServer/expirationAi/${row.id}`,
+      method: 'delete'
+    })
     
     // 从列表中移除
     tableData.value = tableData.value.filter(item => item.id !== row.id)
@@ -298,18 +308,26 @@ onMounted(() => fetchList())
 .account-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.info-id {
-  font-weight: 600;
-  color: #999;
-  font-size: 12px;
+.avatar {
+  flex-shrink: 0;
+  background-color: #409eff;
+  color: white;
 }
 
-.info-name {
+.account-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nickname {
   color: #333;
   font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .pagination-wrapper {
