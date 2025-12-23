@@ -28,10 +28,14 @@
                 v-model="formData.expiration_id" 
                 placeholder="请选择"
                 class="gray-input"
+                :loading="accountLoading"
               >
-                <el-option label="DouMaster" value="1" />
-                <el-option label="Dou大师" value="2" />
-                <el-option label="添澎科技" value="3" />
+                <el-option 
+                  v-for="account in accountOptions" 
+                  :key="account.id" 
+                  :label="account.nickName" 
+                  :value="account.id.toString()" 
+                />
               </el-select>
             </el-form-item>
 
@@ -233,7 +237,7 @@ const isEdit = computed(() => !!route.query.id)
 
 // ========== 表单数据 ==========
 const formData = reactive({
-  expiration_id: '', // 授权账号
+  expiration_id: '', // 授权账号id
   name: '', // 配置名称
   prompt: '', // 提示词
   knowledge_base: '', // 知识库
@@ -248,6 +252,10 @@ const debugInput = ref('')
 
 // ========== 加载状态 ==========
 const loading = ref(false)
+const accountLoading = ref(false)
+
+// ========== 授权账号选项 ==========
+const accountOptions = ref([])
 
 // ========== 表单校验规则 ==========
 const formRules = reactive({
@@ -255,6 +263,30 @@ const formRules = reactive({
   name: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
   prompt: [{ required: true, message: '请输入提示词', trigger: 'blur' }]
 })
+
+// ========== 获取授权账号列表 ==========
+const getAccountList = async () => {
+  accountLoading.value = true
+  try {
+    const response = await request({
+      url: '/aiCuServer/expirationAi/aiCustomerServiceConfig',
+      method: 'GET',
+    })
+    
+    if (response.code === 200) {
+      accountOptions.value = response.data || response.rows || []
+    } else {
+      ElMessage.error(response.msg || '获取授权账号列表失败')
+      accountOptions.value = []
+    }
+  } catch (error) {
+    console.error('获取授权账号列表失败:', error)
+    ElMessage.error('获取授权账号列表失败，请稍后重试')
+    accountOptions.value = []
+  } finally {
+    accountLoading.value = false
+  }
+}
 
 // ========== 编辑模式：获取详情数据 ==========
 const initEditData = async () => {
@@ -281,7 +313,12 @@ const initEditData = async () => {
         // 逐个赋值给reactive对象
         Object.keys(formData).forEach(key => {
           if (data[key] !== undefined) {
-            formData[key] = data[key]
+            // 特别处理expiration_id，确保是字符串类型
+            if (key === 'expiration_id') {
+              formData[key] = data[key] ? data[key].toString() : ''
+            } else {
+              formData[key] = data[key]
+            }
           }
         })
       } else {
@@ -309,6 +346,7 @@ const resetForm = () => {
     formData.status = true
     formData.count = 5
     formData.level = 1
+    formData.expiration_id = ''
   }
 }
 
@@ -322,36 +360,31 @@ const submitForm = async () => {
     try {
       let response
       
+      // 准备提交数据
+      const submitData = {
+        expiration_id: formData.expiration_id, // id作为字符串存入数据库
+        name: formData.name,
+        prompt: formData.prompt,
+        knowledge_base: formData.knowledge_base,
+        count: formData.count,
+        level: formData.level,
+        status: formData.status ? 1 : 0 // 转换为数字
+      }
+      
       if (isEdit.value) {
         // 编辑模式 - 使用PUT
+        submitData.id = route.query.id
         response = await request({
           url: 'aiSerConfig/aiconfig',
           method: 'PUT',
-          data: {
-            id: route.query.id,
-            expiration_id: formData.expiration_id,
-            name: formData.name,
-            prompt: formData.prompt,
-            knowledge_base: formData.knowledge_base,
-            count: formData.count,
-            level: formData.level,
-            status: formData.status ? 1 : 0 // 转换为数字
-          }
+          data: submitData
         })
       } else {
         // 新增模式 - 使用POST
         response = await request({
           url: 'aiSerConfig/aiconfig',
           method: 'POST',
-          data: {
-            expiration_id: formData.expiration_id,
-            name: formData.name,
-            prompt: formData.prompt,
-            knowledge_base: formData.knowledge_base,
-            count: formData.count,
-            level: formData.level,
-            status: formData.status ? 1 : 0 // 转换为数字
-          }
+          data: submitData
         })
       }
       
@@ -433,9 +466,14 @@ const sendDebug = async () => {
 }
 
 // ========== 生命周期钩子 ==========
-onMounted(() => {
-  // 页面加载时初始化数据
-  initEditData()
+onMounted(async () => {
+  // 获取授权账号列表
+  await getAccountList()
+  
+  // 如果是编辑模式，获取详情数据
+  if (isEdit.value) {
+    await initEditData()
+  }
 })
 </script>
 
