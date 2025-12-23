@@ -66,15 +66,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectAiConfigWithCommentUserList" parameterType="AiConfig" resultMap="AiConfigWithCommentUserResult">
         <include refid="selectAiConfigWithCommentUser"/>
         <where>
-            <if test="expirationId != null "> AND ac.expiration_id = #{expirationId}</if>
             <if test="name != null  and name != ''"> AND ac.name like concat('%', #{name}, '%')</if>
-            <if test="prompt != null  and prompt != ''"> AND ac.prompt = #{prompt}</if>
-            <if test="knowledgeBase != null  and knowledgeBase != ''"> AND ac.knowledge_base = #{knowledgeBase}</if>
-            <if test="count != null  and count != ''"> AND ac.count = #{count}</if>
-            <if test="level != null  and level != ''"> AND ac.level = #{level}</if>
-            <if test="status != null "> AND ac.status = #{status}</if>
-            <if test="aiModel != null "> AND ac.ai_model = #{aiModel}</if>
-            <if test="nickName != null and nickName != ''"> AND cu.nickname LIKE concat('%', #{nickName}, '%')</if>
+            <if test="account != null and account != ''"> AND cu.account LIKE concat('%', #{account}, '%')</if>
             <if test="beginCreateTime != null and beginCreateTime != ''"> AND ac.create_time &gt;= #{beginCreateTime}</if>
             <if test="endCreateTime != null and endCreateTime != ''"> AND ac.create_time &lt;= #{endCreateTime}</if>
         </where>
