@@ -29,9 +29,9 @@
                 placeholder="请选择"
                 class="gray-input"
               >
-                <el-option label="DouMaster" value="DouMaster" />
-                <el-option label="Dou大师" value="Dou大师" />
-                <el-option label="添澎科技" value="添澎科技" />
+                <el-option label="DouMaster" value="1" />
+                <el-option label="Dou大师" value="2" />
+                <el-option label="添澎科技" value="3" />
               </el-select>
             </el-form-item>
 
@@ -131,7 +131,8 @@
               type="primary"
               @click="submitForm"
               round
-              >保存设置</el-button
+              :loading="loading"
+              >{{ loading ? '保存中...' : '保存设置' }}</el-button
             >
           </div>
         </el-col>
@@ -151,35 +152,35 @@
                 ><el-icon color="#666"><Delete  /></el-icon>清空内容</el-button>
             </div>
             
-    <!-- 输入框组部分 -->
+            <!-- 输入框组部分 -->
             <div class="debug-input-wrap">
-            <!-- 渐变边框容器 -->
-            <div class="gradient-border-container">
+              <!-- 渐变边框容器 -->
+              <div class="gradient-border-container">
                 <el-input
-                v-model="debugInput"
-                placeholder="请输入问题，体验客服能力"
-                size="small"
-                class="debug-input"
-                :style="{
+                  v-model="debugInput"
+                  placeholder="请输入问题，体验客服能力"
+                  size="small"
+                  class="debug-input"
+                  :style="{
                     border: 'none',
                     background: 'transparent',
                     '--el-input-placeholder-color': '#999'
-                }"
+                  }"
                 />
                 <!-- 蓝色圆形按钮（带向上箭头） -->
                 <el-button
-                type="primary"
-                circle
-                size="small"
-                class="send-btn"
-                style="
+                  type="primary"
+                  circle
+                  size="small"
+                  class="send-btn"
+                  style="
                     width: 32px;
                     height: 32px;
                     margin-right: 4px;
-                "
-                @click="sendDebug"
+                  "
+                  @click="sendDebug"
                 ><el-icon :size="16"><ArrowUp /></el-icon></el-button>
-            </div>
+              </div>
             </div>
 
             <div class="preview-footer">
@@ -193,10 +194,13 @@
 </template>
 
 <script setup lang="js">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft,ArrowUp,Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElLoading } from 'element-plus'
+import { ArrowLeft, ArrowUp, Delete } from '@element-plus/icons-vue'
+// 导入封装的request请求
+import request from '@/utils/request'
+
 // 路由实例
 const router = useRouter()
 const route = useRoute()
@@ -212,16 +216,14 @@ const contextMarks = {
   20: '20',
   25: '25',
   30: '30',
-  35: '35',
   40: '40',
-  45: '45',
   50: '50'
 }
 
 const strictMarks = {
   0: '0',
   0.5: '0.5',
-  1.0: '1.0',
+  1: '1',
   1.5: '1.5',
   1.9: '1.9'
 }
@@ -244,6 +246,9 @@ const formData = reactive({
 const previewContent = ref('')
 const debugInput = ref('')
 
+// ========== 加载状态 ==========
+const loading = ref(false)
+
 // ========== 表单校验规则 ==========
 const formRules = reactive({
   expiration_id: [{ required: true, message: '请选择授权账号', trigger: 'change' }],
@@ -251,20 +256,45 @@ const formRules = reactive({
   prompt: [{ required: true, message: '请输入提示词', trigger: 'blur' }]
 })
 
-// ========== 编辑模式：初始化数据 ==========
-const initEditData = () => {
+// ========== 编辑模式：获取详情数据 ==========
+const initEditData = async () => {
   if (isEdit.value) {
-    // 模拟从接口获取编辑数据
-    formData.expiration_id = 'DouMaster'
-    formData.name = '客服自动回复'
-    formData.prompt = '#角色任务 你的主要任务是作为抖音平台的AI客服...'
-    formData.knowledge_base = '主流平台可选择，单平台价格1280元；'
-    formData.count = 10
-    formData.level = 1
-    formData.status = true
+    try {
+      const loadingInstance = ElLoading.service({
+        lock: true,
+        text: '加载中...',
+        background: 'rgba(0, 0, 0, 0.7)',
+      })
+      
+      // 使用封装的request请求
+      const response = await request({
+        url: `aiSerConfig/aiconfig/${route.query.id}`,
+        method: 'GET',
+      })
+      
+      loadingInstance.close()
+      
+      // 根据实际API返回结构调整
+      if (response.code === 200) {
+        const data = response.data || {}
+        
+        // 逐个赋值给reactive对象
+        Object.keys(formData).forEach(key => {
+          if (data[key] !== undefined) {
+            formData[key] = data[key]
+          }
+        })
+      } else {
+        ElMessage.error(response.msg || '获取数据失败')
+        router.back()
+      }
+    } catch (error) {
+      console.error('获取配置详情失败:', error)
+      ElMessage.error('网络错误或服务器异常')
+      router.back()
+    }
   }
 }
-initEditData()
 
 // ========== 返回列表页 ==========
 const goBack = () => {
@@ -273,22 +303,75 @@ const goBack = () => {
 
 // ========== 重置表单 ==========
 const resetForm = () => {
+  if (formRef.value) {
     formRef.value.resetFields()
     // 重置非表单字段（如开关）
     formData.status = true
     formData.count = 5
     formData.level = 1
+  }
 }
 
 // ========== 提交配置 ==========
 const submitForm = async () => {
   try {
     await formRef.value.validate()
-    // 模拟接口提交
-    setTimeout(() => {
-      ElMessage.success(isEdit.value ? '配置编辑成功！' : '配置新增成功！')
-      router.push('/tiktok/aiSerConfig/index') // 提交后返回列表页
-    }, 500)
+    
+    loading.value = true
+    
+    try {
+      let response
+      
+      if (isEdit.value) {
+        // 编辑模式 - 使用PUT
+        response = await request({
+          url: 'aiSerConfig/aiconfig',
+          method: 'PUT',
+          data: {
+            id: route.query.id,
+            expiration_id: formData.expiration_id,
+            name: formData.name,
+            prompt: formData.prompt,
+            knowledge_base: formData.knowledge_base,
+            count: formData.count,
+            level: formData.level,
+            status: formData.status ? 1 : 0 // 转换为数字
+          }
+        })
+      } else {
+        // 新增模式 - 使用POST
+        response = await request({
+          url: 'aiSerConfig/aiconfig',
+          method: 'POST',
+          data: {
+            expiration_id: formData.expiration_id,
+            name: formData.name,
+            prompt: formData.prompt,
+            knowledge_base: formData.knowledge_base,
+            count: formData.count,
+            level: formData.level,
+            status: formData.status ? 1 : 0 // 转换为数字
+          }
+        })
+      }
+      
+      loading.value = false
+      
+      if (response.code === 200) {
+        ElMessage.success(isEdit.value ? '配置编辑成功！' : '配置新增成功！')
+        
+        // 延迟返回列表页
+        setTimeout(() => {
+          router.back()
+        }, 800)
+      } else {
+        ElMessage.error(response.msg || '保存失败，请重试')
+      }
+    } catch (error) {
+      loading.value = false
+      console.error('保存配置失败:', error)
+      ElMessage.error('保存配置失败，请检查网络连接')
+    }
   } catch (err) {
     ElMessage.error('表单校验失败，请检查必填项')
   }
@@ -302,20 +385,58 @@ const clearPreview = () => {
 }
 
 // 发送调试问题
-const sendDebug = () => {
+const sendDebug = async () => {
   if (!debugInput.value.trim()) {
     ElMessage.warning('请输入问题内容')
     return
   }
-  // 模拟AI回复
+  
+  // 显示用户问题
   const userQuestion = `<div class="msg-user">${debugInput.value}</div>`
-  const aiReply = `<div class="msg-ai">已收到你的问题："${debugInput.value}"，我会根据配置的提示词和知识库为你解答~</div>`
-  previewContent.value += userQuestion + aiReply
+  previewContent.value += userQuestion
+  
+  try {
+    // 这里可以调用实际的调试接口（如果需要）
+    // 模拟AI回复
+    const aiReply = `<div class="msg-ai">已收到你的问题："${debugInput.value}"，我会根据配置的提示词和知识库为你解答~</div>`
+    previewContent.value += aiReply
+    
+    // 如果有实际调试接口，可以这样调用：
+    /*
+    const response = await request({
+      url: 'aiSerConfig/debug',
+      method: 'POST',
+      data: {
+        question: debugInput.value,
+        config_id: route.query.id || ''
+      }
+    })
+    
+    if (response.code === 200) {
+      previewContent.value += `<div class="msg-ai">${response.data.reply}</div>`
+    }
+    */
+  } catch (error) {
+    const errorReply = `<div class="msg-ai">抱歉，调试服务暂时不可用，请稍后再试。</div>`
+    previewContent.value += errorReply
+  }
+  
   debugInput.value = ''
+  
   // 滚动到底部
-  const previewDom = document.querySelector('.preview-content')
-  previewDom.scrollTop = previewDom.scrollHeight
+  setTimeout(() => {
+    const previewDom = document.querySelector('.preview-content')
+    if (previewDom) {
+      previewDom.scrollTop = previewDom.scrollHeight
+    }
+  }, 100)
 }
+
+// ========== 生命周期钩子 ==========
+onMounted(() => {
+  // 页面加载时初始化数据
+  initEditData()
+})
 </script>
 
 <style scoped>
