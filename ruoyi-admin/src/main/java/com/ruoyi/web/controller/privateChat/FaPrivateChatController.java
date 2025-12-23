@@ -6,7 +6,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.system.domain.FaPrivateChat;
 import com.ruoyi.system.domain.FaPrivateChatMsg;
+import com.ruoyi.system.domain.FaClue;
 import com.ruoyi.system.service.IFaPrivateChatService;
+import com.ruoyi.system.service.IFaClueService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +39,9 @@ public class FaPrivateChatController extends BaseController
 {
     @Autowired
     private IFaPrivateChatService faPrivateChatService;
+
+    @Autowired
+    private IFaClueService faClueService;
 
     /**
      * 查询私聊会话列表
@@ -141,5 +146,28 @@ public class FaPrivateChatController extends BaseController
     public AjaxResult getMessages(@RequestParam Long sessionId) {
         List<FaPrivateChatMsg> messages = faPrivateChatService.getSessionMessages(sessionId);
         return success(messages);
+    }
+    /**
+     * 获取关联线索
+     * @param userId 用户ID (对应 comment_user.id)
+     */
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat:query')")
+    @GetMapping("/clues")
+    public AjaxResult getClues(@RequestParam Long userId) {
+        FaClue query = new FaClue();
+        query.setUserId(userId);
+        List<FaClue> clues = faClueService.selectFaClueList(query);
+        return success(clues);
+    }
+
+    /**
+     * 发送私信消息
+     */
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat:add')")
+    @Log(title = "发送私信", businessType = BusinessType.INSERT)
+    @PostMapping("/send")
+    public AjaxResult send(@RequestBody FaPrivateChatMsg msg)
+    {
+        return toAjax(faPrivateChatService.sendMessage(msg));
     }
 }

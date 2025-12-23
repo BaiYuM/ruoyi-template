@@ -178,4 +178,27 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     public List<FaPrivateChatMsg> getSessionMessages(Long sessionId) {
         return faPrivateChatMapper.selectSessionMessages(sessionId);
     }
+
+    /**
+     * 发送消息
+     * 
+     * @param msg 消息对象
+     * @return 结果
+     */
+    @Override
+    public int sendMessage(FaPrivateChatMsg msg) {
+        msg.setCreateTime(DateUtils.getNowDate());
+        // 1. 插入消息记录
+        int rows = faPrivateChatMsgMapper.insertFaPrivateChatMsg(msg);
+        
+        // 2. 更新会话的最后一条消息ID和最后发送时间
+        if (rows > 0 && msg.getSessionId() != null) {
+            FaPrivateChat chat = new FaPrivateChat();
+            chat.setId(msg.getSessionId());
+            chat.setLastMsgId(msg.getId());
+            chat.setLastSendTime(msg.getCreateTime());
+            faPrivateChatMapper.updateFaPrivateChat(chat);
+        }
+        return rows;
+    }
 }

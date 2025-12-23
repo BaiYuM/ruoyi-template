@@ -90,4 +90,12 @@ public interface IFaPrivateChatService
      * @return 消息列表
      */
     public List<FaPrivateChatMsg> getSessionMessages(Long sessionId);
+
+    /**
+     * 发送消息
+     * 
+     * @param msg 消息对象
+     * @return 结果
+     */
+    public int sendMessage(FaPrivateChatMsg msg);
 }
