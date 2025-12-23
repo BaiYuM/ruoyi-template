@@ -88,7 +88,7 @@ public class ExpirationAiController extends BaseController
         }
 
         startPage();
-        List<ExpirationAi> list = expirationAiService.selectExpirationAiWithUserList(expirationAi);
+        List<ExpirationAi> list = expirationAiService.selectExpirationAiWithCommentUserList(expirationAi);
         return getDataTable(list);
     }
 
