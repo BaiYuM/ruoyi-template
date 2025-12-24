@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.private_har_config.mapper.FaPrivateHarassmentConfigMapper">
+    
+    <resultMap type="FaPrivateHarassmentConfig" id="FaPrivateHarassmentConfigResult">
+        <result property="id"    column="id"    />
+        <result property="sysUserId"    column="sys_user_id"    />
+        <result property="accountId"    column="account_id"    />
+        <result property="accountName"    column="account_name"    />
+        <result property="isEnabled"    column="is_enabled"    />
+        <result property="replyInterval"    column="reply_interval"    />
+        <result property="replyIntervalSeconds"    column="reply_interval_seconds"    />
+        <result property="visitCount"    column="visit_count"    />
+        <result property="phraseList"    column="phrase_list"    />
+        <result property="totalTimeSeconds"    column="total_time_seconds"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectFaPrivateHarassmentConfigVo">
+        select id, sys_user_id, account_id, account_name, is_enabled, reply_interval, reply_interval_seconds, visit_count, phrase_list, total_time_seconds, create_by, create_time, update_by, update_time, del_flag from fa_private_harassment_config
+    </sql>
+
+    <select id="selectFaPrivateHarassmentConfigList" parameterType="FaPrivateHarassmentConfig" resultMap="FaPrivateHarassmentConfigResult">
+        <include refid="selectFaPrivateHarassmentConfigVo"/>
+        <where>  
+            <if test="sysUserId != null "> and sys_user_id = #{sysUserId}</if>
+            <if test="accountId != null  and accountId != ''"> and account_id = #{accountId}</if>
+            <if test="accountName != null  and accountName != ''"> and account_name like concat('%', #{accountName}, '%')</if>
+            <if test="isEnabled != null "> and is_enabled = #{isEnabled}</if>
+            <if test="replyInterval != null  and replyInterval != ''"> and reply_interval = #{replyInterval}</if>
+            <if test="replyIntervalSeconds != null "> and reply_interval_seconds = #{replyIntervalSeconds}</if>
+            <if test="visitCount != null "> and visit_count = #{visitCount}</if>
+            <if test="phraseList != null  and phraseList != ''"> and phrase_list = #{phraseList}</if>
+            <if test="totalTimeSeconds != null "> and total_time_seconds = #{totalTimeSeconds}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaPrivateHarassmentConfigById" parameterType="Long" resultMap="FaPrivateHarassmentConfigResult">
+        <include refid="selectFaPrivateHarassmentConfigVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaPrivateHarassmentConfig" parameterType="FaPrivateHarassmentConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into fa_private_harassment_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sysUserId != null">sys_user_id,</if>
+            <if test="accountId != null">account_id,</if>
+            <if test="accountName != null">account_name,</if>
+            <if test="isEnabled != null">is_enabled,</if>
+            <if test="replyInterval != null">reply_interval,</if>
+            <if test="replyIntervalSeconds != null">reply_interval_seconds,</if>
+            <if test="visitCount != null">visit_count,</if>
+            <if test="phraseList != null">phrase_list,</if>
+            <if test="totalTimeSeconds != null">total_time_seconds,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sysUserId != null">#{sysUserId},</if>
+            <if test="accountId != null">#{accountId},</if>
+            <if test="accountName != null">#{accountName},</if>
+            <if test="isEnabled != null">#{isEnabled},</if>
+            <if test="replyInterval != null">#{replyInterval},</if>
+            <if test="replyIntervalSeconds != null">#{replyIntervalSeconds},</if>
+            <if test="visitCount != null">#{visitCount},</if>
+            <if test="phraseList != null">#{phraseList},</if>
+            <if test="totalTimeSeconds != null">#{totalTimeSeconds},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaPrivateHarassmentConfig" parameterType="FaPrivateHarassmentConfig">
+        update fa_private_harassment_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sysUserId != null">sys_user_id = #{sysUserId},</if>
+            <if test="accountId != null">account_id = #{accountId},</if>
+            <if test="accountName != null">account_name = #{accountName},</if>
+            <if test="isEnabled != null">is_enabled = #{isEnabled},</if>
+            <if test="replyInterval != null">reply_interval = #{replyInterval},</if>
+            <if test="replyIntervalSeconds != null">reply_interval_seconds = #{replyIntervalSeconds},</if>
+            <if test="visitCount != null">visit_count = #{visitCount},</if>
+            <if test="phraseList != null">phrase_list = #{phraseList},</if>
+            <if test="totalTimeSeconds != null">total_time_seconds = #{totalTimeSeconds},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaPrivateHarassmentConfigById" parameterType="Long">
+        delete from fa_private_harassment_config where id = #{id}
+    </delete>
+
+    <delete id="deleteFaPrivateHarassmentConfigByIds" parameterType="String">
+        delete from fa_private_harassment_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
