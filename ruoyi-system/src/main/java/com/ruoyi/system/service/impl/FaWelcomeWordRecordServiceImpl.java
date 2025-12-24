@@ -1,10 +1,11 @@
-package com.ruoyi.system.mapper.service.impl;
+package com.ruoyi.system.service.impl;
 
 import java.util.List;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.system.domain.FaWelcomeWordRecord;
 import com.ruoyi.system.mapper.FaWelcomeWordRecordMapper;
-import com.ruoyi.system.mapper.service.IFaWelcomeWordRecordService;
+
+import com.ruoyi.system.service.IFaWelcomeWordRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

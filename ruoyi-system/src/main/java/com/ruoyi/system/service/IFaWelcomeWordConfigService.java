@@ -1,9 +1,8 @@
-package com.ruoyi.system.mapper.service;
+package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.FaWelcomeWordConfig;
 
 import java.util.List;
-
 
 /**
  * 欢迎词配置Service接口

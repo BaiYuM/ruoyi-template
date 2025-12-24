@@ -62,7 +62,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertFaWelcomeWordConfig" parameterType="FaWelcomeWordConfig">
         insert into fa_welcome_word_config
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="id != null">id,</if>
+            id,
             <if test="sysUserId != null">sys_user_id,</if>
             <if test="accountId != null and accountId != ''">account_id,</if>
             <if test="accountName != null and accountName != ''">account_name,</if>
@@ -86,7 +86,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="delFlag != null">del_flag,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="id != null">#{id},</if>
+            #{id},
             <if test="sysUserId != null">#{sysUserId},</if>
             <if test="accountId != null and accountId != ''">#{accountId},</if>
             <if test="accountName != null and accountName != ''">#{accountName},</if>

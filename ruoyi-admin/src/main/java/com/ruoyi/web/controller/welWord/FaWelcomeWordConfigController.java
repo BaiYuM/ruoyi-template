@@ -4,7 +4,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.system.domain.FaWelcomeWordConfig;
-import com.ruoyi.system.mapper.service.IFaWelcomeWordConfigService;
+import com.ruoyi.system.service.IFaWelcomeWordConfigService;
+import com.ruoyi.system.service.IFaPrivateChatService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,9 @@ public class FaWelcomeWordConfigController extends BaseController
 {
     @Autowired
     private IFaWelcomeWordConfigService faWelcomeWordConfigService;
+    
+    @Autowired
+    private IFaPrivateChatService faPrivateChatService;
 
     /**
      * 查询欢迎词配置列表
@@ -58,6 +62,17 @@ public class FaWelcomeWordConfigController extends BaseController
         List<FaWelcomeWordConfig> list = faWelcomeWordConfigService.selectFaWelcomeWordConfigList(faWelcomeWordConfig);
         ExcelUtil<FaWelcomeWordConfig> util = new ExcelUtil<FaWelcomeWordConfig>(FaWelcomeWordConfig.class);
         util.exportExcel(response, list, "欢迎词配置数据");
+    }
+
+    /**
+     * 获取抖音账号列表
+     */
+    @PreAuthorize("@ss.hasPermi('welWord:wel_word_config:list')")
+    @GetMapping("/accounts")
+    public AjaxResult getAccounts()
+    {
+        List<String> accounts = faPrivateChatService.getCommentUserAccounts();
+        return success(accounts);
     }
 
     /**
@@ -97,7 +112,7 @@ public class FaWelcomeWordConfigController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('welWord:wel_word_config:remove')")
     @Log(title = "欢迎词配置", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{ids}")
+    @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(faWelcomeWordConfigService.deleteFaWelcomeWordConfigByIds(ids));

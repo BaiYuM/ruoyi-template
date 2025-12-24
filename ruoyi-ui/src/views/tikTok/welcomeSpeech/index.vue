@@ -10,7 +10,7 @@
       <!-- 白色卡片 -->
       <div class="white-card">
         <!-- 左侧配置区域 -->
-        <div class="left-section">
+        <div class="left-section" v-loading="loading">
           <!-- 配置表单 -->
           <el-form :model="form" :rules="rules" ref="formRef" label-position="top" class="config-form">
             <!-- 是否启用 -->
@@ -77,7 +77,7 @@
             <!-- 操作按钮 -->
             <div class="form-actions mt-4 flex justify-end">
               <el-button @click="resetForm" round class="reset-button">重置</el-button>
-              <el-button type="primary" class="ml-4 save-button" @click="saveConfig" round>保存</el-button>
+              <el-button type="primary" class="ml-4 save-button" @click="saveConfig" round :loading="loading">保存</el-button>
             </div>
           </el-form>
         </div>
@@ -172,24 +172,23 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { listWelcomeWord, addWelcomeWord, updateWelcomeWord, getWelcomeWordAccounts } from '@/api/tikTok/welcomeWord'
 
 // 响应式数据
 const form = reactive({
+  id: undefined,
   isEnabled: false,
   accountList: [],
   welcomeText: ''
 })
 
 // 账号列表数据
-const accounts = ref([
-  { id: 1, name: '抖音账号1' },
-  { id: 2, name: '抖音账号2' },
-  { id: 3, name: '抖音账号3' },
-  { id: 4, name: '抖音账号4' },
-  { id: 5, name: '抖音账号5' }
-])
+const accounts = ref([])
+
+// 当前配置ID（用于判断是新增还是更新）
+const currentConfigId = ref(null)
 
 const rules = {
   welcomeText: [{ required: true, message: '请添加欢迎词', trigger: 'change' }]
@@ -200,6 +199,44 @@ const adding = ref(false)
 const newWelcomeText = ref('')
 const formRef = ref(null)
 const showUserMessage = ref(true) // 模拟显示用户消息
+const loading = ref(false)
+
+// 获取账号列表
+function fetchAccounts() {
+  getWelcomeWordAccounts().then(response => {
+    // 将账号字符串数组转换为对象数组
+    if (response.data && Array.isArray(response.data)) {
+      accounts.value = response.data.map((account, index) => ({
+        id: account,
+        name: account
+      }))
+    }
+  }).catch(error => {
+    console.error('获取账号列表失败:', error)
+  })
+}
+
+// 获取已有配置
+function fetchConfig() {
+  loading.value = true
+  listWelcomeWord({ pageNum: 1, pageSize: 1 }).then(response => {
+    if (response.rows && response.rows.length > 0) {
+      const config = response.rows[0]
+      currentConfigId.value = config.id
+      form.id = config.id
+      form.isEnabled = config.isEnabled === 1
+      form.welcomeText = config.welcomeContent || ''
+      // 解析账号列表
+      if (config.accountId) {
+        form.accountList = config.accountId.split(',').filter(a => a)
+      }
+    }
+  }).catch(error => {
+    console.error('获取配置失败:', error)
+  }).finally(() => {
+    loading.value = false
+  })
+}
 
 // 开始添加欢迎词
 function startAddWelcome() {
@@ -238,6 +275,8 @@ function resetForm() {
   form.welcomeText = ''
   adding.value = false
   newWelcomeText.value = ''
+  // 重新加载配置
+  fetchConfig()
 }
 
 // 保存配置
@@ -254,16 +293,49 @@ function saveConfig() {
     }
     
     // 构建保存数据
-    const config = {
-      isEnabled: form.isEnabled,
-      accountList: form.accountList,
-      welcomeText: form.welcomeText
+    const configData = {
+      isEnabled: form.isEnabled ? 1 : 0,
+      accountId: form.accountList.join(','),
+      accountName: form.accountList.join(','),
+      welcomeContent: form.welcomeText,
+      triggerType: 'auto',
+      configName: '欢迎词配置'
     }
     
-    console.log('保存配置:', config)
-    ElMessage.success('配置保存成功')
+    loading.value = true
+    
+    if (currentConfigId.value) {
+      // 更新
+      configData.id = currentConfigId.value
+      updateWelcomeWord(configData).then(response => {
+        ElMessage.success('配置更新成功')
+      }).catch(error => {
+        ElMessage.error('配置更新失败')
+        console.error(error)
+      }).finally(() => {
+        loading.value = false
+      })
+    } else {
+      // 新增
+      addWelcomeWord(configData).then(response => {
+        ElMessage.success('配置保存成功')
+        // 重新获取配置以获取ID
+        fetchConfig()
+      }).catch(error => {
+        ElMessage.error('配置保存失败')
+        console.error(error)
+      }).finally(() => {
+        loading.value = false
+      })
+    }
   })
 }
+
+// 页面初始化
+onMounted(() => {
+  fetchAccounts()
+  fetchConfig()
+})
 </script>
 
 <style scoped>

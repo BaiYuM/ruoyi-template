@@ -51,3 +51,11 @@ export function exportWelcomeWord(query) {
     params: query
   })
 }
+
+// 获取抖音账号列表
+export function getWelcomeWordAccounts() {
+  return request({
+    url: '/welWord/wel_word_config/accounts',
+    method: 'get'
+  })
+}

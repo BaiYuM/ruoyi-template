@@ -1,4 +1,4 @@
-package com.ruoyi.system.mapper.service;
+package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.FaWelcomeWordRecord;
 
