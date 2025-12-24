@@ -82,6 +82,16 @@ public class AiConfigController extends BaseController
     }
 
     /**
+     * 根据授权账号ID查询AI配置
+     */
+    @PreAuthorize("@ss.hasPermi('tikTok:aiSerConfig:query')")
+    @GetMapping("/byExpiration/{expirationId}")
+    public AjaxResult getByExpirationId(@PathVariable("expirationId") Long expirationId)
+    {
+        return success(aiConfigService.selectAiConfigByExpirationId(expirationId));
+    }
+
+    /**
      * 新增AI客服配置
      */
     @PreAuthorize("@ss.hasPermi('tikTok:aiSerConfig:add')")

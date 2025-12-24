@@ -480,6 +480,14 @@ onMounted(async () => {
   // 如果是编辑模式，获取详情数据
   if (isEdit.value) {
     await initEditData()
+  } else {
+    // 新增模式：检查是否从抖音号管理页面跳转过来，并携带了expirationId
+    if (route.query.expirationId) {
+      // 等待账号列表加载完成后再设置
+      setTimeout(() => {
+        formData.expirationId = route.query.expirationId.toString()
+      }, 100)
+    }
   }
 })
 </script>

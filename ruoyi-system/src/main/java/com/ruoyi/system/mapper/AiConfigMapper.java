@@ -66,4 +66,12 @@ public interface AiConfigMapper
      * @return 结果
      */
     public int deleteAiConfigByIds(Long[] ids);
+
+    /**
+     * 根据授权账号ID查询AI配置
+     * 
+     * @param expirationId 授权账号ID
+     * @return AI客服配置
+     */
+    public AiConfig selectAiConfigByExpirationId(Long expirationId);
 }

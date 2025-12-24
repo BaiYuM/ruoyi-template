@@ -72,9 +72,9 @@
           <template #default="{ row }">
             <el-switch 
               v-model="row.openAi" 
-              :active-value="0" 
-              :inactive-value="1"
-              @change="() => toggleAi(row)" 
+              :active-value="1"
+              :inactive-value="0"
+              @change="() => toggleAi(row)"
             />
           </template>
         </el-table-column>
@@ -82,8 +82,8 @@
           <template #default="{ row }">
             <el-switch 
               v-model="row.funds" 
-              :active-value="0" 
-              :inactive-value="1"
+              :active-value="1"
+              :inactive-value="0"
               @change="() => toggleFunds(row)" 
             />
           </template>
@@ -127,9 +127,12 @@ import { reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // 导入封装的request请求
 import request from '@/utils/request'
+import { useRouter } from 'vue-router'
 // 仅导入用到的图标和组件
 import { Plus, Delete } from '@element-plus/icons-vue'
 import AuthTipDialog from './AuthTipDialog.vue'
+
+const router = useRouter()
 
 const filters = reactive({
   nickName: '',
@@ -178,10 +181,10 @@ const fetchList = async () => {
     if (response && response.code == 200) {
       tableData.value = response.rows || []
       pager.total = response.total || 0
-      
+
       // 转换字段类型（如果后端返回的是字符串）
       tableData.value.forEach(item => {
-        item.openAi = Number(item.openAi) || 0
+        item.openAi = Number(item.openAi)
         item.funds = Number(item.funds) || 0
         item.workPeriodType = Number(item.workPeriodType) || 0
       })
@@ -207,7 +210,49 @@ const resetSearch = () => {
 // 切换AI智能客服状态
 const toggleAi = async (row) => {
   try {
-    const newValue = row.openAi === 1 ? 0 : 1
+
+    const isEnabling = row.openAi
+
+    // 如果是开启AI客服，先检查是否有配置
+    if (isEnabling) {
+      const configRes = await request({
+        url: `/aiSerConfig/aiconfig/byExpiration/${row.id}`,
+        method: 'get'
+      })
+
+      // 如果没有配置，提示用户去创建
+      if (!configRes.data) {
+        const action = await ElMessageBox.confirm(
+          '该账号尚未配置AI客服，是否立即前往配置？',
+          '提示',
+          {
+            confirmButtonText: '去配置',
+            cancelButtonText: '暂不配置',
+            type: 'warning'
+          }
+        )
+        
+        if (action === 'confirm') {
+          // 更新开关状态
+          await request({
+            url: 'aiCuServer/expirationAi',
+            method: 'put',
+            data: { id: row.id, openAi: 1 }
+          })
+          // 跳转到AI配置页面，并携带账号ID
+          router.push({
+            path: '/tiktok/aiSerConfig/detail/index',
+            query: { type: 'add', expirationId: row.id }
+          })
+        } else {
+          // 用户取消，恢复开关状态
+          row.openAi = 0
+        }
+        return
+      }
+    }
+
+    const newValue = isEnabling ? 1 : 0
     await request({
       url: 'aiCuServer/expirationAi',
       method: 'put',
@@ -217,18 +262,29 @@ const toggleAi = async (row) => {
       }
     })
     
+    if (isEnabling) {
+      ElMessage.success('AI智能客服已开启')
+    } else {
+      ElMessage.info('AI智能客服已关闭')
+    }
+
+    // 重新获取列表以更新数据
+    await fetchList()
   } catch (error) {
-    console.error('更新状态失败:', error)
-    ElMessage.error('更新失败，请稍后重试')
-    // 恢复原状态
-    row.openAi = row.openAi === 1 ? 0 : 1
+    if (error !== 'cancel') {
+      console.error('更新状态失败:', error)
+      ElMessage.error('更新失败，请稍后重试')
+      // 恢复到原始状态
+      row.openAi = originalState
+    }
   }
 }
 
 // 切换留资提取状态
 const toggleFunds = async (row) => {
   try {
-    const newValue = row.funds === 1 ? 0 : 1
+    
+    const newValue = row.funds
     await request({
       url: 'aiCuServer/expirationAi',
       method: 'put',
@@ -238,11 +294,19 @@ const toggleFunds = async (row) => {
       }
     })
     
+    if (newValue === 1) {
+      ElMessage.success('留资提取已开启')
+    } else {
+      ElMessage.info('留资提取已关闭')
+    }
+    
+    // 重新获取列表以更新数据
+    await fetchList()
   } catch (error) {
     console.error('更新状态失败:', error)
     ElMessage.error('更新失败，请稍后重试')
-    // 恢复原状态
-    row.funds = row.funds === 1 ? 0 : 1
+    // 恢复到原始状态
+    row.funds = originalState
   }
 }
 

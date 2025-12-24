@@ -132,4 +132,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="selectAiConfigByExpirationId" parameterType="Long" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        where expiration_id = #{expirationId}
+        limit 1
+    </select>
 </mapper>

@@ -111,4 +111,16 @@ public class AiConfigServiceImpl implements IAiConfigService
     {
         return aiConfigMapper.deleteAiConfigById(id);
     }
+
+    /**
+     * 根据授权账号ID查询AI配置
+     * 
+     * @param expirationId 授权账号ID
+     * @return AI客服配置
+     */
+    @Override
+    public AiConfig selectAiConfigByExpirationId(Long expirationId)
+    {
+        return aiConfigMapper.selectAiConfigByExpirationId(expirationId);
+    }
 }
