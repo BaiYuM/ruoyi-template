@@ -16,6 +16,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="lastSendTime"    column="last_send_time"    />
         <result property="nextSendTime"    column="next_send_time"    />
         <result property="status"    column="status"    />
+        <result property="totalTimeSeconds"    column="total_time_seconds"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -24,7 +25,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectFaPrivateHarassmentRecordVo">
-        select id, config_id, chat_id, user_id, user_nickname, user_account, current_visit_count, total_visit_count, last_send_time, next_send_time, status, create_by, create_time, update_by, update_time, del_flag from fa_private_harassment_record
+        select id, config_id, chat_id, user_id, user_nickname, user_account, current_visit_count, total_visit_count, last_send_time, next_send_time, status, total_time_seconds, create_by, create_time, update_by, update_time, del_flag from fa_private_harassment_record
     </sql>
 
     <select id="selectFaPrivateHarassmentRecordList" parameterType="FaPrivateHarassmentRecord" resultMap="FaPrivateHarassmentRecordResult">
@@ -61,6 +62,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="lastSendTime != null">last_send_time,</if>
             <if test="nextSendTime != null">next_send_time,</if>
             <if test="status != null">status,</if>
+            <if test="totalTimeSeconds != null">total_time_seconds,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -78,6 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="lastSendTime != null">#{lastSendTime},</if>
             <if test="nextSendTime != null">#{nextSendTime},</if>
             <if test="status != null">#{status},</if>
+            <if test="totalTimeSeconds != null">#{totalTimeSeconds},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>

@@ -62,6 +62,10 @@ public class FaPrivateHarassmentRecord extends BaseEntity
     @Excel(name = "状态", readConverterExp = "0==进行中,1==已完成,2==已停止,3==已留资")
     private Integer status;
 
+    /** 总时间（秒） */
+    @Excel(name = "总时间", readConverterExp = "秒=")
+    private Long totalTimeSeconds;
+
     /** 删除标志（0=正常 1=删除） */
     private Integer delFlag;
 
@@ -175,7 +179,17 @@ public class FaPrivateHarassmentRecord extends BaseEntity
         return status;
     }
 
-    public void setDelFlag(Integer delFlag) 
+    public void setTotalTimeSeconds(Long totalTimeSeconds)
+    {
+        this.totalTimeSeconds = totalTimeSeconds;
+    }
+
+    public Long getTotalTimeSeconds()
+    {
+        return totalTimeSeconds;
+    }
+
+    public void setDelFlag(Integer delFlag)
     {
         this.delFlag = delFlag;
     }
@@ -199,6 +213,7 @@ public class FaPrivateHarassmentRecord extends BaseEntity
             .append("lastSendTime", getLastSendTime())
             .append("nextSendTime", getNextSendTime())
             .append("status", getStatus())
+            .append("totalTimeSeconds", getTotalTimeSeconds())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

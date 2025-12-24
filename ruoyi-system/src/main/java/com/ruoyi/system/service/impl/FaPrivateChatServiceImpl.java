@@ -198,6 +198,10 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
             chat.setLastMsgId(msg.getId());
             chat.setLastSendTime(msg.getCreateTime());
             faPrivateChatMapper.updateFaPrivateChat(chat);
+            
+            // 3. 调用抖音API发送消息 (此处为占位，实际需根据SDK或API实现)
+            System.out.println("正在调用抖音API发送消息给用户 " + msg.getReceiverId() + ": " + msg.getMsgContent());
+            // TODO: 接入抖音私信API
         }
         return rows;
     }

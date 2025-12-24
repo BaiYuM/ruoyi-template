@@ -1,5 +1,6 @@
 package com.ruoyi.framework.handler;
 
+import com.ruoyi.framework.handler.AbstractHandler;
 import org.springframework.stereotype.Service;
 import vip.gadfly.tiktok.open.bean.message.TtOpWebhookMessage;
 import vip.gadfly.tiktok.open.message.TtOpWebhookMessageHandleResult;

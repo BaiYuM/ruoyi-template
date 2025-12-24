@@ -22,11 +22,23 @@
 
           <!-- 配置表单 -->
           <el-form :model="form" :rules="rules" ref="formRef" label-position="top" class="config-form">
+            <!-- 账号选择 -->
+            <el-form-item label="选择账号" prop="accountId">
+              <el-select v-model="form.accountId" placeholder="请选择抖音账号" @change="handleAccountChange" style="width: 250px">
+                <el-option
+                  v-for="item in accountOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
+              </el-select>
+            </el-form-item>
+
             <!-- 是否启用 -->
             <el-form-item label="是否启用" prop="isEnabled">
               <el-radio-group v-model="form.isEnabled">
-                <el-radio label="开启">开启</el-radio>
-                <el-radio label="关闭">关闭</el-radio>
+                <el-radio :label="1">开启</el-radio>
+                <el-radio :label="0">关闭</el-radio>
               </el-radio-group>
             </el-form-item>
 
@@ -193,8 +205,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getAccounts } from '@/api/privateChat'
+import { listConfig, addConfig, updateConfig } from '@/api/tikTok/harassment'
 
 // 预设时间选项
 const presetTimes = [
@@ -209,9 +223,55 @@ const presetTimes = [
 
 // 响应式数据
 const form = reactive({
-  isEnabled: '开启',
+  id: undefined,
+  accountId: undefined,
+  isEnabled: 1,
   replyInterval: '01:00:00', // 默认1小时
   visitCount: '3'
+})
+
+const accountOptions = ref([])
+const currentConfig = ref(null)
+
+// 获取账号列表
+function getAccountList() {
+  getAccounts().then(response => {
+    accountOptions.value = response.data
+    if (accountOptions.value.length > 0) {
+      form.accountId = accountOptions.value[0]
+      handleAccountChange(form.accountId)
+    }
+  })
+}
+
+// 账号切换处理
+function handleAccountChange(accountId) {
+  listConfig({ accountId: accountId }).then(response => {
+    if (response.rows && response.rows.length > 0) {
+      const config = response.rows[0]
+      currentConfig.value = config
+      form.id = config.id
+      form.isEnabled = config.isEnabled
+      form.replyInterval = config.replyInterval
+      form.visitCount = config.visitCount.toString()
+      segments.value = JSON.parse(config.phraseList || '[]')
+    } else {
+      currentConfig.value = null
+      form.id = undefined
+      form.isEnabled = 1
+      form.replyInterval = '01:00:00'
+      form.visitCount = '3'
+      segments.value = [
+        '您好，看到您对我们的产品感兴趣，需要我为您详细介绍下吗？',
+        '如果方便的话，可以留下您的联系方式，我们会安排专属顾问为您服务。',
+        '期待您的回复，有任何问题都可以随时咨询我哦~'
+      ]
+    }
+  })
+}
+
+onMounted(() => {
+  getAccountList()
 })
 
 // 时间验证函数
@@ -343,14 +403,18 @@ function removeSegment(i) {
 
 // 重置表单
 function resetForm() {
-  form.isEnabled = '开启'
-  form.replyInterval = '01:00:00'
-  form.visitCount = '3'
-  segments.value = [
-    '您好，看到您对我们的产品感兴趣，需要我为您详细介绍下吗？',
-    '如果方便的话，可以留下您的联系方式，我们会安排专属顾问为您服务。',
-    '期待您的回复，有任何问题都可以随时咨询我哦~'
-  ]
+  if (form.accountId) {
+    handleAccountChange(form.accountId)
+  } else {
+    form.isEnabled = 1
+    form.replyInterval = '01:00:00'
+    form.visitCount = '3'
+    segments.value = [
+      '您好，看到您对我们的产品感兴趣，需要我为您详细介绍下吗？',
+      '如果方便的话，可以留下您的联系方式，我们会安排专属顾问为您服务。',
+      '期待您的回复，有任何问题都可以随时咨询我哦~'
+    ]
+  }
 }
 
 // 保存配置
@@ -368,21 +432,28 @@ function saveConfig() {
     
     // 构建保存数据
     const config = {
+      id: form.id,
+      accountId: form.accountId,
       isEnabled: form.isEnabled,
       replyInterval: form.replyInterval,
       replyIntervalSeconds: timeToSeconds(form.replyInterval),
       visitCount: parseInt(form.visitCount),
-      phraseList: segments.value,
+      phraseList: JSON.stringify(segments.value),
       // 计算总时间（秒）
       totalTimeSeconds: timeToSeconds(form.replyInterval) * parseInt(form.visitCount)
     }
     
-    console.log('保存配置:', config)
-    
-    // 模拟保存到服务器
-    setTimeout(() => {
-      ElMessage.success('配置保存成功')
-    }, 500)
+    if (config.id) {
+      updateConfig(config).then(response => {
+        ElMessage.success('配置更新成功')
+        handleAccountChange(form.accountId)
+      })
+    } else {
+      addConfig(config).then(response => {
+        ElMessage.success('配置保存成功')
+        handleAccountChange(form.accountId)
+      })
+    }
   })
 }
 </script>

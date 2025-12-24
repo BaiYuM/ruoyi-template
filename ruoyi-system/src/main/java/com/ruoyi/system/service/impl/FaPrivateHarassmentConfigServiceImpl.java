@@ -55,6 +55,7 @@ public class FaPrivateHarassmentConfigServiceImpl implements IFaPrivateHarassmen
     public int insertFaPrivateHarassmentConfig(FaPrivateHarassmentConfig faPrivateHarassmentConfig)
     {
         faPrivateHarassmentConfig.setCreateTime(DateUtils.getNowDate());
+        syncInterval(faPrivateHarassmentConfig);
         return faPrivateHarassmentConfigMapper.insertFaPrivateHarassmentConfig(faPrivateHarassmentConfig);
     }
 
@@ -68,7 +69,25 @@ public class FaPrivateHarassmentConfigServiceImpl implements IFaPrivateHarassmen
     public int updateFaPrivateHarassmentConfig(FaPrivateHarassmentConfig faPrivateHarassmentConfig)
     {
         faPrivateHarassmentConfig.setUpdateTime(DateUtils.getNowDate());
+        syncInterval(faPrivateHarassmentConfig);
         return faPrivateHarassmentConfigMapper.updateFaPrivateHarassmentConfig(faPrivateHarassmentConfig);
+    }
+
+    /**
+     * 同步时间间隔
+     */
+    private void syncInterval(FaPrivateHarassmentConfig config) {
+        if (config.getReplyInterval() != null && config.getReplyInterval().contains(":")) {
+            try {
+                String[] parts = config.getReplyInterval().split(":");
+                if (parts.length == 3) {
+                    long seconds = Long.parseLong(parts[0]) * 3600 + Long.parseLong(parts[1]) * 60 + Long.parseLong(parts[2]);
+                    config.setReplyIntervalSeconds(seconds);
+                }
+            } catch (Exception e) {
+                // 忽略解析错误
+            }
+        }
     }
 
     /**

@@ -9,6 +9,7 @@ import com.ruoyi.system.domain.FaPrivateChatMsg;
 import com.ruoyi.system.mapper.FaPrivateChatMsgMapper;
 import com.ruoyi.system.service.IFaPrivateChatMsgService;
 import com.ruoyi.system.service.IFaPrivateChatService;
+import com.ruoyi.system.service.IFaPrivateHarassmentRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,9 @@ public class FaPrivateChatMsgServiceImpl implements IFaPrivateChatMsgService
     
     @Autowired
     private IFaPrivateChatService faPrivateChatService;
+
+    @Autowired
+    private IFaPrivateHarassmentRecordService harassmentRecordService;
 
     /**
      * 查询私聊消息
@@ -74,10 +78,16 @@ public class FaPrivateChatMsgServiceImpl implements IFaPrivateChatMsgService
         
         // 更新会话的最后消息ID
         if (result > 0 && faPrivateChatMsg.getChatId() != null) {
-            FaPrivateChat chat = new FaPrivateChat();
-            chat.setId(faPrivateChatMsg.getChatId());
-            chat.setLastMsgId(faPrivateChatMsg.getId());
-            faPrivateChatService.updateFaPrivateChat(chat);
+            FaPrivateChat chat = faPrivateChatService.selectFaPrivateChatById(faPrivateChatMsg.getChatId());
+            if (chat != null) {
+                chat.setLastMsgId(faPrivateChatMsg.getId());
+                faPrivateChatService.updateFaPrivateChat(chat);
+
+                // 如果是用户发来的消息（senderId != 0），则触发私信追杀
+                if (faPrivateChatMsg.getSenderId() != null && faPrivateChatMsg.getSenderId() != 0L) {
+                    harassmentRecordService.startHarassment(chat.getId(), faPrivateChatMsg.getSenderId(), chat.getDouyinId());
+                }
+            }
         }
         
         return result;

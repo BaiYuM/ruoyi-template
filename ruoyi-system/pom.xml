@@ -53,6 +53,10 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>vip.gadfly</groupId>
+            <artifactId>douyin-open-api-sdk</artifactId>
+        </dependency>
 
     </dependencies>
 

@@ -59,4 +59,19 @@ public interface IFaPrivateHarassmentRecordService
      * @return 结果
      */
     public int deleteFaPrivateHarassmentRecordById(Long id);
+
+    /**
+     * 开启私信追杀
+     * 
+     * @param chatId 会话ID
+     * @param userId 抖音用户ID
+     * @param accountId 抖音账号ID
+     * @return 结果
+     */
+    public int startHarassment(Long chatId, Long userId, String accountId);
+
+    /**
+     * 处理私信追杀任务
+     */
+    public void processHarassmentTask();
 }
