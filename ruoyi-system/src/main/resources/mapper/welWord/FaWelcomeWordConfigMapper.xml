@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaWelcomeWordConfigMapper">
+    
+    <resultMap type="FaWelcomeWordConfig" id="FaWelcomeWordConfigResult">
+        <result property="id"    column="id"    />
+        <result property="sysUserId"    column="sys_user_id"    />
+        <result property="accountId"    column="account_id"    />
+        <result property="accountName"    column="account_name"    />
+        <result property="configName"    column="config_name"    />
+        <result property="welcomeContent"    column="welcome_content"    />
+        <result property="triggerType"    column="trigger_type"    />
+        <result property="keywordList"    column="keyword_list"    />
+        <result property="targetAccounts"    column="target_accounts"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="dailyLimit"    column="daily_limit"    />
+        <result property="minDelaySeconds"    column="min_delay_seconds"    />
+        <result property="maxDelaySeconds"    column="max_delay_seconds"    />
+        <result property="isEnabled"    column="is_enabled"    />
+        <result property="priority"    column="priority"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectFaWelcomeWordConfigVo">
+        select id, sys_user_id, account_id, account_name, config_name, welcome_content, trigger_type, keyword_list, target_accounts, start_time, end_time, daily_limit, min_delay_seconds, max_delay_seconds, is_enabled, priority, create_by, create_time, update_by, update_time, remark, del_flag from fa_welcome_word_config
+    </sql>
+
+    <select id="selectFaWelcomeWordConfigList" parameterType="FaWelcomeWordConfig" resultMap="FaWelcomeWordConfigResult">
+        <include refid="selectFaWelcomeWordConfigVo"/>
+        <where>  
+            <if test="sysUserId != null "> and sys_user_id = #{sysUserId}</if>
+            <if test="accountId != null  and accountId != ''"> and account_id = #{accountId}</if>
+            <if test="accountName != null  and accountName != ''"> and account_name like concat('%', #{accountName}, '%')</if>
+            <if test="configName != null  and configName != ''"> and config_name like concat('%', #{configName}, '%')</if>
+            <if test="welcomeContent != null  and welcomeContent != ''"> and welcome_content = #{welcomeContent}</if>
+            <if test="triggerType != null  and triggerType != ''"> and trigger_type = #{triggerType}</if>
+            <if test="keywordList != null  and keywordList != ''"> and keyword_list = #{keywordList}</if>
+            <if test="targetAccounts != null  and targetAccounts != ''"> and target_accounts = #{targetAccounts}</if>
+            <if test="startTime != null "> and start_time = #{startTime}</if>
+            <if test="endTime != null "> and end_time = #{endTime}</if>
+            <if test="dailyLimit != null "> and daily_limit = #{dailyLimit}</if>
+            <if test="minDelaySeconds != null "> and min_delay_seconds = #{minDelaySeconds}</if>
+            <if test="maxDelaySeconds != null "> and max_delay_seconds = #{maxDelaySeconds}</if>
+            <if test="isEnabled != null "> and is_enabled = #{isEnabled}</if>
+            <if test="priority != null "> and priority = #{priority}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaWelcomeWordConfigById" parameterType="Long" resultMap="FaWelcomeWordConfigResult">
+        <include refid="selectFaWelcomeWordConfigVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaWelcomeWordConfig" parameterType="FaWelcomeWordConfig">
+        insert into fa_welcome_word_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="sysUserId != null">sys_user_id,</if>
+            <if test="accountId != null and accountId != ''">account_id,</if>
+            <if test="accountName != null and accountName != ''">account_name,</if>
+            <if test="configName != null and configName != ''">config_name,</if>
+            <if test="welcomeContent != null and welcomeContent != ''">welcome_content,</if>
+            <if test="triggerType != null">trigger_type,</if>
+            <if test="keywordList != null">keyword_list,</if>
+            <if test="targetAccounts != null">target_accounts,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="dailyLimit != null">daily_limit,</if>
+            <if test="minDelaySeconds != null">min_delay_seconds,</if>
+            <if test="maxDelaySeconds != null">max_delay_seconds,</if>
+            <if test="isEnabled != null">is_enabled,</if>
+            <if test="priority != null">priority,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="sysUserId != null">#{sysUserId},</if>
+            <if test="accountId != null and accountId != ''">#{accountId},</if>
+            <if test="accountName != null and accountName != ''">#{accountName},</if>
+            <if test="configName != null and configName != ''">#{configName},</if>
+            <if test="welcomeContent != null and welcomeContent != ''">#{welcomeContent},</if>
+            <if test="triggerType != null">#{triggerType},</if>
+            <if test="keywordList != null">#{keywordList},</if>
+            <if test="targetAccounts != null">#{targetAccounts},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="dailyLimit != null">#{dailyLimit},</if>
+            <if test="minDelaySeconds != null">#{minDelaySeconds},</if>
+            <if test="maxDelaySeconds != null">#{maxDelaySeconds},</if>
+            <if test="isEnabled != null">#{isEnabled},</if>
+            <if test="priority != null">#{priority},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaWelcomeWordConfig" parameterType="FaWelcomeWordConfig">
+        update fa_welcome_word_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sysUserId != null">sys_user_id = #{sysUserId},</if>
+            <if test="accountId != null and accountId != ''">account_id = #{accountId},</if>
+            <if test="accountName != null and accountName != ''">account_name = #{accountName},</if>
+            <if test="configName != null and configName != ''">config_name = #{configName},</if>
+            <if test="welcomeContent != null and welcomeContent != ''">welcome_content = #{welcomeContent},</if>
+            <if test="triggerType != null">trigger_type = #{triggerType},</if>
+            <if test="keywordList != null">keyword_list = #{keywordList},</if>
+            <if test="targetAccounts != null">target_accounts = #{targetAccounts},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="dailyLimit != null">daily_limit = #{dailyLimit},</if>
+            <if test="minDelaySeconds != null">min_delay_seconds = #{minDelaySeconds},</if>
+            <if test="maxDelaySeconds != null">max_delay_seconds = #{maxDelaySeconds},</if>
+            <if test="isEnabled != null">is_enabled = #{isEnabled},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaWelcomeWordConfigById" parameterType="Long">
+        delete from fa_welcome_word_config where id = #{id}
+    </delete>
+
+    <delete id="deleteFaWelcomeWordConfigByIds" parameterType="String">
+        delete from fa_welcome_word_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
