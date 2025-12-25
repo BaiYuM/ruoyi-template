@@ -304,7 +304,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
 
@@ -319,6 +319,7 @@ const loading = reactive({
 
 // 筛选条件
 const selectedAccount = ref('')
+const selectedAccountInfo = ref(null) // 新增：存储选中的账号信息
 const filterType = ref('all')
 const showFilterOptions = ref(false)
 
@@ -349,9 +350,20 @@ const selectFilter = (type) => {
 }
 
 // 处理抖音号筛选
-const handleAccountFilter = () => {
+const handleAccountFilter = (account) => {
+    // 查找选中的账号信息
+    if (account) {
+        selectedAccountInfo.value = accountOptions.value.find(acc => acc.account === account) || null
+    } else {
+        selectedAccountInfo.value = null
+    }
     loadSessions()
 }
+
+// 监听 selectedAccount 变化
+watch(selectedAccount, (newValue) => {
+    handleAccountFilter(newValue)
+})
 
 // 处理键盘事件：Enter发送，Alt+Enter换行
 const handleKeydown = (e) => {
@@ -472,17 +484,6 @@ const sendMessage = async () => {
         })
         
         ElMessage.success('发送成功')
-        
-        // 如果需要实际发送到服务器，可以在这里调用API
-        // await request({
-        //     url: '/privateChat/private_chat/send',
-        //     method: 'POST',
-        //     data: {
-        //         sessionId: activeSession.value.id,
-        //         message: inputMessage.value.trim()
-        //     }
-        // })
-        
     } catch (error) {
         console.error('发送消息失败:', error)
         ElMessage.error('发送失败，请重试')
@@ -507,6 +508,7 @@ const handleRefresh = async () => {
         await loadSessions()
         
         selectedAccount.value = ''
+        selectedAccountInfo.value = null
         filterType.value = 'all'
         showFilterOptions.value = false
         activeSessionId.value = null
@@ -533,25 +535,62 @@ const loadAccounts = async () => {
         })
         
         if (response.code === 200) {
-            // 根据API文档，返回的数据结构可能是 { "key": {} }
-            // 这里假设实际数据在 data 字段中
-            let accounts = response.data || []
+            let accounts = []
             
-            // 如果数据结构是 { "key": {} }，尝试提取
-            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+            // 处理不同的响应格式
+            if (Array.isArray(response.data)) {
+                accounts = response.data
+            } else if (response.data && typeof response.data === 'object') {
+                // 如果是对象，提取所有值
                 accounts = Object.values(response.data)
             }
             
-            accountOptions.value = accounts.map(account => ({
-                account: account || '未知账号',
-                ...account
-            }))
+            // 转换数据结构，确保每个账号都有 account 和 expirationAiId
+            accountOptions.value = accounts.map(account => {
+                // 处理不同的账号数据结构
+                if (typeof account === 'string') {
+                    return {
+                        account: account,
+                        expirationAiId: null
+                    }
+                } else if (typeof account === 'object') {
+                    return {
+                        account: account.account || account.username || account.nickname || '未知账号',
+                        expirationAiId: account.expirationAiId || account.aiConfigId || null,
+                        ...account
+                    }
+                }
+                return {
+                    account: '未知账号',
+                    expirationAiId: null
+                }
+            })
+            
+            // 如果有账号，默认选择第一个
+            if (accountOptions.value.length > 0 && !selectedAccount.value) {
+                selectedAccount.value = accountOptions.value[0].account
+                selectedAccountInfo.value = accountOptions.value[0]
+            }
         } else {
             ElMessage.error(response.msg || '加载抖音号列表失败')
         }
     } catch (error) {
         console.error('加载抖音号列表失败:', error)
         ElMessage.error('加载抖音号列表失败')
+        
+        // 开发环境使用模拟数据
+        if (process.env.NODE_ENV === 'development') {
+            accountOptions.value = [
+                { account: '抖音账号1', expirationAiId: 1 },
+                { account: '抖音账号2', expirationAiId: 2 },
+                { account: '抖音账号3', expirationAiId: 3 }
+            ]
+            
+            if (accountOptions.value.length > 0) {
+                selectedAccount.value = accountOptions.value[0].account
+                selectedAccountInfo.value = accountOptions.value[0]
+            }
+        }
     } finally {
         loading.accounts = false
     }
@@ -559,18 +598,20 @@ const loadAccounts = async () => {
 
 // 加载会话列表
 const loadSessions = async () => {
+    // 如果没有选择抖音号，直接返回
+    if (!selectedAccountInfo.value) {
+        sessionList.value = []
+        return
+    }
+    
     loading.sessions = true
     
     try {
         const params = {}
         
-        // 根据API文档添加参数
-        if (selectedAccount.value) {
-            // 查找对应的AI配置ID
-            const accountInfo = accountOptions.value.find(acc => acc.account === selectedAccount.value)
-            if (accountInfo && accountInfo.aiConfigId) {
-                params.expirationAiId = accountInfo.aiConfigId
-            }
+        // 添加 expirationAiId 参数
+        if (selectedAccountInfo.value && selectedAccountInfo.value.expirationAiId) {
+            params.expirationAiId = selectedAccountInfo.value.expirationAiId
         }
         
         // 是否留资参数
@@ -581,6 +622,8 @@ const loadSessions = async () => {
         }
         // all 时不传 isLead 参数
         
+        console.log('请求参数:', params)
+        
         const response = await request({
             url: '/privateChat/private_chat/sessions',
             method: 'GET',
@@ -588,24 +631,29 @@ const loadSessions = async () => {
         })
         
         if (response.code === 200) {
-            let sessions = response.data || []
+            let sessions = []
             
-            // 处理数据结构
-            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+            // 处理不同的响应格式
+            if (Array.isArray(response.data)) {
+                sessions = response.data
+            } else if (response.data && typeof response.data === 'object') {
+                // 如果是对象，提取所有值
                 sessions = Object.values(response.data)
             }
             
             sessionList.value = sessions.map(session => ({
                 id: session.id,
-                userId: session.peerUserId || session.peerId,
+                userId: session.peerUserId,
                 avatar: session.peerAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-                nick: session.peerNickname  || '未知用户',
+                nick: session.peerNickname || '未知用户',
                 account: session.peerAccount,
-                lastMsgContent: session.lastMsgContent,
+                lastMsgContent: session.lastMsgContent || session.lastMessage || '暂无消息',
                 lastMsgTime: session.lastSendTime,
-                isLead: session.isBlocked,
+                isLead: session.isLead === 1,
                 ...session
             }))
+            
+            console.log('加载到的会话:', sessionList.value)
         } else {
             ElMessage.error(response.msg || '加载会话列表失败')
             sessionList.value = []
@@ -631,21 +679,35 @@ const loadMessages = async (sessionId) => {
         })
         
         if (response.code === 200) {
-            let messagesData = response.data || []
+            let messagesData = []
             
-            // 处理数据结构
-            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+            // 处理不同的响应格式
+            if (Array.isArray(response.data)) {
+                messagesData = response.data
+            } else if (response.data && typeof response.data === 'object') {
+                // 如果是对象，提取所有值
                 messagesData = Object.values(response.data)
             }
             
-            messages.value = messagesData.map(msg => ({
-                id: msg.id || msg.msgId,
-                senderType: msg.senderType || (msg.senderId === activeSession.value?.userId ? 'peer' : 'self'),
-                msgContent: msg.content || msg.msgContent || msg.message || '',
-                sendTime: msg.sendTime || msg.createTime || msg.timestamp,
-                msgType: msg.msgType || msg.type || 0,
-                ...msg
-            }))
+            messages.value = messagesData.map(msg => {
+                // 判断消息发送者
+                let senderType = 'peer'
+                if (activeSession.value) {
+                    // 如果消息的发送者ID不等于当前会话的用户ID，则认为是自己发送的
+                    if (msg.senderId && msg.senderId !== activeSession.value.userId) {
+                        senderType = 'self'
+                    }
+                }
+                
+                return {
+                    id: msg.id || msg.msgId,
+                    senderType: senderType,
+                    msgContent: msg.content || msg.msgContent || msg.message || '',
+                    sendTime: msg.sendTime || msg.createTime || msg.timestamp,
+                    msgType: msg.msgType || msg.type || 0,
+                    ...msg
+                }
+            })
         } else {
             ElMessage.error(response.msg || '加载消息失败')
             messages.value = []
@@ -661,24 +723,14 @@ const loadMessages = async (sessionId) => {
 
 // 筛选后的会话列表
 const filteredSessions = computed(() => {
-    let sessions = sessionList.value
-    
-    // 如果没有选择抖音号，显示所有会话
-    // 如果选择了抖音号，根据账号筛选（后端已根据AI配置ID筛选，这里做前端双重保障）
-    if (selectedAccount.value) {
-        sessions = sessions.filter(session => 
-            !session.account || session.account === selectedAccount.value
-        )
-    }
-    
-    return sessions
+    return sessionList.value
 })
 
 // 初始化数据
 onMounted(async () => {
     try {
         await loadAccounts()
-        await loadSessions()
+        // 加载账号后会默认选择第一个，然后自动加载会话
     } catch (error) {
         console.error('初始化失败:', error)
     }
