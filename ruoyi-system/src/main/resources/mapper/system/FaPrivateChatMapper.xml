@@ -54,32 +54,33 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             pc.last_msg_id,
             pc.is_blocked,
             pc.del_flag,
-            peer.id AS peer_user_id,
+            CASE 
+                WHEN pc.user_id1 = auth_user.id THEN pc.user_id2
+                ELSE pc.user_id1
+            END AS peer_user_id,
             peer.account AS peer_account,
             peer.nickname AS peer_nickname,
             peer.avatar AS peer_avatar,
-            ea_peer.funds AS peer_funds,
-            auth.account AS douyin_id,
+            NULL AS peer_funds,
+            auth_user.account AS douyin_id,
             MAX(pcm.send_time) AS last_send_time
         FROM fa_private_chat pc
         JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id AND pcm.del_flag = 0
-        JOIN expiration_ai ea_auth ON (ea_auth.user_id = pc.user_id1 OR ea_auth.user_id = pc.user_id2)
-        JOIN comment_user auth ON auth.id = ea_auth.user_id
-        JOIN comment_user peer ON peer.id = IF(pc.user_id1 = auth.id, pc.user_id2, pc.user_id1)
-        LEFT JOIN expiration_ai ea_peer ON ea_peer.user_id = peer.id
+        JOIN comment_user auth_user ON auth_user.id IN (pc.user_id1, pc.user_id2)
+        JOIN comment_user peer ON peer.id = CASE 
+                                    WHEN pc.user_id1 = auth_user.id THEN pc.user_id2
+                                    ELSE pc.user_id1
+                                  END
         <where>
             <if test="account != null and account != ''">
-                AND auth.account = #{account}
-            </if>
-            <if test="funds != null">
-                AND ea_peer.funds = #{funds}
+                AND auth_user.account = #{account}
             </if>
             AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
             AND pc.del_flag = 0
         </where>
         GROUP BY
             pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag,
-            peer.id, peer.account, peer.nickname, peer.avatar, ea_peer.funds
+            peer.id, peer.account, peer.nickname, peer.avatar, auth_user.id, auth_user.account
         ORDER BY last_send_time DESC
         LIMIT #{limit}
     </select>
@@ -96,9 +97,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 查询评论用户账号列表 -->
     <select id="selectCommentUserAccounts" resultType="java.lang.String">
         SELECT DISTINCT cu.account
-        FROM expiration_ai ea
-        JOIN comment_user cu ON cu.id = ea.user_id
-        WHERE cu.account IS NOT NULL AND cu.account != ''
+        FROM comment_user cu
+        WHERE cu.id IN (
+            SELECT DISTINCT user_id1 FROM fa_private_chat WHERE del_flag = 0
+            UNION
+            SELECT DISTINCT user_id2 FROM fa_private_chat WHERE del_flag = 0
+        )
+        AND cu.account IS NOT NULL AND cu.account != ''
     </select>
 
     <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
