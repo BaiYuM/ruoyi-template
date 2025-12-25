@@ -191,6 +191,7 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     @Override
     public int sendMessage(FaPrivateChatMsg msg) {
         msg.setCreateTime(DateUtils.getNowDate());
+        msg.setId(IdUtils.getSnowflakeId());
         // 1. 插入消息记录
         int rows = faPrivateChatMsgMapper.insertFaPrivateChatMsg(msg);
         
