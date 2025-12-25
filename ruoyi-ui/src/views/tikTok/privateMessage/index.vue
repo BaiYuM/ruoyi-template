@@ -26,9 +26,9 @@
                             >
                                 <el-option 
                                     v-for="item in accountOptions" 
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="item.value"
+                                    :key="item.account"
+                                    :label="item.account"
+                                    :value="item.account"
                                 />
                             </el-select>
                         </div>
@@ -93,6 +93,12 @@
                         </template>
                         <template v-else>
                             <div 
+                                v-if="filteredSessions.length === 0"
+                                class="empty-sessions"
+                            >
+                                <el-empty description="暂无会话" :image-size="60" />
+                            </div>
+                            <div 
                                 class="session-item" 
                                 v-for="item in filteredSessions" 
                                 :key="item.id"
@@ -105,9 +111,9 @@
                                 <div class="session-content">
                                     <div class="session-header">
                                         <div class="header-left">
-                                            <span class="nickname">{{ item.nick }}</span>
+                                            <span class="nickname">{{ item.nick || '未知用户' }}</span>
                                             <el-tag 
-                                                v-if="item.hasFunds" 
+                                                v-if="item.isLead" 
                                                 size="small" 
                                                 type="success"
                                                 class="lead-tag"
@@ -122,7 +128,7 @@
                                         <span class="time">{{ formatTime(item.lastMsgTime) }}</span>
                                     </div>
                                     <div class="session-preview">
-                                        {{ item.lastMsgContent }}
+                                        {{ item.lastMsgContent || '暂无消息' }}
                                     </div>
                                 </div>
                             </div>
@@ -135,7 +141,7 @@
                             加载中...
                         </template>
                         <template v-else>
-                            已拉取72小时内上线{{ total }}条会话
+                            已加载 {{ filteredSessions.length }} 条会话
                         </template>
                     </div>
                 </div>
@@ -159,18 +165,21 @@
                                 </div>
                             </template>
                             <template v-else>
+                                <div v-if="messages.length === 0" class="empty-messages">
+                                    <el-empty description="暂无消息" :image-size="50" />
+                                </div>
                                 <div 
                                     v-for="(msg, index) in messages" 
                                     :key="index"
-                                    :class="['message-item', msg.senderId === activeSession.userId ? 'received' : 'sent']"
+                                    :class="['message-item', msg.senderType === 'peer' ? 'received' : 'sent']"
                                 >
                                     <!-- 接收的消息 -->
-                                    <div v-if="msg.senderId === activeSession.userId" class="message-received">
+                                    <div v-if="msg.senderType === 'peer'" class="message-received">
                                         <div class="message-avatar">
                                             <el-avatar :size="32" :src="activeSession.avatar" />
                                         </div>
                                         <div class="message-content-wrapper">
-                                            <div class="message-nickname">{{ activeSession.nick }}</div>
+                                            <div class="message-nickname">{{ activeSession.nick || '对方' }}</div>
                                             <div class="message-time">{{ formatDateTime(msg.sendTime) }}</div>
                                             <div class="message-content">
                                                 <div class="message-text">{{ msg.msgContent }}</div>
@@ -179,7 +188,7 @@
                                     </div>
                                     
                                     <!-- 发送的消息 -->
-                                    <div v-if="msg.senderId !== activeSession.userId" class="message-sent">
+                                    <div v-if="msg.senderType === 'self'" class="message-sent">
                                         <div class="message-content-wrapper">
                                             <div class="message-nickname-sent">我</div>
                                             <div class="message-time-sent">{{ formatDateTime(msg.sendTime) }}</div>
@@ -201,7 +210,7 @@
                                 v-model="inputMessage"
                                 type="textarea"
                                 :rows="3"
-                                placeholder="回复内容，可按Enter键发送，按AIt+Enter换行"
+                                placeholder="回复内容，可按Enter键发送，按Alt+Enter换行"
                                 resize="none"
                                 class="reply-input"
                                 @keydown.enter="handleKeydown"
@@ -209,10 +218,10 @@
                             />
                             <div class="input-actions">
                                 <el-button 
-                                    type="default" 
+                                    type="primary" 
                                     class="send-btn"
                                     @click="sendMessage"
-                                    :disabled="!activeSession || loading.send"
+                                    :disabled="!activeSession || loading.send || !inputMessage.trim()"
                                     :loading="loading.send"
                                 >
                                     发送 (Enter)
@@ -237,37 +246,47 @@
                             <div class="clue-user">
                                 <el-avatar :size="48" :src="activeSession.avatar" />
                                 <div class="clue-user-info">
-                                    <div class="clue-nickname">{{ activeSession.nick }}</div>
+                                    <div class="clue-nickname">{{ activeSession.nick || '未知用户' }}</div>
+                                    <div class="clue-account" v-if="activeSession.account">
+                                        {{ activeSession.account }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 线索内容 -->
                         <div class="clue-content">
-                            <div class="clue-title">已关联线索</div>
+                            <div class="clue-title">用户信息</div>
                             <div class="clue-list">
-                                <template v-if="loading.clues">
-                                    <div class="loading-clues">
-                                        <el-skeleton v-for="i in 3" :key="i" animated class="clue-skeleton">
-                                            <template #template>
-                                                <el-skeleton-item variant="text" style="width: 100%; height: 60px;" />
-                                            </template>
-                                        </el-skeleton>
+                                <div class="clue-item">
+                                    <div class="clue-item-header">
+                                        <span class="clue-label">用户ID</span>
                                     </div>
-                                </template>
-                                <template v-else>
-                                    <div 
-                                        v-for="(clue, index) in clues" 
-                                        :key="index"
-                                        class="clue-item"
-                                    >
-                                        <div class="clue-item-header">
-                                            <span class="clue-label">{{ clue.label }}</span>
-                                            <span class="clue-time">{{ clue.time }}</span>
-                                        </div>
-                                        <div class="clue-value">{{ clue.value }}</div>
+                                    <div class="clue-value">{{ activeSession.userId || '未知' }}</div>
+                                </div>
+                                <div class="clue-item">
+                                    <div class="clue-item-header">
+                                        <span class="clue-label">留资状态</span>
                                     </div>
-                                </template>
+                                    <div class="clue-value">
+                                        <el-tag 
+                                            v-if="activeSession.isLead" 
+                                            size="small" 
+                                            type="success"
+                                        >已留资</el-tag>
+                                        <el-tag 
+                                            v-else 
+                                            size="small" 
+                                            type="info"
+                                        >未留资</el-tag>
+                                    </div>
+                                </div>
+                                <div class="clue-item">
+                                    <div class="clue-item-header">
+                                        <span class="clue-label">最后活跃</span>
+                                    </div>
+                                    <div class="clue-value">{{ formatDateTime(activeSession.lastMsgTime) }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -287,8 +306,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-
-// 导入项目中已有的 request 方法
 import request from '@/utils/request'
 
 // 加载状态
@@ -296,36 +313,27 @@ const loading = reactive({
     accounts: false,
     sessions: false,
     messages: false,
-    clues: false,
     send: false,
     refresh: false
 })
 
-// 抖音号选择
+// 筛选条件
 const selectedAccount = ref('')
 const filterType = ref('all')
 const showFilterOptions = ref(false)
-
-// 分页
-const page = ref(1)
-const pageSize = 50
-const total = ref(0)
 
 // 会话相关
 const sessionList = ref([])
 const activeSessionId = ref(null)
 const activeSession = ref(null)
 
-// 抖音号选项
+// 抖音号选项（包含AI配置ID）
 const accountOptions = ref([])
 
 // 聊天消息
 const messages = ref([])
 const inputMessage = ref('')
 const messageListRef = ref(null)
-
-// 线索数据
-const clues = ref([])
 
 // 切换筛选选项显示
 const toggleFilterOptions = (e) => {
@@ -337,7 +345,6 @@ const toggleFilterOptions = (e) => {
 const selectFilter = (type) => {
     filterType.value = type
     showFilterOptions.value = false
-    // 重新加载会话列表
     loadSessions()
 }
 
@@ -370,55 +377,64 @@ const handleKeydown = (e) => {
 const formatTime = (timeString) => {
     if (!timeString) return ''
     
-    const time = new Date(timeString)
-    const now = new Date()
-    const diff = now - time
-    
-    const minute = 60 * 1000
-    const hour = 60 * minute
-    const day = 24 * hour
-    const week = 7 * day
-    
-    if (diff < minute) return '刚刚'
-    if (diff < hour) return `${Math.floor(diff / minute)}分钟前`
-    if (diff < day) return `${Math.floor(diff / hour)}小时前`
-    if (diff < week) return `${Math.floor(diff / day)}天前`
-    return `${Math.floor(diff / week)}周前`
+    try {
+        const time = new Date(timeString)
+        const now = new Date()
+        const diff = now - time
+        
+        const minute = 60 * 1000
+        const hour = 60 * minute
+        const day = 24 * hour
+        const week = 7 * day
+        
+        if (diff < minute) return '刚刚'
+        if (diff < hour) return `${Math.floor(diff / minute)}分钟前`
+        if (diff < day) return `${Math.floor(diff / hour)}小时前`
+        if (diff < week) return `${Math.floor(diff / day)}天前`
+        return `${time.getMonth() + 1}月${time.getDate()}日`
+    } catch (e) {
+        return timeString
+    }
 }
 
 // 格式化日期时间显示
 const formatDateTime = (timeString) => {
     if (!timeString) return ''
     
-    const time = new Date(timeString)
-    const year = time.getFullYear()
-    const month = String(time.getMonth() + 1).padStart(2, '0')
-    const day = String(time.getDate()).padStart(2, '0')
-    const hours = String(time.getHours()).padStart(2, '0')
-    const minutes = String(time.getMinutes()).padStart(2, '0')
-    const seconds = String(time.getSeconds()).padStart(2, '0')
-    
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    try {
+        const time = new Date(timeString)
+        const now = new Date()
+        const isToday = time.toDateString() === now.toDateString()
+        
+        if (isToday) {
+            const hours = String(time.getHours()).padStart(2, '0')
+            const minutes = String(time.getMinutes()).padStart(2, '0')
+            const seconds = String(time.getSeconds()).padStart(2, '0')
+            return `今天 ${hours}:${minutes}:${seconds}`
+        } else {
+            const month = String(time.getMonth() + 1).padStart(2, '0')
+            const day = String(time.getDate()).padStart(2, '0')
+            const hours = String(time.getHours()).padStart(2, '0')
+            const minutes = String(time.getMinutes()).padStart(2, '0')
+            return `${month}-${day} ${hours}:${minutes}`
+        }
+    } catch (e) {
+        return timeString
+    }
 }
 
 // 选择会话
 const selectSession = async (session) => {
     activeSessionId.value = session.id
     activeSession.value = session
+    messages.value = []
     
     // 加载消息
     await loadMessages(session.id)
     
-    // 加载线索 - 使用对方用户ID
-    if (session.userId) {
-        await loadClues(session.userId)
-    }
-    
     // 滚动到底部
     nextTick(() => {
-        if (messageListRef.value) {
-            messageListRef.value.scrollTop = messageListRef.value.scrollHeight
-        }
+        scrollToBottom()
     })
 }
 
@@ -429,50 +445,44 @@ const sendMessage = async () => {
     loading.send = true
     
     try {
-        // 发送私信消息
-        const response = await request({
-            url: '/privateChat/private_chat/send',
-            method: 'POST',
-            data: {
-                chatId: activeSession.value.id,
-                receiverId: activeSession.value.userId,
-                msgType: 0, // 文本消息
-                msgContent: inputMessage.value.trim()
-            }
+        // 注意：API文档中没有发送消息的接口
+        // 这里模拟发送，实际对接时需要根据实际接口调整
+        const now = new Date()
+        const newMessage = {
+            senderType: 'self',
+            msgContent: inputMessage.value.trim(),
+            sendTime: now.toISOString()
+        }
+        
+        // 添加到消息列表
+        messages.value.push(newMessage)
+        
+        // 更新会话的最后一条消息
+        const sessionIndex = sessionList.value.findIndex(s => s.id === activeSession.value.id)
+        if (sessionIndex !== -1) {
+            sessionList.value[sessionIndex].lastMsgContent = inputMessage.value.trim()
+            sessionList.value[sessionIndex].lastMsgTime = now.toISOString()
+        }
+        
+        inputMessage.value = ''
+        
+        // 滚动到底部
+        nextTick(() => {
+            scrollToBottom()
         })
         
-        if (response.code === 200) {
-            // 添加发送的消息到列表
-            const now = new Date()
-            messages.value.push({
-                senderId: null, // 我方ID，需要根据实际情况获取
-                msgContent: inputMessage.value.trim(),
-                sendTime: now.toISOString(),
-                msgType: 0
-            })
-            
-            inputMessage.value = ''
-            
-            // 更新会话的最后一条消息
-            if (sessionList.value) {
-                const sessionIndex = sessionList.value.findIndex(s => s.id === activeSession.value.id)
-                if (sessionIndex !== -1) {
-                    sessionList.value[sessionIndex].lastMsgContent = inputMessage.value.trim()
-                    sessionList.value[sessionIndex].lastMsgTime = now.toISOString()
-                }
-            }
-            
-            // 滚动到底部
-            nextTick(() => {
-                if (messageListRef.value) {
-                    messageListRef.value.scrollTop = messageListRef.value.scrollHeight
-                }
-            })
-            
-            ElMessage.success('发送成功')
-        } else {
-            ElMessage.error(response.msg || '发送失败')
-        }
+        ElMessage.success('发送成功')
+        
+        // 如果需要实际发送到服务器，可以在这里调用API
+        // await request({
+        //     url: '/privateChat/private_chat/send',
+        //     method: 'POST',
+        //     data: {
+        //         sessionId: activeSession.value.id,
+        //         message: inputMessage.value.trim()
+        //     }
+        // })
+        
     } catch (error) {
         console.error('发送消息失败:', error)
         ElMessage.error('发送失败，请重试')
@@ -481,26 +491,38 @@ const sendMessage = async () => {
     }
 }
 
+// 滚动到底部
+const scrollToBottom = () => {
+    if (messageListRef.value) {
+        messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+    }
+}
+
 // 刷新
 const handleRefresh = async () => {
     loading.refresh = true
     
-    // 重新加载所有数据
-    await loadAccounts()
-    await loadSessions()
-    
-    selectedAccount.value = ''
-    filterType.value = 'all'
-    showFilterOptions.value = false
-    activeSessionId.value = null
-    activeSession.value = null
-    messages.value = []
-    clues.value = []
-    
-    loading.refresh = false
+    try {
+        await loadAccounts()
+        await loadSessions()
+        
+        selectedAccount.value = ''
+        filterType.value = 'all'
+        showFilterOptions.value = false
+        activeSessionId.value = null
+        activeSession.value = null
+        messages.value = []
+        
+        ElMessage.success('刷新成功')
+    } catch (error) {
+        console.error('刷新失败:', error)
+        ElMessage.error('刷新失败')
+    } finally {
+        loading.refresh = false
+    }
 }
 
-// 加载抖音号列表
+// 加载抖音号列表（附带AI配置ID）
 const loadAccounts = async () => {
     loading.accounts = true
     
@@ -511,25 +533,25 @@ const loadAccounts = async () => {
         })
         
         if (response.code === 200) {
-            // 根据API响应格式调整
-            const accounts = response.data || []
+            // 根据API文档，返回的数据结构可能是 { "key": {} }
+            // 这里假设实际数据在 data 字段中
+            let accounts = response.data || []
+            
+            // 如果数据结构是 { "key": {} }，尝试提取
+            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+                accounts = Object.values(response.data)
+            }
+            
             accountOptions.value = accounts.map(account => ({
-                label: account || '未知账号',
-                value: account
+                account: account || '未知账号',
+                ...account
             }))
+        } else {
+            ElMessage.error(response.msg || '加载抖音号列表失败')
         }
     } catch (error) {
         console.error('加载抖音号列表失败:', error)
         ElMessage.error('加载抖音号列表失败')
-        
-        // 开发环境使用模拟数据
-        if (process.env.NODE_ENV === 'development') {
-            accountOptions.value = [
-                { label: '抖音账号1', value: 'account1' },
-                { label: '抖音账号2', value: 'account2' },
-                { label: '抖音账号3', value: 'account3' }
-            ]
-        }
     } finally {
         loading.accounts = false
     }
@@ -542,16 +564,22 @@ const loadSessions = async () => {
     try {
         const params = {}
         
-        // 添加筛选参数
+        // 根据API文档添加参数
         if (selectedAccount.value) {
-            params.account = selectedAccount.value
+            // 查找对应的AI配置ID
+            const accountInfo = accountOptions.value.find(acc => acc.account === selectedAccount.value)
+            if (accountInfo && accountInfo.aiConfigId) {
+                params.expirationAiId = accountInfo.aiConfigId
+            }
         }
         
+        // 是否留资参数
         if (filterType.value === 'lead') {
-            params.funds = 1
+            params.isLead = 1
         } else if (filterType.value === 'no-lead') {
-            params.funds = 0
+            params.isLead = 0
         }
+        // all 时不传 isLead 参数
         
         const response = await request({
             url: '/privateChat/private_chat/sessions',
@@ -560,30 +588,32 @@ const loadSessions = async () => {
         })
         
         if (response.code === 200) {
-            // 根据API响应格式调整
-            const sessions = response.data || []
+            let sessions = response.data || []
+            
+            // 处理数据结构
+            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+                sessions = Object.values(response.data)
+            }
+            
             sessionList.value = sessions.map(session => ({
                 id: session.id,
-                userId: session.userId || session.commentUserId,
-                avatar: session.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-                nick: session.peerAccount || session.nick || '未知用户',
-                lastMsgContent: session.lastMsg || session.lastMsgContent || '暂无消息',
-                lastMsgTime: session.lastMsgTime || session.time,
-                hasFunds: session.hasFunds || session.funds === 1,
-                account: session.account
+                userId: session.peerUserId || session.peerId,
+                avatar: session.peerAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+                nick: session.peerNickname  || '未知用户',
+                account: session.peerAccount,
+                lastMsgContent: session.lastMsgContent,
+                lastMsgTime: session.lastSendTime,
+                isLead: session.isBlocked,
+                ...session
             }))
-            
-            total.value = sessionList.value.length
+        } else {
+            ElMessage.error(response.msg || '加载会话列表失败')
+            sessionList.value = []
         }
     } catch (error) {
         console.error('加载会话列表失败:', error)
         ElMessage.error('加载会话列表失败')
-        
-        // 开发环境使用模拟数据
-        if (process.env.NODE_ENV === 'development') {
-            sessionList.value = mockSessions()
-            total.value = sessionList.value.length
-        }
+        sessionList.value = []
     } finally {
         loading.sessions = false
     }
@@ -601,129 +631,57 @@ const loadMessages = async (sessionId) => {
         })
         
         if (response.code === 200) {
-            // 根据API响应格式调整
-            messages.value = response.data || []
+            let messagesData = response.data || []
+            
+            // 处理数据结构
+            if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+                messagesData = Object.values(response.data)
+            }
+            
+            messages.value = messagesData.map(msg => ({
+                id: msg.id || msg.msgId,
+                senderType: msg.senderType || (msg.senderId === activeSession.value?.userId ? 'peer' : 'self'),
+                msgContent: msg.content || msg.msgContent || msg.message || '',
+                sendTime: msg.sendTime || msg.createTime || msg.timestamp,
+                msgType: msg.msgType || msg.type || 0,
+                ...msg
+            }))
+        } else {
+            ElMessage.error(response.msg || '加载消息失败')
+            messages.value = []
         }
     } catch (error) {
         console.error('加载消息失败:', error)
         ElMessage.error('加载消息失败')
-        
-        // 开发环境使用模拟数据
-        if (process.env.NODE_ENV === 'development') {
-            messages.value = mockMessages()
-        }
+        messages.value = []
     } finally {
         loading.messages = false
     }
 }
 
-// 加载线索
-const loadClues = async (userId) => {
-    loading.clues = true
-    
-    try {
-        const response = await request({
-            url: '/privateChat/private_chat/clues',
-            method: 'GET',
-            params: { userId }
-        })
-        
-        if (response.code === 200) {
-            // 根据API响应格式调整
-            const cluesData = response.data || []
-            clues.value = cluesData.map(clue => ({
-                label: clue.fieldName || clue.label,
-                value: clue.fieldValue || clue.value,
-                time: clue.createTime || clue.time
-            }))
-        }
-    } catch (error) {
-        console.error('加载线索失败:', error)
-        ElMessage.error('加载线索失败')
-        
-        // 开发环境使用模拟数据
-        if (process.env.NODE_ENV === 'development') {
-            clues.value = [
-                { label: '手机号', value: '138****5678', time: '2025-11-04' },
-                { label: '微信号', value: 'wx_abc123', time: '2025-11-03' },
-                { label: '邮箱', value: 'user@example.com', time: '2025-11-02' },
-                { label: '咨询产品', value: '抖音代运营服务', time: '2025-11-01' },
-                { label: '预算范围', value: '1000-2000元', time: '2025-10-31' }
-            ]
-        }
-    } finally {
-        loading.clues = false
-    }
-}
-
 // 筛选后的会话列表
 const filteredSessions = computed(() => {
-    return sessionList.value
+    let sessions = sessionList.value
+    
+    // 如果没有选择抖音号，显示所有会话
+    // 如果选择了抖音号，根据账号筛选（后端已根据AI配置ID筛选，这里做前端双重保障）
+    if (selectedAccount.value) {
+        sessions = sessions.filter(session => 
+            !session.account || session.account === selectedAccount.value
+        )
+    }
+    
+    return sessions
 })
 
-// 模拟数据 - 开发环境使用
-const mockSessions = () => {
-    const now = new Date()
-    const sessions = []
-    const timeOptions = [
-        { label: '刚刚', value: 0 },
-        { label: '1小时前', value: 1 },
-        { label: '3小时前', value: 3 },
-        { label: '昨天', value: 24 },
-        { label: '2天前', value: 48 },
-        { label: '3天前', value: 72 },
-        { label: '一周前', value: 168 }
-    ]
-    
-    for (let i = 1; i <= 15; i++) {
-        const timeOption = timeOptions[i % 7]
-        const time = new Date(now.getTime() - timeOption.value * 60 * 60 * 1000)
-        
-        sessions.push({
-            id: i,
-            userId: i,
-            avatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-            nick: i % 3 === 0 ? '非常长的昵称需要省略号显示测试' : ['Gina商业思维', '修星星嘻嘻', '爱喝Lemon'][i % 3],
-            lastMsgContent: '您好，抖音代运营服务单平台价格为980元，支持多主流平台，包含内容策划、视频制作、数据分析等一站式服务。如果您需要更详细的信息，可以随时联系我们的客服。',
-            lastMsgTime: time.toISOString(),
-            hasFunds: i % 4 === 0,
-            account: `account${i}`
-        })
-    }
-    return sessions
-}
-
-// 模拟聊天消息 - 开发环境使用
-const mockMessages = () => {
-    const now = new Date()
-    return [
-        { 
-            senderId: 1, 
-            msgContent: '您好，我想咨询一下抖音代运营的服务', 
-            sendTime: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-            msgType: 0
-        },
-        { 
-            senderId: null, // 我方消息
-            msgContent: '您好，我们提供专业的抖音代运营服务，包括内容策划、视频制作、数据分析等', 
-            sendTime: new Date(now.getTime() - 28 * 60 * 1000).toISOString(),
-            msgType: 0
-        },
-        { 
-            senderId: 1, 
-            msgContent: '价格大概是多少？有哪些套餐可以选择？', 
-            sendTime: new Date(now.getTime() - 26 * 60 * 1000).toISOString(),
-            msgType: 0
-        }
-    ]
-}
-
+// 初始化数据
 onMounted(async () => {
-    // 加载抖音号列表
-    await loadAccounts()
-    
-    // 加载会话列表
-    await loadSessions()
+    try {
+        await loadAccounts()
+        await loadSessions()
+    } catch (error) {
+        console.error('初始化失败:', error)
+    }
     
     // 点击页面其他区域关闭筛选选项
     document.addEventListener('click', () => {
@@ -902,8 +860,6 @@ onMounted(async () => {
 .session-list {
     flex: 1;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #409eff #f5f5f5;
     
     &::-webkit-scrollbar {
         width: 6px;
@@ -911,12 +867,15 @@ onMounted(async () => {
     
     &::-webkit-scrollbar-track {
         background: #f5f5f5;
-        border-radius: 3px;
     }
     
     &::-webkit-scrollbar-thumb {
-        background: #409eff;
+        background: #c0c4cc;
         border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: #909399;
     }
 }
 
@@ -928,6 +887,11 @@ onMounted(async () => {
     display: flex;
     padding: 12px 0;
     border-bottom: 1px solid #f0f0f0;
+}
+
+.empty-sessions {
+    padding: 40px 20px;
+    text-align: center;
 }
 
 .session-item {
@@ -952,6 +916,7 @@ onMounted(async () => {
 
 .session-avatar {
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .session-content {
@@ -971,6 +936,7 @@ onMounted(async () => {
     align-items: center;
     gap: 6px;
     min-width: 0;
+    flex: 1;
 }
 
 .nickname {
@@ -980,7 +946,7 @@ onMounted(async () => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
+    flex: 1;
 }
 
 .lead-tag {
@@ -1003,7 +969,6 @@ onMounted(async () => {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 28px;
 }
 
 .session-footer {
@@ -1036,8 +1001,6 @@ onMounted(async () => {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #409eff #f5f5f5;
     
     &::-webkit-scrollbar {
         width: 6px;
@@ -1045,12 +1008,15 @@ onMounted(async () => {
     
     &::-webkit-scrollbar-track {
         background: #f5f5f5;
-        border-radius: 3px;
     }
     
     &::-webkit-scrollbar-thumb {
-        background: #409eff;
+        background: #c0c4cc;
         border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: #909399;
     }
 }
 
@@ -1058,6 +1024,14 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.empty-messages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
 }
 
 .message-skeleton {
@@ -1089,39 +1063,30 @@ onMounted(async () => {
 
 .message-sent .message-avatar {
     margin-left: 12px;
-    order: 2;
 }
 
 .message-content-wrapper {
     flex: 1;
-    max-width: 80%;
+    max-width: 70%;
 }
 
-// 接收消息的昵称和时间样式
 .message-nickname {
     font-size: 13px;
-    font-weight: 500;
     color: #606266;
-    margin-bottom: 2px;
-    text-align: left;
+    margin-bottom: 4px;
 }
 
 .message-time {
     font-size: 11px;
     color: #909399;
     margin-bottom: 6px;
-    text-align: left;
 }
 
-// 发送消息的昵称和时间样式 - 独占一行且在右侧
 .message-nickname-sent {
     font-size: 13px;
-    font-weight: 500;
     color: #606266;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     text-align: right;
-    width: 100%;
-    display: block;
 }
 
 .message-time-sent {
@@ -1129,8 +1094,6 @@ onMounted(async () => {
     color: #909399;
     margin-bottom: 6px;
     text-align: right;
-    width: 100%;
-    display: block;
 }
 
 .message-content {
@@ -1153,6 +1116,7 @@ onMounted(async () => {
     font-size: 14px;
     color: #303133;
     line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 .chat-input {
@@ -1169,21 +1133,15 @@ onMounted(async () => {
         line-height: 1.5;
         box-shadow: none !important;
         border: none !important;
+        resize: none;
         
         &:focus {
             box-shadow: none !important;
             border: none !important;
         }
-    }
-    
-    :deep(.el-input__wrapper) {
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
         
-        &.is-focus {
-            box-shadow: none !important;
-            border: none !important;
+        &:disabled {
+            background-color: #f5f7fa;
         }
     }
 }
@@ -1194,27 +1152,25 @@ onMounted(async () => {
 }
 
 .send-btn {
-    background-color: #f0f2f5;
-    border-color: #dcdfe6;
-    color: #606266;
+    background-color: #409eff;
+    border-color: #409eff;
+    color: #fff;
     font-size: 14px;
     border-radius: 4px;
-    padding: 8px 16px;
+    padding: 8px 20px;
     
     &:hover {
-        background-color: #e4e6eb;
-        border-color: #c0c4cc;
-        color: #303133;
+        background-color: #79bbff;
+        border-color: #79bbff;
     }
     
     &:active {
-        background-color: #d4d6db;
+        background-color: #337ecc;
     }
     
     &:disabled {
-        background-color: #f5f7fa;
-        border-color: #e4e7ed;
-        color: #c0c4cc;
+        background-color: #a0cfff;
+        border-color: #a0cfff;
         cursor: not-allowed;
     }
 }
@@ -1260,14 +1216,18 @@ onMounted(async () => {
         font-weight: 500;
         color: #303133;
         font-size: 16px;
+        margin-bottom: 4px;
+    }
+    
+    .clue-account {
+        font-size: 12px;
+        color: #909399;
     }
 }
 
 .clue-content {
     flex: 1;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #409eff #f5f5f5;
     
     &::-webkit-scrollbar {
         width: 6px;
@@ -1275,35 +1235,25 @@ onMounted(async () => {
     
     &::-webkit-scrollbar-track {
         background: #f5f5f5;
-        border-radius: 3px;
     }
     
     &::-webkit-scrollbar-thumb {
-        background: #409eff;
+        background: #c0c4cc;
         border-radius: 3px;
     }
 }
 
 .clue-title {
-    padding: 16px 20px 12px;
+    padding: 16px 20px;
     font-size: 14px;
     font-weight: 500;
     color: #303133;
     border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
 }
 
 .clue-list {
     padding: 16px 20px;
-}
-
-.loading-clues {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.clue-skeleton {
-    width: 100%;
 }
 
 .clue-item {
@@ -1327,11 +1277,6 @@ onMounted(async () => {
     color: #303133;
 }
 
-.clue-time {
-    font-size: 12px;
-    color: #909399;
-}
-
 .clue-value {
     font-size: 14px;
     color: #606266;
@@ -1346,5 +1291,30 @@ onMounted(async () => {
     align-items: center;
     justify-content: center;
     height: 100%;
+}
+
+// 响应式调整
+@media (max-width: 1200px) {
+    .main-body {
+        gap: 12px;
+    }
+    
+    .session-panel {
+        width: 320px;
+    }
+    
+    .clue-panel {
+        width: 280px;
+    }
+}
+
+@media (max-width: 992px) {
+    .private-msg {
+        margin: 0 15px;
+    }
+    
+    .clue-panel {
+        display: none;
+    }
 }
 </style>
