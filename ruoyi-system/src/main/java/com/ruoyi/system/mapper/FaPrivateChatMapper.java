@@ -65,16 +65,15 @@ public interface FaPrivateChatMapper
     public int deleteFaPrivateChatByIds(Long[] ids);
 
     /**
-     * 查询最近会话
+     * 查询好友列表
      * 
-     * @param account 抖音账号
-     * @param hours 时间范围（小时）
+     * @param expirationAiId AI授权配置ID
+     * @param isLead 是否留资:0-未留资,1-已留资
      * @param limit 限制条数
-     * @return 会话列表
+     * @return 好友列表
      */
-    public List<FaPrivateChat> selectRecentSessions(@Param("account") String account,
-                                                    @Param("hours") int hours,
-                                                    @Param("funds") Integer funds,
+    public List<FaPrivateChat> selectRecentSessions(@Param("expirationAiId") Long expirationAiId,
+                                                    @Param("isLead") Integer isLead,
                                                     @Param("limit") int limit);
 
     /**
@@ -88,7 +87,25 @@ public interface FaPrivateChatMapper
     /**
      * 查询评论用户账号列表
      * 
-     * @return 抖音账号列表
+     * @return 折音账号列表
      */
     public List<String> selectCommentUserAccounts();
+        
+    /**
+     * 查询账户相关的抠音账号和AI配置
+     * 用于私信消息界面：返回账号列表时附带对应的AI授权配置ID
+     * 
+     * @return 抠音账号和AI認路信息列表
+     */
+    public List<com.ruoyi.system.domain.vo.AccountAiConfigVO> selectAccountsWithAiConfig();
+
+    /**
+     * 根据用户ID查询会话
+     * 
+     * @param userId1 用户ID1
+     * @param userId2 用户ID2
+     * @return 会话
+     */
+    public FaPrivateChat selectChatByUserIds(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+
 }

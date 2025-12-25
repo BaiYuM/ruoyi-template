@@ -17,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="peerAccount"   column="peer_account" />
         <result property="peerNickname"  column="peer_nickname" />
         <result property="peerAvatar"    column="peer_avatar" />
-        <result property="peerFunds"     column="peer_funds" />
+        <result property="peerFunds"     column="is_lead" />
         <result property="lastSendTime"  column="last_send_time" />
         <result property="douyinId"       column="douyin_id" />
     </resultMap>
@@ -43,43 +43,37 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </select>
     
-    <!-- 查询最近会话 -->
+    <!-- 查询好友列表 -->
     <select id="selectRecentSessions" resultMap="FaPrivateChatResult">
         SELECT
-            pc.id,
-            pc.user_id1,
-            pc.user_id2,
-            pc.create_time,
-            pc.update_time,
-            pc.last_msg_id,
-            pc.is_blocked,
-            pc.del_flag,
-            peer.id AS peer_user_id,
-            peer.account AS peer_account,
-            peer.nickname AS peer_nickname,
-            peer.avatar AS peer_avatar,
-            ea_peer.funds AS peer_funds,
-            auth.account AS douyin_id,
-            MAX(pcm.send_time) AS last_send_time
-        FROM fa_private_chat pc
-        JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id AND pcm.del_flag = 0
-        JOIN expiration_ai ea_auth ON (ea_auth.user_id = pc.user_id1 OR ea_auth.user_id = pc.user_id2)
-        JOIN comment_user auth ON auth.id = ea_auth.user_id
-        JOIN comment_user peer ON peer.id = IF(pc.user_id1 = auth.id, pc.user_id2, pc.user_id1)
-        LEFT JOIN expiration_ai ea_peer ON ea_peer.user_id = peer.id
+        COALESCE(pc.id, faif.id) as id,
+        pc.user_id1,
+        pc.user_id2,
+        COALESCE(pc.create_time, faif.create_time) as create_time,
+        COALESCE(pc.update_time, faif.update_time) as update_time,
+        pc.last_msg_id,
+        pc.is_blocked,
+        faif.del_flag,
+        cu.id AS peer_user_id,
+        cu.account AS peer_account,
+        cu.nickname AS peer_nickname,
+        cu.avatar AS peer_avatar,
+        faif.is_lead AS is_lead,
+        NULL AS douyin_id,
+        COALESCE(pc.create_time, faif.last_chat_time) AS last_send_time
+        FROM fa_ai_friend faif
+        JOIN comment_user cu ON cu.id = faif.friend_user_id
+        LEFT JOIN fa_private_chat pc ON ((pc.user_id1 = faif.expiration_ai_id AND pc.user_id2 = faif.friend_user_id) OR (pc.user_id1 = faif.friend_user_id AND pc.user_id2 = faif.expiration_ai_id)) AND pc.del_flag = 0
         <where>
-            <if test="account != null and account != ''">
-                AND auth.account = #{account}
+            <if test="expirationAiId != null">
+                AND faif.expiration_ai_id = #{expirationAiId}
             </if>
-            <if test="funds != null">
-                AND ea_peer.funds = #{funds}
+            <if test="isLead != null">
+                AND faif.is_lead = #{isLead}
             </if>
-            AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
-            AND pc.del_flag = 0
+            AND faif.status = 1
+            AND faif.del_flag = 0
         </where>
-        GROUP BY
-            pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag,
-            peer.id, peer.account, peer.nickname, peer.avatar, ea_peer.funds
         ORDER BY last_send_time DESC
         LIMIT #{limit}
     </select>
@@ -93,12 +87,40 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ORDER BY send_time ASC
     </select>
     
+    <!-- 根据用户ID查询会话 -->
+    <select id="selectChatByUserIds" resultMap="FaPrivateChatResult">
+        SELECT
+        id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag,
+        peer_user_id, peer_account, peer_nickname, peer_avatar, peer_funds, last_send_time, douyin_id
+        FROM fa_private_chat
+        WHERE ((user_id1 = #{userId1} AND user_id2 = #{userId2}) OR (user_id1 = #{userId2} AND user_id2 = #{userId1}))
+          AND del_flag = 0
+    </select>
+    
     <!-- 查询评论用户账号列表 -->
     <select id="selectCommentUserAccounts" resultType="java.lang.String">
         SELECT DISTINCT cu.account
-        FROM expiration_ai ea
-        JOIN comment_user cu ON cu.id = ea.user_id
-        WHERE cu.account IS NOT NULL AND cu.account != ''
+        FROM comment_user cu
+        WHERE cu.id IN (
+            SELECT DISTINCT user_id1 FROM fa_private_chat WHERE del_flag = 0
+            UNION
+            SELECT DISTINCT user_id2 FROM fa_private_chat WHERE del_flag = 0
+        )
+        AND cu.account IS NOT NULL AND cu.account != ''
+    </select>
+
+    <!-- 查询账户相关的抠音账号和AI配置 -->
+    <select id="selectAccountsWithAiConfig" resultType="com.ruoyi.system.domain.vo.AccountAiConfigVO">
+        SELECT DISTINCT cu.account, eai.user_id as expirationAiId
+        FROM comment_user cu
+        LEFT JOIN expiration_ai eai ON eai.user_id = cu.id
+        WHERE cu.id IN (
+            SELECT DISTINCT user_id1 FROM fa_private_chat WHERE del_flag = 0
+            UNION
+            SELECT DISTINCT user_id2 FROM fa_private_chat WHERE del_flag = 0
+        )
+        AND cu.account IS NOT NULL AND cu.account != ''
+        ORDER BY cu.account
     </select>
 
     <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">

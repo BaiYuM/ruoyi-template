@@ -65,13 +65,13 @@ public class FaWelcomeWordConfigController extends BaseController
     }
 
     /**
-     * 获取抖音账号列表
+     * 获取抠音账号列表（附带AI配置ID）
      */
     @PreAuthorize("@ss.hasPermi('welWord:wel_word_config:list')")
     @GetMapping("/accounts")
     public AjaxResult getAccounts()
     {
-        List<String> accounts = faPrivateChatService.getCommentUserAccounts();
+        List<com.ruoyi.system.domain.vo.AccountAiConfigVO> accounts = faPrivateChatService.getAccountsWithAiConfig();
         return success(accounts);
     }
 
