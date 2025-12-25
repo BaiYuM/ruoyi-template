@@ -111,7 +111,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 查询账户相关的抠音账号和AI配置 -->
     <select id="selectAccountsWithAiConfig" resultType="com.ruoyi.system.domain.vo.AccountAiConfigVO">
-        SELECT DISTINCT cu.account, eai.id as expirationAiId
+        SELECT DISTINCT cu.account, eai.user_id as expirationAiId
         FROM comment_user cu
         LEFT JOIN expiration_ai eai ON eai.user_id = cu.id
         WHERE cu.id IN (
@@ -120,7 +120,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             SELECT DISTINCT user_id2 FROM fa_private_chat WHERE del_flag = 0
         )
         AND cu.account IS NOT NULL AND cu.account != ''
-        AND eai.id IS NOT NULL
         ORDER BY cu.account
     </select>
 
