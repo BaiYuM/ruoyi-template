@@ -67,11 +67,11 @@
         <el-table-column prop="createTime" label="创建时间" />
         <el-table-column prop="status" label="状态" align="center">
           <template #default="{ row }">
-            <el-switch 
-              v-model="row.status" 
-              :active-value="1" 
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
               :inactive-value="0"
-              @change="() => toggleStatus(row)" 
+              @change="() => toggleStatus(row)"
             />
           </template>
         </el-table-column>
