@@ -63,24 +63,31 @@ public interface IFaPrivateChatService
     public int deleteFaPrivateChatById(Long id);
     
     /**
-     * 获取评论用户账号列表
+     * 获取账户相关的抠音账号和AI配置
+     * 用于私信消息界面：返回账号列表时附带对应的AI授权配置ID
      *
-     * @return 抖音账号列表
+     * @return 抠音账号和AI配置列表
      */
-    public List<String> getCommentUserAccounts();
+    public List<com.ruoyi.system.domain.vo.AccountAiConfigVO> getAccountsWithAiConfig();
     
     /**
-     * 获取最近会话列表
+     * 获取好友列表
      * 
-     * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
-     * account 参数表示"授权抖音号"（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
-     *
-     * @param account 授权抖音号（comment_user.account）
-     * @param hours 时间范围（小时）
+     * @param expirationAiId AI授权配置ID
+     * @param isLead 是否留资:0-未留资,1-已留资
      * @param limit 限制条数
-     * @return 会话列表
+     * @return 好友列表
      */
-    public List<FaPrivateChat> getRecentSessions(String account, int hours, int limit);
+    public List<FaPrivateChat> getRecentSessions(Long expirationAiId, Integer isLead, int limit);
+    
+    /**
+     * 根据用户ID查询会话
+     * 
+     * @param userId1 用户ID1
+     * @param userId2 用户ID2
+     * @return 会话
+     */
+    public FaPrivateChat selectChatByUserIds(Long userId1, Long userId2);
     
     /**
      * 获取会话消息列表

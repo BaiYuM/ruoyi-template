@@ -132,13 +132,13 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
     }
     
     /**
-     * 获取评论用户账号列表
+     * 获取账户相关的抠音账号和AI配置
      *
-     * @return 抖音账号列表
+     * @return 抠音账号和AI配置列表
      */
     @Override
-    public List<String> getCommentUserAccounts() {
-        return faPrivateChatMapper.selectCommentUserAccounts();
+    public List<com.ruoyi.system.domain.vo.AccountAiConfigVO> getAccountsWithAiConfig() {
+        return faPrivateChatMapper.selectAccountsWithAiConfig();
     }
 
     /**
@@ -146,16 +146,15 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
      *
      * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
      * account 参数表示"授权抖音号"（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
-     *
-     * @param account 授权抖音号（comment_user.account）
-     * @param hours 时间范围（小时）
+     * @param expirationAiId AI授权配置ID
+     * @param isLead 是否留资:0-未留资,1-已留资
      * @param limit 限制条数
      * @return 会话列表
      */
     @Override
-    public List<FaPrivateChat> getRecentSessions(String account, int hours, int limit) {
-        List<FaPrivateChat> list = faPrivateChatMapper.selectRecentSessions(account, hours, null, limit);
-        // 为每个会话加载最后一条消息的内容
+    public List<FaPrivateChat> getRecentSessions(Long expirationAiId, Integer isLead, int limit) {
+        List<FaPrivateChat> list = faPrivateChatMapper.selectRecentSessions(expirationAiId, isLead, limit);
+        // 为每个好友加载最后一条消息的内容
         for (FaPrivateChat chat : list) {
             if (chat.getLastMsgId() != null) {
                 FaPrivateChatMsg msg = faPrivateChatMsgMapper.selectFaPrivateChatMsgById(chat.getLastMsgId());
@@ -165,6 +164,11 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
             }
         }
         return list;
+    }
+
+    @Override
+    public FaPrivateChat selectChatByUserIds(Long userId1, Long userId2) {
+        return faPrivateChatMapper.selectChatByUserIds(userId1, userId2);
     }
 
     /**

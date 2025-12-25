@@ -108,27 +108,26 @@ public class FaPrivateChatController extends BaseController
     }
 
     /**
-     * 获取抖音号列表
+     * 获取抠音号列表（附带AI配置ID）
+     * 用于私信消息界面：选择抠音号时需要对应的AI授权配置ID
      */
     @PreAuthorize("@ss.hasPermi('privateChat:private_chat:accounts')")
     @GetMapping("/accounts")
     public AjaxResult getAccounts() {
-        List<String> accounts = faPrivateChatService.getCommentUserAccounts();
+        List<com.ruoyi.system.domain.vo.AccountAiConfigVO> accounts = faPrivateChatService.getAccountsWithAiConfig();
         return success(accounts);
     }
 
     /**
-     * 获取会话列表
+     * 获取好友列表
      *
-     * <p>说明：本系统以 comment_user 表表示抖音侧用户/账号。
-     * account 参数表示"授权抖音号"（comment_user.account），用于确定用哪个抖音号视角查看会话。</p>
-     *
-     * @param account 授权抖音号（comment_user.account）
+     * @param expirationAiId AI授权配置ID
+     * @param isLead 是否留资:0-未留资,1-已留资
      */
     @PreAuthorize("@ss.hasPermi('privateChat:private_chat:sessions')")
     @GetMapping("/sessions")
-    public AjaxResult getSessions(@RequestParam(required = false) String account) {
-        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(account, 72, 2000);
+        public AjaxResult getSessions(@RequestParam(required = false) Long expirationAiId, @RequestParam(required = false) Integer isLead) {
+        List<FaPrivateChat> sessions = faPrivateChatService.getRecentSessions(expirationAiId, isLead, 2000);
         return success(sessions);
     }
 
@@ -142,6 +141,24 @@ public class FaPrivateChatController extends BaseController
         List<FaPrivateChatMsg> messages = faPrivateChatService.getSessionMessages(sessionId);
         return success(messages);
     }
+    /**
+     * 获取会话 ID
+     * 根据好友用户ID和AI授权配置ID查询是否存在会话
+     * 
+     * @param friendUserId 好友用户ID (comment_user.id)
+     * @param expirationAiId AI授权配置ID
+     * @return 会话 ID（如果存在）
+     */
+    @PreAuthorize("@ss.hasPermi('privateChat:private_chat:query')")
+    @GetMapping("/chatId")
+    public AjaxResult getChatId(@RequestParam Long friendUserId, @RequestParam Long expirationAiId) {
+        FaPrivateChat chat = faPrivateChatService.selectChatByUserIds(expirationAiId, friendUserId);
+        if (chat != null) {
+            return success(chat.getId());
+        }
+        return success(null);
+    }
+
     /**
      * 发送私信消息
      */
