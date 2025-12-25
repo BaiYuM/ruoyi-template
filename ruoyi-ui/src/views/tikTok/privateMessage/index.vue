@@ -641,16 +641,16 @@ const loadSessions = async () => {
                 // 如果是对象，提取所有值
                 sessions = Object.values(response.data)
             }
-            
+        
             sessionList.value = sessions.map(session => ({
-                id: session.id,
+                id: String(session.id),
                 userId: session.peerUserId,
                 avatar: session.peerAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
                 nick: session.peerNickname || '未知用户',
                 account: session.peerAccount,
                 lastMsgContent: session.lastMsgContent || session.lastMessage || '暂无消息',
                 lastMsgTime: session.lastSendTime,
-                isLead: session.isLead === 1,
+                isLead: session.peerLead,
                 ...session
             }))
             
