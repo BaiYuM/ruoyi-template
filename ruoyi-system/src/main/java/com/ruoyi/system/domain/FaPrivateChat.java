@@ -60,6 +60,9 @@ public class FaPrivateChat extends BaseEntity
     /** 会话列表展示：对方留资状态（来源 expiration_ai.funds；0/1；可能为空表示未知） */
     private Integer peerFunds;
 
+    /** 会话列表展示：对方留资状态（来源 fa_ai_friend.is_lead；0/1；可能为空表示未知） */
+    private Integer peerLead;
+
     /** 会话列表展示：该会话最近一条消息时间 */
     private java.util.Date lastSendTime;
 
@@ -210,6 +213,14 @@ public class FaPrivateChat extends BaseEntity
         this.douyinId = douyinId;
     }
 
+    public Integer getPeerLead()
+    {
+        return peerLead;
+    }
+    public void setPeerLead(Integer peerLead)
+    {
+        this.peerLead = peerLead;
+    }
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -227,6 +238,7 @@ public class FaPrivateChat extends BaseEntity
             .append("peerNickname", getPeerNickname())
             .append("peerAvatar", getPeerAvatar())
             .append("peerFunds", getPeerFunds())
+            .append("peerLead", getPeerLead())
             .append("lastSendTime", getLastSendTime())
             .append("douyinId", getDouyinId())
             .toString();
