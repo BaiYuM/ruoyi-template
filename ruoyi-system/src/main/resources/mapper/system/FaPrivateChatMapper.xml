@@ -17,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="peerAccount"   column="peer_account" />
         <result property="peerNickname"  column="peer_nickname" />
         <result property="peerAvatar"    column="peer_avatar" />
-        <result property="peerFunds"     column="is_lead" />
+        <result property="peerLead"     column="is_lead" />
         <result property="lastSendTime"  column="last_send_time" />
         <result property="douyinId"       column="douyin_id" />
     </resultMap>

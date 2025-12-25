@@ -39,6 +39,9 @@ public class FaPrivateHarassmentRecordServiceImpl implements IFaPrivateHarassmen
 
     @Autowired
     private ICommentUserService commentUserService;
+    
+    @Autowired
+    private com.ruoyi.system.service.IFaAiFriendService faAiFriendService;
 
     /**
      * 查询私信追杀执行记录
@@ -193,10 +196,32 @@ public class FaPrivateHarassmentRecordServiceImpl implements IFaPrivateHarassmen
 
                 // 4. 检查留资状态
                 FaPrivateChat chat = chatService.selectFaPrivateChatById(record.getChatId());
-                if (chat != null && chat.getPeerFunds() != null && chat.getPeerFunds() == 1) {
-                    record.setStatus(3); // 已留资
-                    faPrivateHarassmentRecordMapper.updateFaPrivateHarassmentRecord(record);
-                    continue;
+                if (chat != null && chat.getPeerUserId() != null) {
+                    // 根据好友用户ID和AI授权配置查询好友的is_lead状态
+                    // 注：这里需要先获取该会话对应的AI授权ID，从配置中获取
+                    String accountId = config.getAccountId();
+                    com.ruoyi.system.domain.CommentUser authUser = new com.ruoyi.system.domain.CommentUser();
+                    authUser.setAccount(accountId);
+                    List<com.ruoyi.system.domain.CommentUser> authUsers = commentUserService.selectCommentUserList(authUser);
+                    
+                    if (!authUsers.isEmpty()) {
+                        Long authUserId = authUsers.get(0).getId();
+                        
+                        // 查询是否有对应的AI配置
+                        com.ruoyi.system.domain.FaAiFriend queryFriend = new com.ruoyi.system.domain.FaAiFriend();
+                        queryFriend.setFriendUserId(chat.getPeerUserId());
+                        List<com.ruoyi.system.domain.FaAiFriend> friends = faAiFriendService.selectFaAiFriendList(queryFriend);
+                        
+                        if (!friends.isEmpty()) {
+                            com.ruoyi.system.domain.FaAiFriend friend = friends.get(0);
+                            // 检查是否已留资
+                            if (friend.getIsLead() != null && friend.getIsLead() == 1) {
+                                record.setStatus(3); // 已留资
+                                faPrivateHarassmentRecordMapper.updateFaPrivateHarassmentRecord(record);
+                                continue;
+                            }
+                        }
+                    }
                 }
 
                 // 5. 获取话术
