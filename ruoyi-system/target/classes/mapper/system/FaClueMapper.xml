@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaClueMapper">
+    
+    <resultMap type="FaClue" id="FaClueResult">
+        <result property="id"    column="clue_id"    />
+        <result property="expirationAiId"    column="expiration_ai_id"    />
+        <result property="clueLabel"    column="clue_label"    />
+        <result property="clueValue"    column="clue_value"    />
+        <result property="clueType"    column="clue_type"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFaClueVo">
+        select clue_id, expiration_ai_id, clue_label, clue_value, clue_type, create_time, update_time from fa_clue
+    </sql>
+
+    <select id="selectFaClueList" parameterType="FaClue" resultMap="FaClueResult">
+        <include refid="selectFaClueVo"/>
+        <where>
+            <if test="expirationAiId != null "> and expiration_ai_id = #{expirationAiId}</if>
+            <if test="clueLabel != null  and clueLabel != ''"> and clue_label like concat('%', #{clueLabel}, '%')</if>
+            <if test="clueValue != null  and clueValue != ''"> and clue_value like concat('%', #{clueValue}, '%')</if>
+            <if test="clueType != null  and clueType != ''"> and clue_type = #{clueType}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaClueById" parameterType="Long" resultMap="FaClueResult">
+        <include refid="selectFaClueVo"/>
+        where clue_id = #{id}
+    </select>
+        
+    <insert id="insertFaClue" parameterType="FaClue" useGeneratedKeys="true" keyProperty="id">
+        insert into fa_clue
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="expirationAiId != null">expiration_ai_id,</if>
+            <if test="clueLabel != null and clueLabel != ''">clue_label,</if>
+            <if test="clueValue != null and clueValue != ''">clue_value,</if>
+            <if test="clueType != null and clueType != ''">clue_type,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="expirationAiId != null">#{expirationAiId},</if>
+            <if test="clueLabel != null and clueLabel != ''">#{clueLabel},</if>
+            <if test="clueValue != null and clueValue != ''">#{clueValue},</if>
+            <if test="clueType != null and clueType != ''">#{clueType},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaClue" parameterType="FaClue">
+        update fa_clue
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="expirationAiId != null">expiration_ai_id = #{expirationAiId},</if>
+            <if test="clueLabel != null and clueLabel != ''">clue_label = #{clueLabel},</if>
+            <if test="clueValue != null and clueValue != ''">clue_value = #{clueValue},</if>
+            <if test="clueType != null and clueType != ''">clue_type = #{clueType},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where clue_id = #{id}
+    </update>
+
+    <delete id="deleteFaClueById" parameterType="Long">
+        delete from fa_clue where clue_id = #{id}
+    </delete>
+
+    <delete id="deleteFaClueByIds" parameterType="String">
+        delete from fa_clue where clue_id in 
+        <foreach item="clueId" collection="array" open="(" separator="," close=")">
+            #{clueId}
+        </foreach>
+    </delete>
+</mapper>

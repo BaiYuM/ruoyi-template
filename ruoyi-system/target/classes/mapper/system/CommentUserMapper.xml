@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CommentUserMapper">
+    
+    <resultMap type="com.ruoyi.system.domain.CommentUser" id="CommentUserResult">
+        <result property="id"    column="id"    />
+        <result property="platform"    column="platform"    />
+        <result property="openId"    column="open_id"    />
+        <result property="appId"    column="app_id"    />
+        <result property="unionId"    column="union_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="type"    column="type"    />
+        <result property="account"    column="account"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="gender"    column="gender"    />
+        <result property="country"    column="country"    />
+        <result property="province"    column="province"    />
+        <result property="city"    column="city"    />
+        <result property="location"    column="location"    />
+        <result property="birthday"    column="birthday"    />
+        <result property="age"    column="age"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="userCategory"    column="user_category"    />
+        <result property="categoryConfidence"    column="category_confidence"    />
+        <result property="categoryReason"    column="category_reason"    />
+        <result property="activityLevel"    column="activity_level"    />
+        <result property="commentCount"    column="comment_count"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="shareCount"    column="share_count"    />
+        <result property="interactionScore"    column="interaction_score"    />
+        <result property="lastClassifiedTime"    column="last_classified_time"    />
+    </resultMap>
+
+    <sql id="selectCommentUserVo">
+        select id, platform, open_id, app_id, union_id, user_id, type, account, nickname, avatar, gender, country, province, city, location, birthday, age, create_by, update_by, create_time, update_time, user_category, category_confidence, category_reason, activity_level, comment_count, like_count, share_count, interaction_score, last_classified_time from comment_user
+    </sql>
+
+    <select id="selectCommentUserList" parameterType="com.ruoyi.system.domain.CommentUser" resultMap="CommentUserResult">
+        <include refid="selectCommentUserVo"/>
+        <where>  
+            <if test="platform != null  and platform != ''"> and platform = #{platform}</if>
+            <if test="openId != null  and openId != ''"> and open_id = #{openId}</if>
+            <if test="appId != null  and appId != ''"> and app_id = #{appId}</if>
+            <if test="unionId != null  and unionId != ''"> and union_id = #{unionId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="account != null  and account != ''"> and account = #{account}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+            <if test="avatar != null  and avatar != ''"> and avatar = #{avatar}</if>
+            <if test="gender != null "> and gender = #{gender}</if>
+            <if test="country != null  and country != ''"> and country = #{country}</if>
+            <if test="province != null  and province != ''"> and province = #{province}</if>
+            <if test="city != null  and city != ''"> and city = #{city}</if>
+            <if test="location != null  and location != ''"> and location = #{location}</if>
+            <if test="birthday != null "> and birthday = #{birthday}</if>
+            <if test="age != null "> and age = #{age}</if>
+            <if test="userCategory != null  and userCategory != ''"> and user_category = #{userCategory}</if>
+            <if test="categoryConfidence != null "> and category_confidence = #{categoryConfidence}</if>
+            <if test="categoryReason != null  and categoryReason != ''"> and category_reason = #{categoryReason}</if>
+            <if test="activityLevel != null  and activityLevel != ''"> and activity_level = #{activityLevel}</if>
+            <if test="commentCount != null "> and comment_count = #{commentCount}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+            <if test="shareCount != null "> and share_count = #{shareCount}</if>
+            <if test="interactionScore != null "> and interaction_score = #{interactionScore}</if>
+            <if test="lastClassifiedTime != null "> and last_classified_time = #{lastClassifiedTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectCommentUserById" parameterType="Long" resultMap="CommentUserResult">
+        <include refid="selectCommentUserVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectCommentUserByPlatformAndAccount" resultType="com.ruoyi.system.domain.CommentUser">
+        <include refid="selectCommentUserVo"/>
+        where platform = #{platform} and account = #{account}
+    </select>
+
+    <select id="selectCommentUserByUserId" parameterType="Long" resultMap="CommentUserResult">
+        <include refid="selectCommentUserVo"/>
+        where user_id = #{userId}
+    </select>
+
+    <insert id="insertCommentUser" parameterType="com.ruoyi.system.domain.CommentUser" useGeneratedKeys="true" keyProperty="id">
+        insert into comment_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="platform != null and platform != ''">platform,</if>
+            <if test="openId != null and openId != ''">open_id,</if>
+            <if test="appId != null and appId != ''">app_id,</if>
+            <if test="unionId != null">union_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="type != null">type,</if>
+            <if test="account != null">account,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="gender != null">gender,</if>
+            <if test="country != null">country,</if>
+            <if test="province != null">province,</if>
+            <if test="city != null">city,</if>
+            <if test="location != null">location,</if>
+            <if test="birthday != null">birthday,</if>
+            <if test="age != null">age,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="userCategory != null">user_category,</if>
+            <if test="categoryConfidence != null">category_confidence,</if>
+            <if test="categoryReason != null">category_reason,</if>
+            <if test="activityLevel != null">activity_level,</if>
+            <if test="commentCount != null">comment_count,</if>
+            <if test="likeCount != null">like_count,</if>
+            <if test="shareCount != null">share_count,</if>
+            <if test="interactionScore != null">interaction_score,</if>
+            <if test="lastClassifiedTime != null">last_classified_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="platform != null and platform != ''">#{platform},</if>
+            <if test="openId != null and openId != ''">#{openId},</if>
+            <if test="appId != null and appId != ''">#{appId},</if>
+            <if test="unionId != null">#{unionId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="type != null">#{type},</if>
+            <if test="account != null">#{account},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="country != null">#{country},</if>
+            <if test="province != null">#{province},</if>
+            <if test="city != null">#{city},</if>
+            <if test="location != null">#{location},</if>
+            <if test="birthday != null">#{birthday},</if>
+            <if test="age != null">#{age},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="userCategory != null">#{userCategory},</if>
+            <if test="categoryConfidence != null">#{categoryConfidence},</if>
+            <if test="categoryReason != null">#{categoryReason},</if>
+            <if test="activityLevel != null">#{activityLevel},</if>
+            <if test="commentCount != null">#{commentCount},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="shareCount != null">#{shareCount},</if>
+            <if test="interactionScore != null">#{interactionScore},</if>
+            <if test="lastClassifiedTime != null">#{lastClassifiedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCommentUser" parameterType="com.ruoyi.system.domain.CommentUser">
+        update comment_user
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="platform != null and platform != ''">platform = #{platform},</if>
+            <if test="openId != null and openId != ''">open_id = #{openId},</if>
+            <if test="appId != null and appId != ''">app_id = #{appId},</if>
+            <if test="unionId != null">union_id = #{unionId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="account != null">account = #{account},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="country != null">country = #{country},</if>
+            <if test="province != null">province = #{province},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="userCategory != null">user_category = #{userCategory},</if>
+            <if test="categoryConfidence != null">category_confidence = #{categoryConfidence},</if>
+            <if test="categoryReason != null">category_reason = #{categoryReason},</if>
+            <if test="activityLevel != null">activity_level = #{activityLevel},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="shareCount != null">share_count = #{shareCount},</if>
+            <if test="interactionScore != null">interaction_score = #{interactionScore},</if>
+            <if test="lastClassifiedTime != null">last_classified_time = #{lastClassifiedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCommentUserById" parameterType="Long">
+        delete from comment_user where id = #{id}
+    </delete>
+
+    <delete id="deleteCommentUserByIds" parameterType="String">
+        delete from comment_user where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

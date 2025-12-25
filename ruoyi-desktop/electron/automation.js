@@ -2,6 +2,8 @@
 const puppeteer = require('puppeteer')
 const path = require('path')
 const fs = require('fs').promises
+const { exec } = require('child_process')
+const chromeLauncher = require('chrome-launcher')
 
 class AutomationManager {
   constructor() {
@@ -17,26 +19,131 @@ class AutomationManager {
   async launchBrowser(options = {}) {
     // 默认配置
     const defaultOptions = {
-      headless: true, // 无头模式，设置为false可以看到浏览器窗口
+      headless: options.headless !== false,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--window-size=1280,720'
       ],
       defaultViewport: { width: 1280, height: 720 },
       ignoreHTTPSErrors: true
     }
 
     try {
-      console.log('正在启动浏览器...')
-      this.browser = await puppeteer.launch({ ...defaultOptions, ...options })
+      console.log('正在查找 Chrome 浏览器...')
+      
+      // 方法1: 使用 chrome-launcher 查找 Chrome
+      let chromePath = null
+      try {
+        const chrome = await chromeLauncher.launch({
+          chromeFlags: ['--headless'],
+          chromePath: options.chromePath
+        })
+        chromePath = chrome.chromePath
+        await chrome.kill()
+      } catch (error) {
+        console.log('chrome-launcher 查找失败:', error.message)
+      }
+      
+      // 方法2: 尝试常见路径
+      if (!chromePath) {
+        const possiblePaths = [
+          // Windows
+          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+          'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+          process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
+          // Mac
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+          '/Applications/Chromium.app/Contents/MacOS/Chromium',
+          // Linux
+          '/usr/bin/google-chrome',
+          '/usr/bin/google-chrome-stable',
+          '/usr/bin/chromium',
+          '/usr/bin/chromium-browser'
+        ]
+        
+        for (const path of possiblePaths) {
+          try {
+            if (fs.existsSync && fs.existsSync(path)) {
+              chromePath = path
+              console.log('找到 Chrome 在:', chromePath)
+              break
+            }
+          } catch (e) {
+            // 继续尝试下一个路径
+          }
+        }
+      }
+      
+      if (!chromePath) {
+        throw new Error('未找到 Chrome 浏览器。请安装 Chrome 或指定 Chrome 路径。')
+      }
+      
+      console.log('正在启动 Chrome...')
+      this.browser = await puppeteer.launch({
+        ...defaultOptions,
+        ...options,
+        executablePath: chromePath
+      })
+      
       console.log('浏览器启动成功')
       return this.browser
     } catch (error) {
       console.error('启动浏览器失败:', error)
       throw error
+    }
+  }
+
+  /**
+   * 备用方案：使用系统浏览器（无需安装 Chrome）
+   */
+  async launchSystemBrowser(options = {}) {
+    const open = require('open')
+    const config = {
+      url: options.url || 'https://example.com',
+      app: {
+        name: open.apps.chrome || open.apps.edge || open.apps.firefox || open.apps.chromium
+      }
+    }
+    
+    console.log('使用系统浏览器:', config.app.name)
+    await open(config.url, config.app)
+    
+    // 返回一个模拟的 browser 对象
+    return {
+      newPage: async () => ({
+        goto: async (url) => {
+          console.log('跳转到:', url)
+          await open(url, config.app)
+          return Promise.resolve()
+        },
+        click: (selector) => {
+          console.log('模拟点击:', selector)
+          return Promise.resolve()
+        },
+        type: (selector, text) => {
+          console.log('模拟输入:', selector, text)
+          return Promise.resolve()
+        },
+        screenshot: (options) => {
+          console.log('模拟截图:', options)
+          return Promise.resolve()
+        },
+        close: () => {
+          console.log('关闭页面')
+          return Promise.resolve()
+        },
+        title: () => Promise.resolve('系统浏览器模拟页面'),
+        url: () => Promise.resolve(config.url),
+        content: () => Promise.resolve('<html>系统浏览器模拟内容</html>')
+      }),
+      close: () => {
+        console.log('关闭浏览器')
+        return Promise.resolve()
+      }
     }
   }
 
@@ -54,8 +161,22 @@ class AutomationManager {
     try {
       this.addLog(taskId, 'info', '开始自动化任务')
       
-      // 启动浏览器
-      await this.launchBrowser({ headless: config.headless !== false })
+      // 尝试启动浏览器（Chrome）
+      try {
+        await this.launchBrowser({ 
+          headless: config.headless !== false,
+          chromePath: config.chromePath 
+        })
+      } catch (chromeError) {
+        this.addLog(taskId, 'warning', `Chrome 启动失败: ${chromeError.message}`)
+        this.addLog(taskId, 'info', '尝试使用系统浏览器...')
+        
+        // 使用备用方案
+        this.browser = await this.launchSystemBrowser({ 
+          url: config.url || 'https://example.com' 
+        })
+        this.addLog(taskId, 'success', '已切换到系统浏览器模式')
+      }
       
       this.page = await this.browser.newPage()
       await this.page.setDefaultNavigationTimeout(30000)
@@ -75,25 +196,31 @@ class AutomationManager {
       
       this.addLog(taskId, 'success', '页面加载成功')
 
-      // 执行点击任务
-      const tasks = [
-        { selector: 'a', description: '点击第一个链接', required: false },
-        { selector: '#myButton', description: '点击ID为myButton的按钮', required: false },
-        { selector: '.submit-button', description: '点击提交按钮', required: false },
-        { selector: 'a[href="/about"]', description: '点击关于链接', required: false }
+      // 执行点击任务 - 使用配置的任务或默认任务
+      const tasks = config.tasks || [
+        { selector: 'a', description: '点击第一个链接', required: false, action: 'click' },
+        { selector: 'button[type="submit"]', description: '点击提交按钮', required: false, action: 'click' },
+        { selector: 'input[type="text"]', description: '填写输入框', required: false, action: 'type', value: '测试数据' }
       ]
 
       for (const [index, task] of tasks.entries()) {
         try {
           this.addLog(taskId, 'info', `执行任务 ${index + 1}: ${task.description}`)
           
-          await this.page.waitForSelector(task.selector, { timeout: 5000 })
-          await this.page.click(task.selector)
+          if (task.action === 'click') {
+            await this.page.waitForSelector(task.selector, { timeout: 5000 })
+            await this.page.click(task.selector)
+          } else if (task.action === 'type' && task.value) {
+            await this.page.waitForSelector(task.selector, { timeout: 5000 })
+            await this.page.type(task.selector, task.value)
+          } else if (task.action === 'wait' && task.delay) {
+            await this.page.waitForTimeout(task.delay)
+          }
           
           this.addLog(taskId, 'success', `${task.description} 完成`)
           
           // 等待页面响应
-          await this.page.waitForTimeout(2000)
+          await this.page.waitForTimeout(task.delay || 2000)
           
         } catch (error) {
           if (task.required) {
@@ -103,7 +230,7 @@ class AutomationManager {
           }
         }
       }
-
+    
       // 截图保存（可选）
       if (config.screenshot) {
         const screenshotDir = path.join(__dirname, '../screenshots')

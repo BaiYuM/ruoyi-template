@@ -9,7 +9,7 @@
     "vue:build": "cd ../ruoyi-ui && npm run build:prod",
     "vue:install": "cd ../ruoyi-ui && npm install",
     "vue:build:electron": "cd ../ruoyi-ui && cross-env ELECTRON=true npm run build:prod",
-    "electron:dev": "concurrently \"npm run vue:dev\" \"wait-on http://localhost:5173 && cross-env ELECTRON=true electron .\"",
+    "electron:dev": "concurrently \"npm run vue:dev\" \"wait-on http://localhost:80 && cross-env ELECTRON=true electron .\"",
     "electron:serve": "cross-env ELECTRON=true electron .",
     "build": "npm run vue:build:electron && electron-builder",
     "dist": "npm run build && electron-builder",
@@ -17,7 +17,10 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux",
     "dev": "npm run electron:dev",
-    "automation:test": "node electron/automation-test.js"
+    "automation:test": "node electron/simple-automation-test.js",
+    "start": "electron .",
+    "clean": "rm -rf node_modules screenshots dist_electron",
+    "setup": "npm install && npm run vue:install"
   },
   "devDependencies": {
     "electron": "^27.0.0",
@@ -27,7 +30,6 @@
     "cross-env": "^7.0.3"
   },
   "dependencies": {
-    "puppeteer": "^21.0.0"
   },
   "build": {
     "appId": "com.ruoyi.desktop",
@@ -37,18 +39,19 @@
       "buildResources": "build"
     },
     "files": [
-      "electron/**/*",
-      "../ruoyi-ui/dist/**/*",
-      "screenshots/**/*"
+      "**/*",
+      "!node_modules/**/*",
+      "!**/.gitignore",
+      "!**/.npmrc"
     ],
     "extraResources": [
       {
-        "from": "../ruoyi-ui/public",
-        "to": "public"
+        "from": "../ruoyi-ui/dist",
+        "to": "ruoyi-ui"
       },
       {
-        "from": "node_modules/puppeteer/.local-chromium",
-        "to": "chromium"
+        "from": "screenshots",
+        "to": "screenshots"
       }
     ],
     "win": {

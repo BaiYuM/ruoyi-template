@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaPrivateChatMapper">
+    
+    <resultMap type="FaPrivateChat" id="FaPrivateChatResult">
+        <result property="id"    column="id"    />
+        <result property="userId1"    column="user_id1"    />
+        <result property="userId2"    column="user_id2"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="lastMsgId"    column="last_msg_id"    />
+        <result property="isBlocked"    column="is_blocked"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="peerUserId"    column="peer_user_id" />
+        <result property="peerAccount"   column="peer_account" />
+        <result property="peerNickname"  column="peer_nickname" />
+        <result property="peerAvatar"    column="peer_avatar" />
+        <result property="peerFunds"     column="peer_funds" />
+        <result property="lastSendTime"  column="last_send_time" />
+        <result property="douyinId"       column="douyin_id" />
+    </resultMap>
+
+    <sql id="selectFaPrivateChatVo">
+        select id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag,
+               peer_user_id, peer_account, peer_nickname, peer_avatar, peer_funds, last_send_time, douyin_id
+        from fa_private_chat
+    </sql>
+
+    <select id="selectFaPrivateChatList" parameterType="FaPrivateChat" resultMap="FaPrivateChatResult">
+        <include refid="selectFaPrivateChatVo"/>
+        <where>  
+            <if test="userId1 != null "> and user_id1 = #{userId1}</if>
+            <if test="userId2 != null "> and user_id2 = #{userId2}</if>
+            <if test="lastMsgId != null "> and last_msg_id = #{lastMsgId}</if>
+            <if test="isBlocked != null "> and is_blocked = #{isBlocked}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaPrivateChatById" parameterType="Long" resultMap="FaPrivateChatResult">
+        <include refid="selectFaPrivateChatVo"/>
+        where id = #{id}
+    </select>
+    
+    <!-- 查询最近会话 -->
+    <select id="selectRecentSessions" resultMap="FaPrivateChatResult">
+        SELECT
+            pc.id,
+            pc.user_id1,
+            pc.user_id2,
+            pc.create_time,
+            pc.update_time,
+            pc.last_msg_id,
+            pc.is_blocked,
+            pc.del_flag,
+            peer.id AS peer_user_id,
+            peer.account AS peer_account,
+            peer.nickname AS peer_nickname,
+            peer.avatar AS peer_avatar,
+            ea_peer.funds AS peer_funds,
+            auth.account AS douyin_id,
+            MAX(pcm.send_time) AS last_send_time
+        FROM fa_private_chat pc
+        JOIN fa_private_chat_msg pcm ON pc.id = pcm.chat_id AND pcm.del_flag = 0
+        JOIN expiration_ai ea_auth ON (ea_auth.user_id = pc.user_id1 OR ea_auth.user_id = pc.user_id2)
+        JOIN comment_user auth ON auth.id = ea_auth.user_id
+        JOIN comment_user peer ON peer.id = IF(pc.user_id1 = auth.id, pc.user_id2, pc.user_id1)
+        LEFT JOIN expiration_ai ea_peer ON ea_peer.user_id = peer.id
+        <where>
+            <if test="account != null and account != ''">
+                AND auth.account = #{account}
+            </if>
+            <if test="funds != null">
+                AND ea_peer.funds = #{funds}
+            </if>
+            AND pcm.send_time >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
+            AND pc.del_flag = 0
+        </where>
+        GROUP BY
+            pc.id, pc.user_id1, pc.user_id2, pc.create_time, pc.update_time, pc.last_msg_id, pc.is_blocked, pc.del_flag,
+            peer.id, peer.account, peer.nickname, peer.avatar, ea_peer.funds
+        ORDER BY last_send_time DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 查询会话消息 -->
+    <select id="selectSessionMessages" resultType="com.ruoyi.system.domain.FaPrivateChatMsg">
+        SELECT id, chat_id, sender_id, receiver_id, msg_type, msg_content, send_time, is_recalled, recall_time, del_flag
+        FROM fa_private_chat_msg
+        WHERE chat_id = #{sessionId}
+          AND del_flag = 0
+        ORDER BY send_time ASC
+    </select>
+    
+    <!-- 查询评论用户账号列表 -->
+    <select id="selectCommentUserAccounts" resultType="java.lang.String">
+        SELECT DISTINCT cu.account
+        FROM expiration_ai ea
+        JOIN comment_user cu ON cu.id = ea.user_id
+        WHERE cu.account IS NOT NULL AND cu.account != ''
+    </select>
+
+    <insert id="insertFaPrivateChat" parameterType="FaPrivateChat">
+        insert into fa_private_chat
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            id,
+            <if test="userId1 != null">user_id1,</if>
+            <if test="userId2 != null">user_id2,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="lastMsgId != null">last_msg_id,</if>
+            <if test="isBlocked != null">is_blocked,</if>
+            <if test="peerUserId != null">peer_user_id,</if>
+            <if test="peerAccount != null and peerAccount != ''">peer_account,</if>
+            <if test="peerNickname != null and peerNickname != ''">peer_nickname,</if>
+            <if test="peerAvatar != null and peerAvatar != ''">peer_avatar,</if>
+            <if test="peerFunds != null">peer_funds,</if>
+            <if test="lastSendTime != null">last_send_time,</if>
+            <if test="douyinId != null and douyinId != ''">douyin_id,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{id},
+            <if test="userId1 != null">#{userId1},</if>
+            <if test="userId2 != null">#{userId2},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="lastMsgId != null">#{lastMsgId},</if>
+            <if test="isBlocked != null">#{isBlocked},</if>
+            <if test="peerUserId != null">#{peerUserId},</if>
+            <if test="peerAccount != null and peerAccount != ''">#{peerAccount},</if>
+            <if test="peerNickname != null and peerNickname != ''">#{peerNickname},</if>
+            <if test="peerAvatar != null and peerAvatar != ''">#{peerAvatar},</if>
+            <if test="peerFunds != null">#{peerFunds},</if>
+            <if test="lastSendTime != null">#{lastSendTime},</if>
+            <if test="douyinId != null and douyinId != ''">#{douyinId},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaPrivateChat" parameterType="FaPrivateChat">
+        update fa_private_chat
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId1 != null">user_id1 = #{userId1},</if>
+            <if test="userId2 != null">user_id2 = #{userId2},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="lastMsgId != null">last_msg_id = #{lastMsgId},</if>
+            <if test="isBlocked != null">is_blocked = #{isBlocked},</if>
+            <if test="peerUserId != null">peer_user_id = #{peerUserId},</if>
+            <if test="peerAccount != null and peerAccount != ''">peer_account = #{peerAccount},</if>
+            <if test="peerNickname != null and peerNickname != ''">peer_nickname = #{peerNickname},</if>
+            <if test="peerAvatar != null and peerAvatar != ''">peer_avatar = #{peerAvatar},</if>
+            <if test="peerFunds != null">peer_funds = #{peerFunds},</if>
+            <if test="lastSendTime != null">last_send_time = #{lastSendTime},</if>
+            <if test="douyinId != null and douyinId != ''">douyin_id = #{douyinId},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaPrivateChatById" parameterType="Long">
+        delete from fa_private_chat where id = #{id}
+    </delete>
+
+    <delete id="deleteFaPrivateChatByIds" parameterType="String">
+        delete from fa_private_chat where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

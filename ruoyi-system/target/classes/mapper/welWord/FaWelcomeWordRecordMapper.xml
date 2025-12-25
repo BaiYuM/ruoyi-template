@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaWelcomeWordRecordMapper">
+    
+    <resultMap type="FaWelcomeWordRecord" id="FaWelcomeWordRecordResult">
+        <result property="id"    column="id"    />
+        <result property="configId"    column="config_id"    />
+        <result property="sysUserId"    column="sys_user_id"    />
+        <result property="accountId"    column="account_id"    />
+        <result property="triggerUserId"    column="trigger_user_id"    />
+        <result property="triggerUserName"    column="trigger_user_name"    />
+        <result property="sentContent"    column="sent_content"    />
+        <result property="executionStatus"    column="execution_status"    />
+        <result property="executionTime"    column="execution_time"    />
+        <result property="errorMessage"    column="error_message"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectFaWelcomeWordRecordVo">
+        select id, config_id, sys_user_id, account_id, trigger_user_id, trigger_user_name, sent_content, execution_status, execution_time, error_message, create_time from fa_welcome_word_record
+    </sql>
+
+    <select id="selectFaWelcomeWordRecordList" parameterType="FaWelcomeWordRecord" resultMap="FaWelcomeWordRecordResult">
+        <include refid="selectFaWelcomeWordRecordVo"/>
+        <where>  
+            <if test="configId != null "> and config_id = #{configId}</if>
+            <if test="sysUserId != null "> and sys_user_id = #{sysUserId}</if>
+            <if test="accountId != null  and accountId != ''"> and account_id = #{accountId}</if>
+            <if test="triggerUserId != null  and triggerUserId != ''"> and trigger_user_id = #{triggerUserId}</if>
+            <if test="triggerUserName != null  and triggerUserName != ''"> and trigger_user_name like concat('%', #{triggerUserName}, '%')</if>
+            <if test="sentContent != null  and sentContent != ''"> and sent_content = #{sentContent}</if>
+            <if test="executionStatus != null  and executionStatus != ''"> and execution_status = #{executionStatus}</if>
+            <if test="executionTime != null "> and execution_time = #{executionTime}</if>
+            <if test="errorMessage != null  and errorMessage != ''"> and error_message = #{errorMessage}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaWelcomeWordRecordById" parameterType="Long" resultMap="FaWelcomeWordRecordResult">
+        <include refid="selectFaWelcomeWordRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaWelcomeWordRecord" parameterType="FaWelcomeWordRecord">
+        insert into fa_welcome_word_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="configId != null">config_id,</if>
+            <if test="sysUserId != null">sys_user_id,</if>
+            <if test="accountId != null and accountId != ''">account_id,</if>
+            <if test="triggerUserId != null">trigger_user_id,</if>
+            <if test="triggerUserName != null">trigger_user_name,</if>
+            <if test="sentContent != null">sent_content,</if>
+            <if test="executionStatus != null">execution_status,</if>
+            <if test="executionTime != null">execution_time,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="configId != null">#{configId},</if>
+            <if test="sysUserId != null">#{sysUserId},</if>
+            <if test="accountId != null and accountId != ''">#{accountId},</if>
+            <if test="triggerUserId != null">#{triggerUserId},</if>
+            <if test="triggerUserName != null">#{triggerUserName},</if>
+            <if test="sentContent != null">#{sentContent},</if>
+            <if test="executionStatus != null">#{executionStatus},</if>
+            <if test="executionTime != null">#{executionTime},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaWelcomeWordRecord" parameterType="FaWelcomeWordRecord">
+        update fa_welcome_word_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="configId != null">config_id = #{configId},</if>
+            <if test="sysUserId != null">sys_user_id = #{sysUserId},</if>
+            <if test="accountId != null and accountId != ''">account_id = #{accountId},</if>
+            <if test="triggerUserId != null">trigger_user_id = #{triggerUserId},</if>
+            <if test="triggerUserName != null">trigger_user_name = #{triggerUserName},</if>
+            <if test="sentContent != null">sent_content = #{sentContent},</if>
+            <if test="executionStatus != null">execution_status = #{executionStatus},</if>
+            <if test="executionTime != null">execution_time = #{executionTime},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaWelcomeWordRecordById" parameterType="Long">
+        delete from fa_welcome_word_record where id = #{id}
+    </delete>
+
+    <delete id="deleteFaWelcomeWordRecordByIds" parameterType="String">
+        delete from fa_welcome_word_record where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

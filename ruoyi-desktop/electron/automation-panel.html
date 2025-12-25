@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动化任务控制台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 500;
+    }
+    
+    .header .subtitle {
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 20px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+    
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: #40a9ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    
+    .checkbox-group label {
+      margin-bottom: 0;
+      cursor: pointer;
+    }
+    
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .btn-primary {
+      background: #1890ff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #40a9ff;
+    }
+    
+    .btn-success {
+      background: #52c41a;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #73d13d;
+    }
+    
+    .btn-danger {
+      background: #f5222d;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #ff4d4f;
+    }
+    
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #d9d9d9;
+    }
+    
+    .btn-secondary:hover {
+      background: #e8e8e8;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .status-panel {
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    
+    .status-label {
+      color: #666;
+    }
+    
+    .status-value {
+      font-weight: 500;
+    }
+    
+    .status-running {
+      color: #52c41a;
+    }
+    
+    .status-stopped {
+      color: #f5222d;
+    }
+    
+    .logs-container {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #6a9955;
+      margin-right: 10px;
+    }
+    
+    .log-level {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    .log-info { color: #569cd6; }
+    .log-success { color: #6a9955; }
+    .log-warning { color: #d7ba7d; }
+    .log-error { color: #f44747; }
+    
+    .control-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .empty-logs {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+    }
+    
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #1890ff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .advanced-config {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed #e8e8e8;
+    }
+    
+    .task-item {
+      background: #fafafa;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #1890ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>自动化任务控制台</h1>
+      <div class="subtitle">使用 Electron 内置浏览器进行自动化操作</div>
+    </div>
+    
+    <div class="content">
+      <!-- 任务配置 -->
+      <div class="section">
+        <div class="section-title">任务配置</div>
+        <div class="config-grid">
+          <div class="form-group">
+            <label for="url">目标URL</label>
+            <input 
+              type="text" 
+              id="url" 
+              class="form-control" 
+              value="http://localhost:80"
+              placeholder="请输入目标网址"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label>运行模式</label>
+            <div class="checkbox-group">
+              <input type="checkbox" id="headless" checked>
+              <label for="headless">后台运行（无界面）</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>操作选项</label>
+            <div class="checkbox-group">
+              <input type="checkbox" id="screenshot" checked>
+              <label for="screenshot">保存截图</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>任务类型</label>
+            <select id="taskType" class="form-control">
+              <option value="simple">简单测试</option>
+              <option value="custom">自定义任务</option>
+              <option value="login">登录测试</option>
+              <option value="data-entry">数据录入</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- 高级配置 -->
+        <div class="advanced-config" id="advancedConfig" style="display: none;">
+          <div class="section-title">高级配置</div>
+          <div class="config-grid">
+            <div class="form-group">
+              <label for="delay">默认延迟(ms)</label>
+              <input 
+                type="number" 
+                id="delay" 
+                class="form-control" 
+                value="1000"
+                min="100"
+                max="10000"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label for="timeout">超时时间(ms)</label>
+              <input 
+                type="number" 
+                id="timeout" 
+                class="form-control" 
+                value="30000"
+                min="1000"
+                max="120000"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <button class="toggle-btn" onclick="toggleAdvanced()">
+          显示高级配置
+        </button>
+      </div>
+      
+        <!-- 任务状态 -->
+        <div class="section">
+            <div class="section-title">任务状态</div>
+            <div class="status-panel">
+            <div class="status-item">
+                <span class="status-label">运行状态:</span>
+                <span id="runningStatus" class="status-value status-stopped">停止</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">浏览器状态:</span>
+                <span id="browserStatus" class="status-value">未启动</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">当前任务:</span>
+                <span id="currentTask" class="status-value">无</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">日志数量:</span>
+                <span id="logCount" class="status-value">0</span>
+            </div>
+            </div>
+            
+            <div class="control-buttons">
+            <button id="startBtn" class="btn btn-success" onclick="startAutomation()">
+                <span>▶</span> 开始自动化任务
+            </button>
+            <button id="stopBtn" class="btn btn-danger" onclick="stopAutomation()" disabled>
+                <span>■</span> 停止任务
+            </button>
+            <button class="btn btn-secondary" onclick="clearLogs()">
+                <span>🗑️</span> 清除日志
+            </button>
+            <button class="btn btn-secondary" onclick="testConnection()">
+                <span>🔗</span> 测试连接
+            </button>
+            </div>
+        </div>
+        
+        <!-- 任务日志 -->
+        <div class="section">
+            <div class="section-title">
+            任务日志
+            <button class="toggle-btn" onclick="toggleLogs()" style="float: right;">
+                折叠/展开
+            </button>
+            </div>
+            <div id="logsContainer" class="logs-container">
+            <div id="logsContent">
+                <div class="log-entry">
+                <span class="log-time">系统</span>
+                <span class="log-level log-info">INFO</span>
+                <span class="log-message">自动化控制台已就绪</span>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+<script>
+    let isRunning = false
+    let advancedVisible = false
+    let logsVisible = true
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        updateStatus()
+        setupEventListeners()
+        
+        // 监听自动化日志
+        window.automationAPI.onAutomationLog((log) => {
+            addLog(log)
+        })
+        
+        // 监听自动化结果
+        window.automationAPI.onAutomationResult((result) => {
+            console.log('任务结果:', result)
+            if (result.success) {
+            alert(`任务完成！任务ID: ${result.taskId}`)
+            } else {
+            alert(`任务失败: ${result.error}`)
+            }
+            updateStatus()
+        })
+        
+        // 定期更新状态
+        setInterval(updateStatus, 2000)
+        })
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+        // URL 输入框回车事件
+        document.getElementById('url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+            startAutomation()
+            }
+        })
+        
+        // 任务类型变化
+        document.getElementById('taskType').addEventListener('change', (e) => {
+            updateTaskConfig(e.target.value)
+        })
+    }
+    
+    // 更新任务配置
+    function updateTaskConfig(type) {
+        const urlInput = document.getElementById('url')
+        
+        switch(type) {
+            case 'login':
+            urlInput.value = 'http://localhost:80'
+            break
+            case 'data-entry':
+            urlInput.value = 'http://localhost:80'
+            break
+            case 'simple':
+            urlInput.value = 'http://localhost:80'
+            break
+            default:
+            // 保持当前值
+        }
+        }
+        
+        // 开始自动化
+        async function startAutomation() {
+        if (isRunning) {
+            alert('已有任务正在运行，请先停止当前任务')
+            return
+        }
+        
+        const config = {
+            url: document.getElementById('url').value.trim(),
+            headless: document.getElementById('headless').checked,
+            screenshot: document.getElementById('screenshot').checked,
+            tasks: getTaskConfig()
+        }
+        
+        if (!config.url) {
+            alert('请输入目标URL')
+            return
+        }
+        
+        try {
+            const result = await window.automationAPI.startAutomation(config)
+            
+            if (result.success) {
+            addLog({
+                level: 'success',
+                message: `任务已开始，任务ID: ${result.taskId}`
+            })
+            isRunning = true
+            updateButtonStates()
+            } else {
+            addLog({
+                level: 'error',
+                message: `任务启动失败: ${result.error}`
+            })
+            }
+        } catch (error) {
+            addLog({
+            level: 'error',
+            message: `启动异常: ${error.message}`
+            })
+        }
+    }
+    
+    // 获取任务配置
+    function getTaskConfig() {
+        const taskType = document.getElementById('taskType').value
+        
+        switch(taskType) {
+            case 'simple':
+            return [
+                {
+                selector: 'input[type="text"]:first-of-type',
+                description: '填写第一个输入框',
+                action: 'type',
+                value: '自动化测试',
+                required: false,
+                delay: 500
+                },
+                {
+                selector: 'button[type="submit"], .el-button--primary',
+                description: '点击主要按钮',
+                action: 'click',
+                required: false,
+                delay: 1000
+                }
+            ]
+            
+            case 'login':
+            return [
+                {
+                selector: 'input[name="username"], input[type="text"]:first-of-type',
+                description: '输入用户名',
+                action: 'type',
+                value: 'admin',
+                required: false,
+                delay: 500
+                },
+                {
+                selector: 'input[name="password"], input[type="password"]',
+                description: '输入密码',
+                action: 'type',
+                value: 'admin123',
+                required: false,
+                delay: 500
+                },
+                {
+                selector: 'input[name="validateCode"], input[placeholder*="验证码"]',
+                description: '验证码',
+                action: 'type',
+                value: '2',
+                required: false,
+                delay: 500
+                },
+                {
+                selector: 'button[type="button"], .login-btn',
+                description: '点击登录按钮',
+                action: 'click',
+                required: false,
+                delay: 2000
+                }
+            ]
+            
+            case 'custom':
+            // 这里可以添加自定义任务配置界面
+            return [
+                {
+                selector: 'a:first-of-type',
+                description: '点击第一个链接',
+                action: 'click',
+                required: false,
+                delay: 1000
+                }
+            ]
+            
+            default:
+            return []
+        }
+    }
+    
+    // 停止自动化
+    async function stopAutomation() {
+        if (!isRunning) {
+            alert('没有正在运行的任务')
+            return
+        }
+        
+        try {
+            const result = await window.automationAPI.stopAutomation()
+            
+            addLog({
+            level: 'info',
+            message: result.message
+            })
+            
+            isRunning = false
+            updateButtonStates()
+        } catch (error) {
+            addLog({
+            level: 'error',
+            message: `停止失败: ${error.message}`
+            })
+        }
+        }
+        
+        // 测试连接
+        async function testConnection() {
+        const url = document.getElementById('url').value.trim()
+        
+        if (!url) {
+            alert('请输入要测试的URL')
+            return
+        }
+        
+        addLog({
+            level: 'info',
+            message: `正在测试连接: ${url}`
+        })
+        
+        try {
+            const response = await fetch(url, { method: 'HEAD' })
+            
+            if (response.ok) {
+            addLog({
+                level: 'success',
+                message: '连接测试成功'
+            })
+            } else {
+            addLog({
+                level: 'warning',
+                message: `连接异常: ${response.status} ${response.statusText}`
+            })
+            }
+        } catch (error) {
+            addLog({
+            level: 'error',
+            message: `连接失败: ${error.message}`
+            })
+        }
+    }
+    
+    // 清除日志
+    async function clearLogs() {
+        await window.automationAPI.clearAutomationLogs()
+        document.getElementById('logsContent').innerHTML = `
+            <div class="log-entry">
+            <span class="log-time">系统</span>
+            <span class="log-level log-info">INFO</span>
+            <span class="log-message">日志已清除</span>
+            </div>
+        `
+        updateLogCount()
+        }
+        
+        // 更新状态
+        async function updateStatus() {
+        try {
+            const status = await window.automationAPI.getAutomationStatus()
+            
+            // 更新运行状态
+            isRunning = status.isRunning
+            document.getElementById('runningStatus').textContent = isRunning ? '运行中' : '停止'
+            document.getElementById('runningStatus').className = `status-value ${isRunning ? 'status-running' : 'status-stopped'}`
+            
+            // 更新浏览器状态
+            document.getElementById('browserStatus').textContent = status.browserStatus
+            
+            // 更新当前任务
+            document.getElementById('currentTask').textContent = isRunning ? '自动化任务' : '无'
+            
+            // 更新按钮状态
+            updateButtonStates()
+            
+            // 更新日志计数
+            updateLogCount()
+            
+        } catch (error) {
+            console.error('更新状态失败:', error)
+        }
+    }
+    
+    // 更新按钮状态
+    function updateButtonStates() {
+        const startBtn = document.getElementById('startBtn')
+        const stopBtn = document.getElementById('stopBtn')
+        
+        startBtn.disabled = isRunning
+        stopBtn.disabled = !isRunning
+        }
+        
+        // 更新日志计数
+        function updateLogCount() {
+        const logs = document.getElementById('logsContent').getElementsByClassName('log-entry')
+        document.getElementById('logCount').textContent = logs.length
+        }
+        
+        // 添加日志
+        function addLog(log) {
+        const logsContent = document.getElementById('logsContent')
+        const logEntry = document.createElement('div')
+        logEntry.className = 'log-entry'
+        
+        const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()
+        const level = log.level || 'info'
+        const message = log.message || ''
+        
+        logEntry.innerHTML = `
+            <span class="log-time">${time}</span>
+            <span class="log-level log-${level}">${level.toUpperCase()}</span>
+            <span class="log-message">${message}</span>
+        `
+        
+        logsContent.appendChild(logEntry)
+        
+        // 自动滚动到底部
+        const logsContainer = document.getElementById('logsContainer')
+        logsContainer.scrollTop = logsContainer.scrollHeight
+        
+        // 更新计数
+        updateLogCount()
+    }
+    
+    // 切换高级配置
+    function toggleAdvanced() {
+        advancedVisible = !advancedVisible
+        const advancedConfig = document.getElementById('advancedConfig')
+        const toggleBtn = document.querySelector('.toggle-btn')
+        
+        if (advancedVisible) {
+            advancedConfig.style.display = 'block'
+            toggleBtn.textContent = '隐藏高级配置'
+        } else {
+            advancedConfig.style.display = 'none'
+            toggleBtn.textContent = '显示高级配置'
+        }
+    }
+    
+    // 切换日志显示
+    function toggleLogs() {
+        logsVisible = !logsVisible
+        const logsContainer = document.getElementById('logsContainer')
+        const toggleBtn = document.querySelector('.toggle-btn')
+        
+        if (logsVisible) {
+            logsContainer.style.display = 'block'
+            toggleBtn.textContent = '折叠'
+        } else {
+            logsContainer.style.display = 'none'
+            toggleBtn.textContent = '展开'
+        }
+        }
+    </script>
+    </body>
+</html>
