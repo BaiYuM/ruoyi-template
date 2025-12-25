@@ -636,6 +636,7 @@ const loadSessions = async () => {
             // 处理不同的响应格式
             if (Array.isArray(response.data)) {
                 sessions = response.data
+              console.log('响应数据:', response.data)
             } else if (response.data && typeof response.data === 'object') {
                 // 如果是对象，提取所有值
                 sessions = Object.values(response.data)
