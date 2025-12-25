@@ -781,7 +781,11 @@ function registerIpcHandlers() {
 // Electron 准备就绪
 app.whenReady().then(() => {
   console.log('=== RuoYi Electron 启动 ===')
-  
+  console.log('=== RuoYi Electron 启动 ===')
+  console.log('当前目录:', __dirname)
+  console.log('是否开发环境:', isDev)
+  console.log('Node版本:', process.version)
+  console.log('Electron版本:', process.versions.electron)
   // 创建主窗口
   createMainWindow()
   

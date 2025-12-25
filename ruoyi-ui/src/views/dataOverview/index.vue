@@ -62,7 +62,7 @@ import * as echarts from 'echarts'
 if (typeof window !== 'undefined' && !window.echarts) {
   window.echarts = echarts
 }
-import { getOverview } from '@/api/dataOverview'
+import { getOverview } from '@/api/dataOverview.js'
 
 const range = ref([])
 const chartRef = ref(null)
@@ -119,7 +119,7 @@ function quickRange(days) {
 }
 
 async function loadData() {
-  console.debug('dataOverview: loadData start')
+  console.debug('dataOverview.js: loadData start')
   if (!range.value || range.value.length !== 2) {
     ElMessage.warning('请选择日期范围（默认近7天）')
     quickRange(7)
@@ -129,10 +129,10 @@ async function loadData() {
     startDate: formatDate(range.value[0]),
     endDate: formatDate(range.value[1])
   }
-  console.debug('dataOverview: loadData params', params)
+  console.debug('dataOverview.js: loadData params', params)
   try {
     const res = await getOverview(params)
-    console.debug('dataOverview: getOverview returned', res)
+    console.debug('dataOverview.js: getOverview returned', res)
     // expect res to be { cards: [...], series: { dates: [], lines: [{name,data},...] } }
     if (res && res.cards) {
       for (let i = 0; i < statsCards.length; i++) statsCards[i].value = res.cards[i] ?? 0
@@ -165,17 +165,17 @@ async function loadData() {
 
     if (chart) {
       try {
-        console.debug('dataOverview: series prepared', { dates: series.dates && series.dates.length, lines: series.lines && series.lines.length })
+        console.debug('dataOverview.js: series prepared', { dates: series.dates && series.dates.length, lines: series.lines && series.lines.length })
         const opt = buildChartOption(series)
         chart.clear()
         chart.setOption(opt)
         chart.resize()
-        console.debug('dataOverview: chart updated, dates=', series.dates && series.dates.length)
+        console.debug('dataOverview.js: chart updated, dates=', series.dates && series.dates.length)
       } catch (e) {
-        console.error('dataOverview chart setOption error', e)
+        console.error('dataOverview.js chart setOption error', e)
       }
     } else {
-      console.warn('dataOverview: chart instance not initialized')
+      console.warn('dataOverview.js: chart instance not initialized')
     }
     // chart data handled below; no table rows (user requested chart-only)
   } catch (e) {
@@ -236,15 +236,15 @@ onMounted(() => {
   quickRange(7)
   nextTick(() => {
     try {
-      console.debug('dataOverview: chartRef=', chartRef.value)
-      console.debug('dataOverview: echarts object=', typeof echarts !== 'undefined')
+      console.debug('dataOverview.js: chartRef=', chartRef.value)
+      console.debug('dataOverview.js: echarts object=', typeof echarts !== 'undefined')
       if (chartRef.value) {
         // ensure container has height in case CSS collapsed it
         try { chartRef.value.style.height = chartRef.value.style.height || '360px' } catch (e) {}
         chart = echarts.init(chartRef.value)
-        console.debug('dataOverview: echarts version=', echarts?.version || 'unknown')
+        console.debug('dataOverview.js: echarts version=', echarts?.version || 'unknown')
       } else {
-        console.warn('dataOverview: chartRef not available at onMounted')
+        console.warn('dataOverview.js: chartRef not available at onMounted')
       }
     } catch (e) {
       console.error('echarts init error', e)
