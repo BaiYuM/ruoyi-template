@@ -1,6 +1,5 @@
 package com.ruoyi.system.domain.vo;
 
-import com.ruoyi.system.domain.FaUser;
 import com.ruoyi.system.domain.CommentUser;
 
 /**
@@ -8,8 +7,7 @@ import com.ruoyi.system.domain.CommentUser;
  */
 public class DouyinUserVO
 {
-    /** 基础用户信息 */
-    private FaUser faUser;
+
 
     /** 详细用户信息 */
     private CommentUser commentUser;
@@ -23,13 +21,6 @@ public class DouyinUserVO
     /** 最后活跃时间 */
     private String lastActiveTime;
 
-    public FaUser getFaUser() {
-        return faUser;
-    }
-
-    public void setFaUser(FaUser faUser) {
-        this.faUser = faUser;
-    }
 
     public CommentUser getCommentUser() {
         return commentUser;
@@ -70,9 +61,6 @@ public class DouyinUserVO
         if (commentUser != null && commentUser.getNickname() != null) {
             return commentUser.getNickname();
         }
-        if (faUser != null && faUser.getNickname() != null) {
-            return faUser.getNickname();
-        }
         return "";
     }
 
@@ -82,9 +70,6 @@ public class DouyinUserVO
     public String getDisplayAvatar() {
         if (commentUser != null && commentUser.getAvatar() != null) {
             return commentUser.getAvatar();
-        }
-        if (faUser != null && faUser.getAvatar() != null) {
-            return faUser.getAvatar();
         }
         return "";
     }
@@ -123,9 +108,6 @@ public class DouyinUserVO
     public String getPlatform() {
         if (commentUser != null && commentUser.getPlatform() != null) {
             return commentUser.getPlatform();
-        }
-        if (faUser != null && faUser.getPlatform() != null) {
-            return faUser.getPlatform();
         }
         return "";
     }
