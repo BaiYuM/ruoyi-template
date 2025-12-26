@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
+const http = require('http')
 
 // 导入自动化服务
 const { 
@@ -17,6 +18,123 @@ let automationWindow = null
 const isDev = process.env.NODE_ENV === 'development' || 
               process.env.ELECTRON === 'true' ||
               process.argv.some(arg => arg.includes('electron'))
+
+// HTTP服务器端口
+const HTTP_PORT = process.env.DESKTOP_HTTP_PORT || 9876
+
+// 启动HTTP服务器
+function startHttpServer() {
+  const server = http.createServer((req, res) => {
+    // 设置CORS头
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+    // 处理预检请求
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200)
+      res.end()
+      return
+    }
+
+    // 解析请求路径
+    const url = new URL(req.url, `http://${req.headers.host}`)
+    const pathname = url.pathname
+
+    if (req.method === 'POST' && pathname === '/api/automation/start') {
+      // 接收POST数据
+      let body = ''
+      req.on('data', chunk => {
+        body += chunk.toString()
+      })
+      req.on('end', async () => {
+        try {
+          const config = JSON.parse(body)
+          const result = await runAutomationTask(config)
+          
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({
+            success: true,
+            message: '自动化任务已启动',
+            data: result
+          }))
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({
+            success: false,
+            message: error.message
+          }))
+        }
+      })
+    } else if (req.method === 'POST' && pathname === '/api/automation/stop') {
+      // 停止自动化任务
+      try {
+        const result = await stopAutomationTask()
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: true,
+          message: '自动化任务已停止',
+          data: result
+        }))
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: false,
+          message: error.message
+        }))
+      }
+    } else if (req.method === 'GET' && pathname === '/api/automation/status') {
+      // 获取自动化状态
+      try {
+        const status = getAutomationStatus()
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: true,
+          data: status
+        }))
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: false,
+          message: error.message
+        }))
+      }
+    } else if (req.method === 'POST' && pathname === '/api/automation/clear-logs') {
+      // 清除日志
+      try {
+        const result = clearAutomationLogs()
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: true,
+          message: '日志已清除',
+          data: result
+        }))
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({
+          success: false,
+          message: error.message
+        }))
+      }
+    } else {
+      // 404
+      res.writeHead(404, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({
+        success: false,
+        message: 'API端点不存在'
+      }))
+    }
+  })
+
+  server.listen(HTTP_PORT, () => {
+    console.log(`自动化HTTP服务器运行在端口 ${HTTP_PORT}`)
+  })
+
+  return server
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -287,6 +405,9 @@ function registerIPCHandlers() {
 
 // 应用准备就绪
 app.whenReady().then(() => {
+  // 启动HTTP服务器
+  startHttpServer()
+  
   // 注册 IPC 处理器
   registerIPCHandlers()
   
