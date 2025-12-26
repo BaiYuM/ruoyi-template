@@ -477,7 +477,10 @@ const sendMessage = async () => {
         const senderId = selectedAccountInfo.value.expirationAiId
         
         // 获取接收者ID - 使用当前会话的id（对方用户ID）
-        const receiverId = activeSession.value.userId || activeSession.value.id
+        const receiverId = activeSession.value.id
+
+        const chatId = messages.value[0].chatId || null
+
         
         if (!receiverId) {
             ElMessage.error('无法获取接收者ID')
@@ -490,11 +493,18 @@ const sendMessage = async () => {
             loading.send = false
             return
         }
+
+        if (!chatId) {
+            ElMessage.error('无法获取会话ID')
+            loading.send = false
+            return
+        }
         
         // 构建请求数据
         const requestData = {
             senderId: Number(senderId),
             receiverId: Number(receiverId),
+            chatId: Number(chatId),
             msgType: 0, // 文本消息
             msgContent: inputMessage.value.trim()
         }
@@ -517,6 +527,7 @@ const sendMessage = async () => {
                 senderType: 'self',
                 senderId: senderId,
                 receiverId: receiverId,
+                chatId: chatId,
                 msgContent: inputMessage.value.trim(),
                 sendTime: response.data?.sendTime || now.toISOString(),
                 msgType: 0,
@@ -720,7 +731,6 @@ const loadSessions = async () => {
             // 处理不同的响应格式
             if (Array.isArray(response.data)) {
                 sessions = response.data
-              console.log('响应数据:', response.data)
             } else if (response.data && typeof response.data === 'object') {
                 // 如果是对象，提取所有值
                 sessions = Object.values(response.data)
@@ -732,7 +742,7 @@ const loadSessions = async () => {
                 avatar: session.peerAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
                 nick: session.peerNickname || '未知用户',
                 account: session.peerAccount,
-                lastMsgContent: session.lastMsgContent || session.lastMessage || '暂无消息',
+                lastMsgContent: session.lastMsgContent,
                 lastMsgTime: session.lastSendTime,
                 isLead: session.peerLead,
                 ...session
@@ -773,7 +783,7 @@ const loadMessages = async (sessionId) => {
                 // 如果是对象，提取所有值
                 messagesData = Object.values(response.data)
             }
-            
+
             messages.value = messagesData.map(msg => {
                 // 判断消息发送者
                 let senderType = 'peer'
