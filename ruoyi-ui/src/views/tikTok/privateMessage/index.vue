@@ -319,7 +319,7 @@ const loading = reactive({
 
 // 筛选条件
 const selectedAccount = ref('')
-const selectedAccountInfo = ref(null) // 新增：存储选中的账号信息
+const selectedAccountInfo = ref(null) // 存储选中的账号信息
 const filterType = ref('all')
 const showFilterOptions = ref(false)
 
@@ -350,14 +350,24 @@ const selectFilter = (type) => {
 }
 
 // 处理抖音号筛选
-const handleAccountFilter = (account) => {
+const handleAccountFilter = async (account) => {
+    // 清空右侧两栏
+    activeSessionId.value = null
+    activeSession.value = null
+    messages.value = []
+    
     // 查找选中的账号信息
     if (account) {
         selectedAccountInfo.value = accountOptions.value.find(acc => acc.account === account) || null
     } else {
         selectedAccountInfo.value = null
+        // 如果清空账号选择，直接清空会话列表
+        sessionList.value = []
+        return
     }
-    loadSessions()
+    
+    // 加载新账号的会话
+    await loadSessions()
 }
 
 // 监听 selectedAccount 变化
@@ -454,39 +464,112 @@ const selectSession = async (session) => {
 const sendMessage = async () => {
     if (!inputMessage.value.trim() || !activeSession.value) return
     
+    // 检查是否选择了抖音号
+    if (!selectedAccountInfo.value || !selectedAccountInfo.value.expirationAiId) {
+        ElMessage.error('请先选择抖音号')
+        return
+    }
+    
     loading.send = true
     
     try {
-        // 注意：API文档中没有发送消息的接口
-        // 这里模拟发送，实际对接时需要根据实际接口调整
-        const now = new Date()
-        const newMessage = {
-            senderType: 'self',
-            msgContent: inputMessage.value.trim(),
-            sendTime: now.toISOString()
+        // 获取当前用户ID - 使用选中抖音号的expirationAiId
+        const senderId = selectedAccountInfo.value.expirationAiId
+        
+        // 获取接收者ID - 使用当前会话的id（对方用户ID）
+        const receiverId = activeSession.value.userId || activeSession.value.id
+        
+        if (!receiverId) {
+            ElMessage.error('无法获取接收者ID')
+            loading.send = false
+            return
         }
         
-        // 添加到消息列表
-        messages.value.push(newMessage)
-        
-        // 更新会话的最后一条消息
-        const sessionIndex = sessionList.value.findIndex(s => s.id === activeSession.value.id)
-        if (sessionIndex !== -1) {
-            sessionList.value[sessionIndex].lastMsgContent = inputMessage.value.trim()
-            sessionList.value[sessionIndex].lastMsgTime = now.toISOString()
+        if (!senderId) {
+            ElMessage.error('无法获取发送者ID（请检查抖音号配置）')
+            loading.send = false
+            return
         }
         
-        inputMessage.value = ''
+        // 构建请求数据
+        const requestData = {
+            senderId: Number(senderId),
+            receiverId: Number(receiverId),
+            msgType: 0, // 文本消息
+            msgContent: inputMessage.value.trim()
+        }
+
+        console.log('发送消息请求数据:', requestData)
         
-        // 滚动到底部
-        nextTick(() => {
-            scrollToBottom()
+        // 调用发送消息接口
+        const response = await request({
+            url: '/privateChat/private_chat/send',
+            method: 'POST',
+            data: requestData
         })
         
-        ElMessage.success('发送成功')
+        if (response.code === 200) {
+            const now = new Date()
+            
+            // 添加发送的消息到列表
+            const newMessage = {
+                id: response.data?.id || Date.now(),
+                senderType: 'self',
+                senderId: senderId,
+                receiverId: receiverId,
+                msgContent: inputMessage.value.trim(),
+                sendTime: response.data?.sendTime || now.toISOString(),
+                msgType: 0,
+                ...response.data
+            }
+            
+            messages.value.push(newMessage)
+            
+            // 更新会话的最后一条消息
+            const sessionIndex = sessionList.value.findIndex(s => s.id === activeSession.value.id)
+            if (sessionIndex !== -1) {
+                sessionList.value[sessionIndex].lastMsgContent = inputMessage.value.trim()
+                sessionList.value[sessionIndex].lastMsgTime = now.toISOString()
+                
+                // 将更新后的会话移动到列表顶部（最新）
+                const updatedSession = sessionList.value[sessionIndex]
+                sessionList.value.splice(sessionIndex, 1)
+                sessionList.value.unshift(updatedSession)
+            }
+            
+            inputMessage.value = ''
+            
+            // 滚动到底部
+            nextTick(() => {
+                scrollToBottom()
+            })
+            
+            ElMessage.success('发送成功')
+        } else {
+            ElMessage.error(response.msg || '发送失败')
+        }
     } catch (error) {
         console.error('发送消息失败:', error)
-        ElMessage.error('发送失败，请重试')
+        
+        // 根据错误类型给出不同的提示
+        if (error.response) {
+            // 服务器返回了错误状态码
+            if (error.response.status === 401) {
+                ElMessage.error('请先登录')
+            } else if (error.response.status === 403) {
+                ElMessage.error('无权限发送消息')
+            } else if (error.response.status === 400) {
+                ElMessage.error('请求参数错误：' + (error.response.data?.msg || ''))
+            } else {
+                ElMessage.error('发送失败，服务器错误：' + error.response.status)
+            }
+        } else if (error.request) {
+            // 请求已发出但没有收到响应
+            ElMessage.error('网络连接失败，请检查网络')
+        } else {
+            // 请求设置时出错
+            ElMessage.error('发送失败，请重试')
+        }
     } finally {
         loading.send = false
     }
@@ -507,10 +590,11 @@ const handleRefresh = async () => {
         await loadAccounts()
         await loadSessions()
         
-        selectedAccount.value = ''
-        selectedAccountInfo.value = null
-        filterType.value = 'all'
-        showFilterOptions.value = false
+        // 保持当前选中的账号
+        // selectedAccount.value 保持不变
+        // selectedAccountInfo.value 保持不变
+        
+        // 清空右侧两栏
         activeSessionId.value = null
         activeSession.value = null
         messages.value = []
@@ -586,7 +670,7 @@ const loadAccounts = async () => {
                 { account: '抖音账号3', expirationAiId: 3 }
             ]
             
-            if (accountOptions.value.length > 0) {
+            if (accountOptions.value.length > 0 && !selectedAccount.value) {
                 selectedAccount.value = accountOptions.value[0].account
                 selectedAccountInfo.value = accountOptions.value[0]
             }

@@ -25,10 +25,12 @@ D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\expir
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\commentUser\CommentUserController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\privateChat\FaPrivateHarassmentRecordController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\system\SysMenuController.java
+D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\friend\FaAiFriendClueController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\autoworkflow\FriendAddPlanController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\common\CommonController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\system\SysDeptController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\monitor\CacheController.java
+D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\friend\FaAiFriendController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\monitor\SysLogininforController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\autoworkflow\AiExpertController.java
 D:\baile\ruoyi-template\ruoyi-admin\src\main\java\com\ruoyi\web\controller\autoworkflow\AutoPublishController.java

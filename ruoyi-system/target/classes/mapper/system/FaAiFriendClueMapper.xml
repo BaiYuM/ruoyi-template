@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaAiFriendClueMapper">
+    
+    <resultMap type="FaAiFriendClue" id="FaAiFriendClueResult">
+        <result property="id"    column="id"    />
+        <result property="friendId"    column="friend_id"    />
+        <result property="expirationAiId"    column="expiration_ai_id"    />
+        <result property="friendUserId"    column="friend_user_id"    />
+        <result property="clueLabel"    column="clue_label"    />
+        <result property="clueValue"    column="clue_value"    />
+        <result property="clueSource"    column="clue_source"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectFaAiFriendClueVo">
+        select id, friend_id, expiration_ai_id, friend_user_id, clue_label, clue_value, clue_source, status, del_flag, create_by, create_time, update_by, update_time, remark from fa_ai_friend_clue
+    </sql>
+
+    <select id="selectFaAiFriendClueList" parameterType="FaAiFriendClue" resultMap="FaAiFriendClueResult">
+        <include refid="selectFaAiFriendClueVo"/>
+        <where>  
+            <if test="friendId != null "> and friend_id = #{friendId}</if>
+            <if test="expirationAiId != null "> and expiration_ai_id = #{expirationAiId}</if>
+            <if test="friendUserId != null "> and friend_user_id = #{friendUserId}</if>
+            <if test="clueLabel != null  and clueLabel != ''"> and clue_label = #{clueLabel}</if>
+            <if test="clueValue != null  and clueValue != ''"> and clue_value = #{clueValue}</if>
+            <if test="clueSource != null  and clueSource != ''"> and clue_source = #{clueSource}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaAiFriendClueById" parameterType="Long" resultMap="FaAiFriendClueResult">
+        <include refid="selectFaAiFriendClueVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaAiFriendClue" parameterType="FaAiFriendClue">
+        insert into fa_ai_friend_clue
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="friendId != null">friend_id,</if>
+            <if test="expirationAiId != null">expiration_ai_id,</if>
+            <if test="friendUserId != null">friend_user_id,</if>
+            <if test="clueLabel != null and clueLabel != ''">clue_label,</if>
+            <if test="clueValue != null and clueValue != ''">clue_value,</if>
+            <if test="clueSource != null">clue_source,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="friendId != null">#{friendId},</if>
+            <if test="expirationAiId != null">#{expirationAiId},</if>
+            <if test="friendUserId != null">#{friendUserId},</if>
+            <if test="clueLabel != null and clueLabel != ''">#{clueLabel},</if>
+            <if test="clueValue != null and clueValue != ''">#{clueValue},</if>
+            <if test="clueSource != null">#{clueSource},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaAiFriendClue" parameterType="FaAiFriendClue">
+        update fa_ai_friend_clue
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="friendId != null">friend_id = #{friendId},</if>
+            <if test="expirationAiId != null">expiration_ai_id = #{expirationAiId},</if>
+            <if test="friendUserId != null">friend_user_id = #{friendUserId},</if>
+            <if test="clueLabel != null and clueLabel != ''">clue_label = #{clueLabel},</if>
+            <if test="clueValue != null and clueValue != ''">clue_value = #{clueValue},</if>
+            <if test="clueSource != null">clue_source = #{clueSource},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaAiFriendClueById" parameterType="Long">
+        delete from fa_ai_friend_clue where id = #{id}
+    </delete>
+
+    <delete id="deleteFaAiFriendClueByIds" parameterType="String">
+        delete from fa_ai_friend_clue where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FaPrivateChatSettingMapper">
+    
+    <resultMap type="FaPrivateChatSetting" id="FaPrivateChatSettingResult">
+        <result property="id"    column="id"    />
+        <result property="chatId"    column="chat_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="isTop"    column="is_top"    />
+        <result property="isMute"    column="is_mute"    />
+        <result property="isHide"    column="is_hide"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectFaPrivateChatSettingVo">
+        select id, chat_id, user_id, is_top, is_mute, is_hide, update_time, del_flag from fa_private_chat_setting
+    </sql>
+
+    <select id="selectFaPrivateChatSettingList" parameterType="FaPrivateChatSetting" resultMap="FaPrivateChatSettingResult">
+        <include refid="selectFaPrivateChatSettingVo"/>
+        <where>  
+            <if test="chatId != null "> and chat_id = #{chatId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="isTop != null "> and is_top = #{isTop}</if>
+            <if test="isMute != null "> and is_mute = #{isMute}</if>
+            <if test="isHide != null "> and is_hide = #{isHide}</if>
+        </where>
+    </select>
+    
+    <select id="selectFaPrivateChatSettingById" parameterType="Long" resultMap="FaPrivateChatSettingResult">
+        <include refid="selectFaPrivateChatSettingVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFaPrivateChatSetting" parameterType="FaPrivateChatSetting">
+        insert into fa_private_chat_setting
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="chatId != null">chat_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="isTop != null">is_top,</if>
+            <if test="isMute != null">is_mute,</if>
+            <if test="isHide != null">is_hide,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="chatId != null">#{chatId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="isTop != null">#{isTop},</if>
+            <if test="isMute != null">#{isMute},</if>
+            <if test="isHide != null">#{isHide},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFaPrivateChatSetting" parameterType="FaPrivateChatSetting">
+        update fa_private_chat_setting
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="chatId != null">chat_id = #{chatId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="isTop != null">is_top = #{isTop},</if>
+            <if test="isMute != null">is_mute = #{isMute},</if>
+            <if test="isHide != null">is_hide = #{isHide},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFaPrivateChatSettingById" parameterType="Long">
+        delete from fa_private_chat_setting where id = #{id}
+    </delete>
+
+    <delete id="deleteFaPrivateChatSettingByIds" parameterType="String">
+        delete from fa_private_chat_setting where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

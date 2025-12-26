@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AiConfigMapper">
+    
+    <resultMap type="AiConfig" id="AiConfigResult">
+        <result property="id"    column="id"    />
+        <result property="expirationId"    column="expiration_id"    />
+        <result property="name"    column="name"    />
+        <result property="prompt"    column="prompt"    />
+        <result property="knowledgeBase"    column="knowledge_base"    />
+        <result property="count"    column="count"    />
+        <result property="level"    column="level"    />
+        <result property="status"    column="status"    />
+        <result property="aiModel"    column="ai_model"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+    
+    <resultMap type="AiConfig" id="AiConfigWithCommentUserResult" extends="AiConfigResult">
+        <result property="account" column="account" />
+        <result property="nickName" column="nickname" />
+        <result property="avatar" column="avatar" />
+    </resultMap>
+
+    <sql id="selectAiConfigVo">
+        select id, expiration_id, name, prompt, knowledge_base, count, level, status, ai_model, create_time from ai_config
+    </sql>
+    
+    <sql id="selectAiConfigWithCommentUser">
+        SELECT 
+            ac.id,
+            ac.expiration_id,
+            ac.name,
+            ac.prompt,
+            ac.knowledge_base,
+            ac.count,
+            ac.level,
+            ac.status,
+            ac.ai_model,
+            ac.create_time,
+            cu.account,
+            cu.nickname,
+            cu.avatar
+        FROM ai_config ac
+        LEFT JOIN expiration_ai ea ON ea.id = ac.expiration_id
+        LEFT JOIN comment_user cu ON cu.id = ea.user_id
+    </sql>
+
+    <select id="selectAiConfigList" parameterType="AiConfig" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        <where>  
+            <if test="expirationId != null "> and expiration_id = #{expirationId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="prompt != null  and prompt != ''"> and prompt = #{prompt}</if>
+            <if test="knowledgeBase != null  and knowledgeBase != ''"> and knowledge_base = #{knowledgeBase}</if>
+            <if test="count != null  and count != ''"> and count = #{count}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="aiModel != null "> and ai_model = #{aiModel}</if>
+            <if test="beginCreateTime != null and beginCreateTime != ''"> and create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null and endCreateTime != ''"> and create_time &lt;= #{endCreateTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectAiConfigWithCommentUserList" parameterType="AiConfig" resultMap="AiConfigWithCommentUserResult">
+        <include refid="selectAiConfigWithCommentUser"/>
+        <where>
+            <if test="name != null  and name != ''"> AND ac.name like concat('%', #{name}, '%')</if>
+            <if test="account != null and account != ''"> AND cu.account LIKE concat('%', #{account}, '%')</if>
+            <if test="beginCreateTime != null and beginCreateTime != ''"> AND ac.create_time &gt;= #{beginCreateTime}</if>
+            <if test="endCreateTime != null and endCreateTime != ''"> AND ac.create_time &lt;= #{endCreateTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectAiConfigById" parameterType="Long" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAiConfig" parameterType="AiConfig">
+        insert into ai_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="expirationId != null">expiration_id,</if>
+            <if test="name != null">name,</if>
+            <if test="prompt != null">prompt,</if>
+            <if test="knowledgeBase != null">knowledge_base,</if>
+            <if test="count != null">count,</if>
+            <if test="level != null">level,</if>
+            <if test="status != null">status,</if>
+            <if test="aiModel != null">ai_model,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="expirationId != null">#{expirationId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="prompt != null">#{prompt},</if>
+            <if test="knowledgeBase != null">#{knowledgeBase},</if>
+            <if test="count != null">#{count},</if>
+            <if test="level != null">#{level},</if>
+            <if test="status != null">#{status},</if>
+            <if test="aiModel != null">#{aiModel},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAiConfig" parameterType="AiConfig">
+        update ai_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="expirationId != null">expiration_id = #{expirationId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="prompt != null">prompt = #{prompt},</if>
+            <if test="knowledgeBase != null">knowledge_base = #{knowledgeBase},</if>
+            <if test="count != null">count = #{count},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="aiModel != null">ai_model = #{aiModel},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAiConfigById" parameterType="Long">
+        delete from ai_config where id = #{id}
+    </delete>
+
+    <delete id="deleteAiConfigByIds" parameterType="String">
+        delete from ai_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectAiConfigByExpirationId" parameterType="Long" resultMap="AiConfigResult">
+        <include refid="selectAiConfigVo"/>
+        where expiration_id = #{expirationId}
+        limit 1
+    </select>
+</mapper>
