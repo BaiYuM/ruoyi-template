@@ -27,9 +27,9 @@
               <el-select v-model="form.accountId" placeholder="请选择抖音账号" @change="handleAccountChange" style="width: 250px">
                 <el-option
                   v-for="item in accountOptions"
-                  :key="item"
-                  :label="item"
-                  :value="item"
+                  :key="item.account"
+                  :label="item.account"
+                  :value="item.account"
                 />
               </el-select>
             </el-form-item>
@@ -238,7 +238,7 @@ function getAccountList() {
   getAccounts().then(response => {
     accountOptions.value = response.data
     if (accountOptions.value.length > 0) {
-      form.accountId = accountOptions.value[0]
+      form.accountId = accountOptions.value[0].account
       handleAccountChange(form.accountId)
     }
   })

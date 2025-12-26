@@ -113,7 +113,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectAccountsWithAiConfig" resultType="com.ruoyi.system.domain.vo.AccountAiConfigVO">
         SELECT DISTINCT cu.account, eai.user_id as expirationAiId
         FROM comment_user cu
-        LEFT JOIN expiration_ai eai ON eai.user_id = cu.id
+        INNER JOIN expiration_ai eai ON eai.user_id = cu.id
         WHERE cu.id IN (
             SELECT DISTINCT user_id1 FROM fa_private_chat WHERE del_flag = 0
             UNION
