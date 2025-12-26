@@ -450,7 +450,7 @@ const selectSession = async (session) => {
     activeSessionId.value = session.id
     activeSession.value = session
     messages.value = []
-    
+
     // 加载消息
     await loadMessages(session.id)
     
@@ -471,15 +471,14 @@ const sendMessage = async () => {
     }
     
     loading.send = true
-    
     try {
         // 获取当前用户ID - 使用选中抖音号的expirationAiId
         const senderId = selectedAccountInfo.value.expirationAiId
-        
-        // 获取接收者ID - 使用当前会话的id（对方用户ID）
-        const receiverId = activeSession.value.id
 
-        const chatId = messages.value[0].chatId || null
+        // 获取接收者ID - 使用当前会话的id（对方用户ID）
+        const receiverId = activeSession.value.peerUserId
+
+        const chatId = activeSession.value.id
 
         
         if (!receiverId) {
@@ -502,9 +501,9 @@ const sendMessage = async () => {
         
         // 构建请求数据
         const requestData = {
-            senderId: Number(senderId),
-            receiverId: Number(receiverId),
-            chatId: Number(chatId),
+            senderId: String(senderId),
+            receiverId: String(receiverId),
+            chatId: String(chatId),
             msgType: 0, // 文本消息
             msgContent: inputMessage.value.trim()
         }
