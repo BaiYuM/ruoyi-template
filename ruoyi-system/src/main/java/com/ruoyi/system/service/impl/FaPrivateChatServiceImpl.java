@@ -190,18 +190,59 @@ public class FaPrivateChatServiceImpl implements IFaPrivateChatService
      */
     @Override
     public int sendMessage(FaPrivateChatMsg msg) {
+        // 检查是否已存在会话，如果不存在则自动创建
+        FaPrivateChat chat = null;
+        if (msg.getChatId() == null) {
+            // 根据发送方和接收方ID查找或创建会话
+            chat = faPrivateChatMapper.selectChatByUserIds(msg.getSenderId(), msg.getReceiverId());
+            if (chat == null) {
+                // 创建新的会话
+                chat = new FaPrivateChat();
+                chat.setUserId1(msg.getSenderId());
+                chat.setUserId2(msg.getReceiverId());
+                
+                // 确保 userId1 < userId2，防止重复会话
+                if (chat.getUserId1() != null && chat.getUserId2() != null) {
+                    if (chat.getUserId1() > chat.getUserId2()) {
+                        Long temp = chat.getUserId1();
+                        chat.setUserId1(chat.getUserId2());
+                        chat.setUserId2(temp);
+                    }
+                }
+                
+                // 使用雪花算法生成ID
+                if (chat.getId() == null) {
+                    chat.setId(IdUtils.getSnowflakeId());
+                }
+                
+                chat.setCreateBy(SecurityUtils.getUsername());
+                int chatResult = faPrivateChatMapper.insertFaPrivateChat(chat);
+                if (chatResult <= 0) {
+                    throw new RuntimeException("创建聊天会话失败");
+                }
+            }
+            msg.setChatId(chat.getId());
+        } else {
+            // 如果提供了chatId，检查会话是否存在
+            chat = faPrivateChatMapper.selectFaPrivateChatById(msg.getChatId());
+            if (chat == null) {
+                throw new RuntimeException("聊天会话不存在");
+            }
+        }
+        
         msg.setCreateTime(DateUtils.getNowDate());
         msg.setId(IdUtils.getSnowflakeId());
+        
         // 1. 插入消息记录
         int rows = faPrivateChatMsgMapper.insertFaPrivateChatMsg(msg);
         
         // 2. 更新会话的最后一条消息ID和最后发送时间
         if (rows > 0 && msg.getChatId() != null) {
-            FaPrivateChat chat = new FaPrivateChat();
-            chat.setId(msg.getChatId());
-            chat.setLastMsgId(msg.getId());
-            chat.setLastSendTime(msg.getCreateTime());
-            faPrivateChatMapper.updateFaPrivateChat(chat);
+            FaPrivateChat updateChat = new FaPrivateChat();
+            updateChat.setId(msg.getChatId());
+            updateChat.setLastMsgId(msg.getId());
+            updateChat.setLastSendTime(msg.getCreateTime());
+            faPrivateChatMapper.updateFaPrivateChat(updateChat);
             
             // 3. 调用抖音API发送消息 (此处为占位，实际需根据SDK或API实现)
             System.out.println("正在调用抖音API发送消息给用户 " + msg.getReceiverId() + ": " + msg.getMsgContent());

@@ -91,7 +91,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectChatByUserIds" resultMap="FaPrivateChatResult">
         SELECT
         id, user_id1, user_id2, create_time, update_time, last_msg_id, is_blocked, del_flag,
-        peer_user_id, peer_account, peer_nickname, peer_avatar, peer_funds, last_send_time, douyin_id
+        peer_user_id, peer_account, peer_nickname, peer_avatar, peer_lead, last_send_time, douyin_id
         FROM fa_private_chat
         WHERE ((user_id1 = #{userId1} AND user_id2 = #{userId2}) OR (user_id1 = #{userId2} AND user_id2 = #{userId1}))
           AND del_flag = 0
