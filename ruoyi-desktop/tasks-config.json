@@ -1,0 +1,218 @@
+[
+  {
+    "id": "login_task",
+    "name": "登录任务",
+    "description": "执行登录操作的自动化任务",
+    "enabled": true,
+    "tasks": [
+      {
+        "selector": "input[placeholder*='账'], input[placeholder*='用户'], input[type='text']:first-of-type, .el-input__inner:first-of-type",
+        "description": "输入用户名",
+        "action": "type",
+        "value": "admin",
+        "required": true,
+        "delay": 800
+      },
+      {
+        "selector": "input[type='password'], input[placeholder*='密码'], .el-input__inner[type='password']",
+        "description": "输入密码",
+        "action": "type",
+        "value": "admin123",
+        "required": true,
+        "delay": 800
+      },
+      {
+        "selector": "input[placeholder*='验证'], input[name='code'], .el-input__inner:last-of-type",
+        "description": "等待人工输入验证码",
+        "action": "waitForManual",
+        "waitType": "elementHasValue",
+        "waitSelector": "input[placeholder*='验证'], input[name='code'], .el-input__inner:last-of-type",
+        "timeout": 60000,
+        "message": "✅ 请手动输入验证码，输入后脚本将自动继续登录",
+        "required": true,
+        "delay": 500
+      },
+      {
+        "selector": "button.el-button--primary, button[type='submit'], .login-btn, button:contains('登录')",
+        "description": "点击登录按钮",
+        "action": "click",
+        "required": true,
+        "delay": 1500
+      },
+      {
+        "selector": "",
+        "description": "检查登录结果",
+        "action": "checkLoginResult",
+        "timeout": 15000,
+        "message": "正在检测登录结果...",
+        "required": false,
+        "delay": 500
+      },
+      {
+        "selector": "",
+        "description": "等待登录成功",
+        "action": "waitForManual",
+        "waitType": "loginSuccess",
+        "timeout": 60000,
+        "message": "正在检测登录状态...",
+        "required": true,
+        "delay": 500
+      }
+    ]
+  },
+  {
+    "id": "login_task_headless",
+    "name": "无界面登录任务",
+    "description": "无界面模式下执行登录操作的自动化任务",
+    "enabled": true,
+    "headless": true,
+    "tasks": [
+      {
+        "selector": "input[placeholder*='账'], input[placeholder*='用户'], input[type='text']:first-of-type, .el-input__inner:first-of-type",
+        "description": "输入用户名",
+        "action": "type",
+        "value": "admin",
+        "required": true,
+        "delay": 800
+      },
+      {
+        "selector": "input[type='password'], input[placeholder*='密码'], .el-input__inner[type='password']",
+        "description": "输入密码",
+        "action": "type",
+        "value": "admin123",
+        "required": true,
+        "delay": 800
+      },
+      {
+        "selector": "input[placeholder*='验证'], input[name='code'], .el-input__inner:last-of-type",
+        "description": "等待人工输入验证码（无界面模式）",
+        "action": "waitForManual",
+        "waitType": "elementHasValue",
+        "waitSelector": "input[placeholder*='验证'], input[name='code'], .el-input__inner:last-of-type",
+        "timeout": 60000,
+        "message": "请人工输入验证码",
+        "required": true,
+        "delay": 500,
+        "headlessMode": true
+      },
+      {
+        "selector": "button.el-button--primary, button[type='submit'], .login-btn, button:contains('登录')",
+        "description": "点击登录按钮",
+        "action": "click",
+        "required": true,
+        "delay": 1500
+      },
+      {
+        "selector": "",
+        "description": "检查登录结果",
+        "action": "checkLoginResult",
+        "timeout": 15000,
+        "message": "正在检测登录结果...",
+        "required": false,
+        "delay": 500
+      },
+      {
+        "selector": "",
+        "description": "等待登录成功",
+        "action": "waitForManual",
+        "waitType": "loginSuccess",
+        "timeout": 60000,
+        "message": "正在检测登录状态...",
+        "required": true,
+        "delay": 500
+      }
+    ]
+  },
+  {
+    "id": "data_entry_task",
+    "name": "数据录入任务",
+    "description": "执行数据录入的自动化任务",
+    "enabled": true,
+    "tasks": [
+      {
+        "selector": "input[placeholder*='姓名'], input[name='name']",
+        "description": "输入姓名",
+        "action": "type",
+        "value": "测试用户",
+        "required": true,
+        "delay": 300
+      },
+      {
+        "selector": "input[placeholder*='电话'], input[name='phone']",
+        "description": "输入电话",
+        "action": "type",
+        "value": "13800138000",
+        "required": true,
+        "delay": 300
+      },
+      {
+        "selector": "input[placeholder*='邮箱'], input[name='email']",
+        "description": "输入邮箱",
+        "action": "type",
+        "value": "test@example.com",
+        "required": false,
+        "delay": 300
+      },
+      {
+        "selector": "button[type='submit'], .submit-btn",
+        "description": "点击提交按钮",
+        "action": "click",
+        "required": true,
+        "delay": 1000
+      }
+    ]
+  },
+  {
+    "id": "report_generation_task",
+    "name": "报表生成任务",
+    "description": "执行报表生成的自动化任务",
+    "enabled": true,
+    "tasks": [
+      {
+        "selector": "a[href*='report'], .report-menu",
+        "description": "点击报表菜单",
+        "action": "click",
+        "required": true,
+        "delay": 1000
+      },
+      {
+        "selector": "select[name='reportType'], .report-type",
+        "description": "选择报表类型",
+        "action": "type",
+        "value": "daily",
+        "required": true,
+        "delay": 500
+      },
+      {
+        "selector": "input[name='startDate']",
+        "description": "输入开始日期",
+        "action": "type",
+        "value": "2025-01-01",
+        "required": true,
+        "delay": 500
+      },
+      {
+        "selector": "input[name='endDate']",
+        "description": "输入结束日期",
+        "action": "type",
+        "value": "2025-01-31",
+        "required": true,
+        "delay": 500
+      },
+      {
+        "selector": "button[onclick*='generate'], .generate-btn",
+        "description": "点击生成按钮",
+        "action": "click",
+        "required": true,
+        "delay": 3000
+      },
+      {
+        "selector": "button[onclick*='export'], .export-btn",
+        "description": "导出报表",
+        "action": "click",
+        "required": false,
+        "delay": 2000
+      }
+    ]
+  }
+]
