@@ -1,30 +1,31 @@
 const SimpleAutomation = require('./simple-automation')
 
-// 创建单例实例
-const automationManager = new SimpleAutomation()
+// 导出单例实例
+const automationManager = new AutomationManager()
 
 // 导出函数接口
 async function runAutomationTask(config = {}) {
-    return await automationManager.startTask(config)
+  return await automationManager.runAutomationTask(config)
 }
 
 async function stopAutomationTask() {
-    return await automationManager.stopTask()
+  return await automationManager.stopTask()
 }
 
 function getAutomationStatus() {
-    return automationManager.getTaskStatus()
+  return automationManager.getTaskStatus()
 }
 
 function clearAutomationLogs() {
-    return automationManager.clearLogs()
+  return automationManager.clearLogs()
 }
 
-// 导出模块
+// 导出模块 - 确保这些函数都正确导出
 module.exports = {
-    automationManager,
-    runAutomationTask,
-    stopAutomationTask,
-    getAutomationStatus,
-    clearAutomationLogs
+  AutomationManager,
+  automationManager,
+  runAutomationTask,      // 确保这个导出
+  stopAutomationTask,     // 确保这个导出
+  getAutomationStatus,    // 确保这个导出
+  clearAutomationLogs     // 确保这个导出
 }

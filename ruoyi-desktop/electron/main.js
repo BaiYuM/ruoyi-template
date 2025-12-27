@@ -1,51 +1,58 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+// electron/main.js
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
 
-// 导入自动化服务
+// 正确导入自动化模块
+const automationModule = require('./automation')
+
+// 解构导入，确保名称正确
 const { 
+  automationManager,
   runAutomationTask, 
   stopAutomationTask, 
   getAutomationStatus,
   clearAutomationLogs 
-} = require('./automation-service')
+} = automationModule
+
+console.log('自动化模块导入状态:', {
+  hasRunAutomationTask: typeof runAutomationTask === 'function',
+  hasStopAutomationTask: typeof stopAutomationTask === 'function',
+  hasGetAutomationStatus: typeof getAutomationStatus === 'function',
+  hasClearAutomationLogs: typeof clearAutomationLogs === 'function'
+})
 
 // 全局变量
 let mainWindow
-let automationWindow = null
 
 // 检查开发环境
-const isDev = process.env.NODE_ENV === 'development' || 
-              process.env.ELECTRON === 'true' ||
-              process.argv.some(arg => arg.includes('electron'))
+const isDev = process.env.NODE_ENV === 'development'
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     show: true,
-    icon: path.join(__dirname, '../build/icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.js')
     }
   })
 
-  // 加载页面
-  if (isDev) {
-    // 开发环境：加载 Vue 开发服务器
-    mainWindow.loadURL('http://localhost:80')
-    mainWindow.webContents.openDevTools()
-  } else {
-    // 生产环境：加载打包文件
-    mainWindow.loadFile(path.join(__dirname, '../../ruoyi-ui/dist/index.html'))
-  }
+  // 加载自动化控制面板
+  const panelPath = path.join(__dirname, 'automation-panel.html')
+  console.log('加载面板路径:', panelPath)
+  mainWindow.loadFile(panelPath)
 
   // 页面加载完成
   mainWindow.webContents.on('did-finish-load', () => {
-    console.log('主窗口加载完成')
+    console.log('自动化控制面板加载完成')
+    // 发送初始化消息
+    mainWindow.webContents.send('automation-ready')
   })
+
+  // 打开开发者工具
+  mainWindow.webContents.openDevTools()
 
   // 窗口关闭事件
   mainWindow.on('closed', () => {
@@ -63,9 +70,12 @@ function createMenu() {
       label: '文件',
       submenu: [
         {
-          label: '打开自动化控制台',
+          label: '重新加载',
+          accelerator: 'CmdOrCtrl+R',
           click: () => {
-            openAutomationPanel()
+            if (mainWindow) {
+              mainWindow.reload()
+            }
           }
         },
         { type: 'separator' },
@@ -80,22 +90,49 @@ function createMenu() {
       label: '自动化',
       submenu: [
         {
-          label: '开始测试任务',
-          click: () => {
-            startTestTask()
+          label: '运行测试任务',
+          click: async () => {
+            try {
+              console.log('开始测试任务...')
+              const result = await runAutomationTask({
+                url: 'http://localhost:80',
+                headless: false,
+                screenshot: true,
+                tasks: [
+                  {
+                    selector: 'input[type="text"]:first-of-type',
+                    description: '测试输入',
+                    action: 'type',
+                    value: '自动化测试',
+                    required: false,
+                    delay: 500
+                  }
+                ]
+              })
+              console.log('测试任务结果:', result)
+              
+              // 发送结果到页面
+              if (mainWindow) {
+                mainWindow.webContents.send('automation-result', result)
+              }
+            } catch (error) {
+              console.error('测试任务失败:', error)
+            }
           }
         },
         {
           label: '停止所有任务',
-          click: () => {
-            stopAllTasks()
+          click: async () => {
+            console.log('停止所有任务...')
+            const result = await stopAutomationTask()
+            console.log('停止任务结果:', result)
           }
         },
-        { type: 'separator' },
         {
-          label: '查看任务日志',
+          label: '查看状态',
           click: () => {
-            showAutomationLogs()
+            const status = getAutomationStatus()
+            console.log('当前状态:', status)
           }
         }
       ]
@@ -113,9 +150,11 @@ function createMenu() {
           }
         },
         {
-          label: '重新加载',
-          accelerator: 'CmdOrCtrl+R',
-          role: 'reload'
+          label: '检查模块',
+          click: () => {
+            console.log('检查自动化模块:', automationModule)
+            console.log('runAutomationTask 类型:', typeof runAutomationTask)
+          }
         }
       ]
     }
@@ -125,175 +164,101 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-// 打开自动化控制面板
-function openAutomationPanel() {
-  if (automationWindow) {
-    automationWindow.focus()
-    return
-  }
-
-  automationWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    parent: mainWindow,
-    modal: true,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload-automation.js')
+// 注册 IPC 处理器
+function registerIPCHandlers() {
+  console.log('注册 IPC 处理器...')
+  
+  // 自动化任务相关
+  ipcMain.handle('run-automation-task', async (event, config) => {
+    console.log('收到自动化任务请求:', config)
+    
+    try {
+      // 检查函数是否存在
+      if (typeof runAutomationTask !== 'function') {
+        throw new Error('runAutomationTask 函数不存在')
+      }
+      
+      const result = await runAutomationTask(config)
+      console.log('任务执行结果:', result)
+      
+      // 发送日志到页面
+      if (mainWindow && result.taskId) {
+        const logs = automationManager.getLogs(result.taskId)
+        logs.forEach(log => {
+          mainWindow.webContents.send('automation-log', log)
+        })
+      }
+      
+      return result
+    } catch (error) {
+      console.error('自动化任务执行失败:', error)
+      return {
+        success: false,
+        error: error.message,
+        taskId: Date.now(),
+        message: `执行失败: ${error.message}`
+      }
     }
   })
 
-  automationWindow.loadFile(path.join(__dirname, 'automation-panel.html'))
-
-  automationWindow.on('closed', () => {
-    automationWindow = null
-  })
-}
-
-// 启动测试任务
-async function startTestTask() {
-  const result = await runAutomationTask({
-    url: 'http://localhost:80',
-    headless: false,
-    screenshot: true,
-    tasks: [
-      {
-        selector: 'input[type="text"]:first-of-type',
-        description: '填写第一个输入框',
-        action: 'type',
-        value: '自动化测试数据',
-        required: false,
-        delay: 500
-      },
-      {
-        selector: 'button[type="submit"]',
-        description: '点击提交按钮',
-        action: 'click',
-        required: false,
-        delay: 1000
+  ipcMain.handle('stop-automation-task', async () => {
+    console.log('收到停止任务请求')
+    try {
+      const result = await stopAutomationTask()
+      return result
+    } catch (error) {
+      console.error('停止任务失败:', error)
+      return {
+        success: false,
+        message: error.message
       }
-    ]
-  })
-
-  console.log('测试任务结果:', result)
-}
-
-// 停止所有任务
-async function stopAllTasks() {
-  const result = await stopAutomationTask()
-  console.log('停止任务结果:', result)
-}
-
-// 显示自动化日志
-function showAutomationLogs() {
-  const status = getAutomationStatus()
-  console.log('当前任务状态:', status)
-}
-
-// 注册 IPC 处理器
-function registerIPCHandlers() {
-  // 自动化相关
-  ipcMain.handle('start-automation', async (event, config) => {
-    return await runAutomationTask(config)
-  })
-
-  ipcMain.handle('stop-automation', async () => {
-    return await stopAutomationTask()
+    }
   })
 
   ipcMain.handle('get-automation-status', () => {
-    return getAutomationStatus()
+    const status = getAutomationStatus()
+    console.log('获取状态:', status)
+    return status
   })
 
   ipcMain.handle('clear-automation-logs', () => {
+    console.log('清除日志')
     return clearAutomationLogs()
   })
 
-  // 页面操作相关
-  ipcMain.handle('execute-click', async (event, selector) => {
+  // 文件操作相关
+  ipcMain.handle('dialog:openFile', async (event, options = {}) => {
     const win = BrowserWindow.getFocusedWindow() || mainWindow
-    if (!win) {
-      return { success: false, error: '没有活动窗口' }
-    }
-
-    try {
-      const result = await win.webContents.executeJavaScript(`
-        (function() {
-          try {
-            const element = document.querySelector('${selector.replace(/'/g, "\\'")}')
-            if (!element) {
-              return { success: false, error: '元素未找到' }
-            }
-            
-            element.click()
-            return { 
-              success: true, 
-              element: {
-                tagName: element.tagName,
-                text: element.textContent?.trim() || ''
-              }
-            }
-          } catch (error) {
-            return { success: false, error: error.message }
-          }
-        })()
-      `, true)
-
-      return result
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
+    const result = await dialog.showOpenDialog(win, {
+      title: options.title || '选择文件',
+      filters: options.filters || [{ name: '所有文件', extensions: ['*'] }],
+      properties: options.properties || ['openFile']
+    })
+    return result
   })
 
-  ipcMain.handle('execute-script', async (event, script) => {
-    const win = BrowserWindow.getFocusedWindow() || mainWindow
-    if (!win) {
-      return { success: false, error: '没有活动窗口' }
-    }
-
-    try {
-      const result = await win.webContents.executeJavaScript(script, true)
-      return { success: true, result }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  })
-
-  ipcMain.handle('get-page-info', async (event) => {
-    const win = BrowserWindow.getFocusedWindow() || mainWindow
-    if (!win) {
-      return { success: false, error: '没有活动窗口' }
-    }
-
-    try {
-      const info = await win.webContents.executeJavaScript(`
-        (function() {
-          return {
-            title: document.title,
-            url: window.location.href,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          }
-        })()
-      `, true)
-
-      return { success: true, ...info }
-    } catch (error) {
-      return { success: false, error: error.message }
+  ipcMain.handle('get-system-info', () => {
+    return {
+      platform: process.platform,
+      arch: process.arch,
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron,
+      memoryUsage: process.memoryUsage()
     }
   })
 }
 
 // 应用准备就绪
 app.whenReady().then(() => {
+  console.log('应用准备就绪，开始初始化...')
+  
   // 注册 IPC 处理器
   registerIPCHandlers()
   
   // 创建主窗口
   createWindow()
-
-  // macOS 特殊处理
+  
+  // 监听窗口激活
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -301,15 +266,15 @@ app.whenReady().then(() => {
   })
 })
 
-// 所有窗口关闭
+// 窗口关闭
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-// 应用退出前
+// 退出前清理
 app.on('before-quit', async () => {
-  // 停止所有自动化任务
+  console.log('应用退出，停止所有任务...')
   await stopAutomationTask()
 })

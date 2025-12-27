@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>自动化任务控制台</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -11,86 +12,259 @@
       box-sizing: border-box;
     }
     
+    :root {
+      --primary: #1890ff;
+      --success: #52c41a;
+      --warning: #faad14;
+      --error: #ff4d4f;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-primary: #262626;
+      --text-secondary: #595959;
+      --border-color: #d9d9d9;
+      --shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-primary);
       padding: 20px;
+      min-height: 100vh;
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px 30px;
-    }
-    
-    .header h1 {
-      font-size: 24px;
-      font-weight: 500;
-    }
-    
-    .header .subtitle {
-      opacity: 0.9;
-      margin-top: 5px;
-    }
-    
-    .content {
-      padding: 30px;
-    }
-    
-    .section {
-      margin-bottom: 30px;
-      border: 1px solid #e8e8e8;
-      border-radius: 6px;
-      padding: 20px;
-    }
-    
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: #333;
-      border-bottom: 1px solid #f0f0f0;
-      padding-bottom: 10px;
-    }
-    
-    .config-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      height: calc(100vh - 40px);
+    }
+    
+    /* 左侧菜单栏 */
+    .sidebar {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .logo {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    
+    .logo h1 {
+      color: var(--primary);
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .logo .version {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    
+    .nav-menu {
+      flex: 1;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    
+    .nav-item:hover {
+      background: rgba(24, 144, 255, 0.1);
+      color: var(--primary);
+    }
+    
+    .nav-item.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .nav-item i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    
+    .user-info {
+      border-top: 1px solid var(--border-color);
+      padding-top: 20px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    /* 主内容区 */
+    .main-content {
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
     
-    .form-group {
-      margin-bottom: 15px;
+    .header-bar {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
-    .form-group label {
-      display: block;
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+    }
+    
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 24px;
+    }
+    
+    .stat-icon.running { background: rgba(82, 196, 26, 0.1); color: var(--success); }
+    .stat-icon.stopped { background: rgba(255, 77, 79, 0.1); color: var(--error); }
+    .stat-icon.tasks { background: rgba(24, 144, 255, 0.1); color: var(--primary); }
+    .stat-icon.logs { background: rgba(250, 173, 20, 0.1); color: var(--warning); }
+    
+    .stat-info h3 {
+      font-size: 14px;
+      color: var(--text-secondary);
       margin-bottom: 5px;
+    }
+    
+    .stat-info .number {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .content-tabs {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: #fafafa;
+    }
+    
+    .tab-btn {
+      padding: 15px 30px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
+    }
+    
+    .tab-content {
+      padding: 30px;
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 配置表单 */
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
       font-weight: 500;
-      color: #555;
+      color: var(--text-primary);
     }
     
     .form-control {
       width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
       font-size: 14px;
       transition: all 0.3s;
+      background: white;
     }
     
     .form-control:focus {
       outline: none;
-      border-color: #40a9ff;
+      border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
     }
     
@@ -101,54 +275,67 @@
       margin-bottom: 15px;
     }
     
-    .checkbox-group label {
-      margin-bottom: 0;
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
       cursor: pointer;
     }
     
+    .checkbox-group label {
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    /* 按钮样式 */
     .btn {
-      padding: 8px 20px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.3s;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 8px;
     }
     
     .btn-primary {
-      background: #1890ff;
+      background: var(--primary);
       color: white;
     }
     
     .btn-primary:hover {
       background: #40a9ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
     }
     
     .btn-success {
-      background: #52c41a;
+      background: var(--success);
       color: white;
     }
     
     .btn-success:hover {
       background: #73d13d;
+      transform: translateY(-1px);
     }
     
     .btn-danger {
-      background: #f5222d;
+      background: var(--error);
       color: white;
     }
     
     .btn-danger:hover {
-      background: #ff4d4f;
+      background: #ff7875;
+      transform: translateY(-1px);
     }
     
     .btn-secondary {
       background: #f5f5f5;
-      color: #333;
-      border: 1px solid #d9d9d9;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
     }
     
     .btn-secondary:hover {
@@ -158,611 +345,1278 @@
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none !important;
     }
     
-    .status-panel {
-      background: #fafafa;
-      padding: 15px;
-      border-radius: 4px;
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    
+    /* 状态面板 */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
       margin-bottom: 20px;
     }
     
     .status-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .status-item:last-child {
-      border-bottom: none;
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
     }
     
     .status-label {
-      color: #666;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
     }
     
     .status-value {
+      font-size: 16px;
       font-weight: 500;
     }
     
-    .status-running {
-      color: #52c41a;
-    }
+    .status-value.running { color: var(--success); }
+    .status-value.stopped { color: var(--error); }
     
-    .status-stopped {
-      color: #f5222d;
-    }
-    
+    /* 日志容器 */
     .logs-container {
       background: #1e1e1e;
       color: #d4d4d4;
-      padding: 15px;
-      border-radius: 4px;
+      padding: 20px;
+      border-radius: 8px;
       font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.5;
-      max-height: 400px;
+      font-size: 13px;
+      height: 400px;
       overflow-y: auto;
     }
     
     .log-entry {
-      padding: 4px 0;
+      padding: 8px 0;
       border-bottom: 1px solid #333;
-    }
-    
-    .log-entry:last-child {
-      border-bottom: none;
+      display: flex;
+      align-items: center;
     }
     
     .log-time {
       color: #6a9955;
-      margin-right: 10px;
+      min-width: 80px;
+      font-size: 12px;
     }
     
     .log-level {
+      min-width: 70px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 11px;
       font-weight: bold;
-      margin-right: 10px;
+      margin: 0 10px;
     }
     
-    .log-info { color: #569cd6; }
-    .log-success { color: #6a9955; }
-    .log-warning { color: #d7ba7d; }
-    .log-error { color: #f44747; }
+    .log-level.info { background: #569cd6; color: white; }
+    .log-level.success { background: #6a9955; color: white; }
+    .log-level.warning { background: #d7ba7d; color: #333; }
+    .log-level.error { background: #f44747; color: white; }
     
-    .control-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
+    .log-message {
+      flex: 1;
     }
     
     .empty-logs {
       text-align: center;
+      padding: 40px;
       color: #888;
-      padding: 20px;
     }
     
-    .toggle-btn {
-      background: none;
-      border: none;
-      color: #1890ff;
-      cursor: pointer;
-      font-size: 12px;
+    /* 动画效果 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
-    .advanced-config {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px dashed #e8e8e8;
+    .animate-fade {
+      animation: fadeIn 0.3s ease;
     }
     
-    .task-item {
-      background: #fafafa;
-      padding: 10px;
-      margin-bottom: 10px;
+    /* 响应式 */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+    
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
       border-radius: 4px;
-      border-left: 3px solid #1890ff;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    .logs-container::-webkit-scrollbar-track {
+      background: #2d2d2d;
+    }
+    
+    .logs-container::-webkit-scrollbar-thumb {
+      background: #555;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>自动化任务控制台</h1>
-      <div class="subtitle">使用 Electron 内置浏览器进行自动化操作</div>
-    </div>
-    
-    <div class="content">
-      <!-- 任务配置 -->
-      <div class="section">
-        <div class="section-title">任务配置</div>
-        <div class="config-grid">
-          <div class="form-group">
-            <label for="url">目标URL</label>
-            <input 
-              type="text" 
-              id="url" 
-              class="form-control" 
-              value="http://localhost:80"
-              placeholder="请输入目标网址"
-            />
-          </div>
-          
-          <div class="form-group">
-            <label>运行模式</label>
-            <div class="checkbox-group">
-              <input type="checkbox" id="headless" checked>
-              <label for="headless">后台运行（无界面）</label>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label>操作选项</label>
-            <div class="checkbox-group">
-              <input type="checkbox" id="screenshot" checked>
-              <label for="screenshot">保存截图</label>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label>任务类型</label>
-            <select id="taskType" class="form-control">
-              <option value="simple">简单测试</option>
-              <option value="custom">自定义任务</option>
-              <option value="login">登录测试</option>
-              <option value="data-entry">数据录入</option>
-            </select>
-          </div>
-        </div>
-        
-        <!-- 高级配置 -->
-        <div class="advanced-config" id="advancedConfig" style="display: none;">
-          <div class="section-title">高级配置</div>
-          <div class="config-grid">
-            <div class="form-group">
-              <label for="delay">默认延迟(ms)</label>
-              <input 
-                type="number" 
-                id="delay" 
-                class="form-control" 
-                value="1000"
-                min="100"
-                max="10000"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="timeout">超时时间(ms)</label>
-              <input 
-                type="number" 
-                id="timeout" 
-                class="form-control" 
-                value="30000"
-                min="1000"
-                max="120000"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <button class="toggle-btn" onclick="toggleAdvanced()">
-          显示高级配置
-        </button>
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+      <div class="logo">
+        <h1><i class="fas fa-robot"></i> 自动化控制台</h1>
+        <div class="version">v2.0.0</div>
       </div>
       
-        <!-- 任务状态 -->
-        <div class="section">
-            <div class="section-title">任务状态</div>
-            <div class="status-panel">
-            <div class="status-item">
-                <span class="status-label">运行状态:</span>
-                <span id="runningStatus" class="status-value status-stopped">停止</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">浏览器状态:</span>
-                <span id="browserStatus" class="status-value">未启动</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">当前任务:</span>
-                <span id="currentTask" class="status-value">无</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">日志数量:</span>
-                <span id="logCount" class="status-value">0</span>
-            </div>
+      <div class="nav-menu">
+        <a href="#dashboard" class="nav-item active" onclick="switchTab('dashboard')">
+          <i class="fas fa-tachometer-alt"></i> 仪表板
+        </a>
+        <a href="#automation" class="nav-item" onclick="switchTab('automation')">
+          <i class="fas fa-cogs"></i> 任务配置
+        </a>
+        <a href="#status" class="nav-item" onclick="switchTab('status')">
+          <i class="fas fa-chart-line"></i> 运行状态
+        </a>
+        <a href="#logs" class="nav-item" onclick="switchTab('logs')">
+          <i class="fas fa-clipboard-list"></i> 任务日志
+        </a>
+        <a href="#settings" class="nav-item" onclick="switchTab('settings')">
+          <i class="fas fa-sliders-h"></i> 系统设置
+        </a>
+      </div>
+      
+      <div class="user-info">
+        <div class="avatar">AD</div>
+        <div>
+          <div style="font-weight: 500;">管理员</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">已连接</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 头部状态栏 -->
+      <div class="header-bar">
+        <div>
+          <h2 id="currentTabTitle">仪表板</h2>
+          <div style="font-size: 14px; color: var(--text-secondary);" id="currentTime">
+            正在更新时间...
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="refreshAll()">
+            <i class="fas fa-sync-alt"></i> 刷新
+          </button>
+          <button class="btn btn-primary" onclick="openHelp()">
+            <i class="fas fa-question-circle"></i> 帮助
+          </button>
+        </div>
+      </div>
+      
+      <!-- 统计卡片 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon running">
+            <i class="fas fa-play-circle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>运行状态</h3>
+            <div class="number" id="statRunning">已停止</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon tasks">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="stat-info">
+            <h3>任务总数</h3>
+            <div class="number" id="statTasks">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon logs">
+            <i class="fas fa-history"></i>
+          </div>
+          <div class="stat-info">
+            <h3>日志数量</h3>
+            <div class="number" id="statLogs">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon stopped">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>错误数量</h3>
+            <div class="number" id="statErrors">0</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签页内容 -->
+      <div class="content-tabs">
+        <!-- 仪表板 -->
+        <div id="dashboard" class="tab-content active">
+          <h3 style="margin-bottom: 20px;">快速开始</h3>
+          
+          <div class="config-grid">
+            <div class="form-group">
+              <label class="form-label">目标URL</label>
+              <input type="text" id="url" class="form-control" value="http://localhost:80" 
+                     placeholder="请输入目标网址">
             </div>
             
-            <div class="control-buttons">
-            <button id="startBtn" class="btn btn-success" onclick="startAutomation()">
-                <span>▶</span> 开始自动化任务
+            <div class="form-group">
+              <label class="form-label">运行模式</label>
+              <div class="checkbox-group">
+                <input type="checkbox" id="headless" checked>
+                <label>后台运行（无界面）</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" id="screenshot" checked>
+                <label>保存截图</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="startAutomation()">
+              <i class="fas fa-play"></i> 开始自动化
             </button>
-            <button id="stopBtn" class="btn btn-danger" onclick="stopAutomation()" disabled>
-                <span>■</span> 停止任务
-            </button>
-            <button class="btn btn-secondary" onclick="clearLogs()">
-                <span>🗑️</span> 清除日志
+            <button class="btn btn-danger" onclick="stopAutomation()" id="stopBtn" disabled>
+              <i class="fas fa-stop"></i> 停止任务
             </button>
             <button class="btn btn-secondary" onclick="testConnection()">
-                <span>🔗</span> 测试连接
+              <i class="fas fa-wifi"></i> 测试连接
             </button>
+            <button class="btn btn-secondary" onclick="showTestResults()">
+              <i class="fas fa-chart-bar"></i> 查看结果
+            </button>
+          </div>
+          
+          <div style="margin-top: 30px;">
+            <h4 style="margin-bottom: 15px;">最近任务</h4>
+            <div id="recentTasks" style="background: #fafafa; padding: 15px; border-radius: 8px;">
+              <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                暂无任务记录
+              </div>
             </div>
+          </div>
+        </div>
+        
+        <!-- 任务配置 -->
+        <div id="automation" class="tab-content">
+          <h3 style="margin-bottom: 20px;">自动化任务配置</h3>
+          
+          <div class="config-grid">
+            <div class="form-group">
+              <label class="form-label">任务类型</label>
+              <select id="taskType" class="form-control" onchange="updateTaskConfig()">
+                <option value="simple">简单测试</option>
+                <option value="login">登录测试</option>
+                <option value="data-entry">数据录入</option>
+                <option value="form-submit">表单提交</option>
+                <option value="custom">自定义任务</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">超时时间 (毫秒)</label>
+              <input type="number" id="timeout" class="form-control" value="30000" min="1000" max="120000">
+            </div>
+          </div>
+          
+          <div id="taskConfigArea">
+            <!-- 任务配置内容会动态加载 -->
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+              请选择任务类型以显示配置
+            </div>
+          </div>
+        </div>
+        
+        <!-- 运行状态 -->
+        <div id="status" class="tab-content">
+          <h3 style="margin-bottom: 20px;">系统状态监控</h3>
+          
+          <div class="status-grid">
+            <div class="status-item">
+              <div class="status-label">自动化状态</div>
+              <div class="status-value" id="statusRunning">未运行</div>
+            </div>
+            
+            <div class="status-item">
+              <div class="status-label">浏览器状态</div>
+              <div class="status-value" id="statusBrowser">未启动</div>
+            </div>
+            
+            <div class="status-item">
+              <div class="status-label">页面状态</div>
+              <div class="status-value" id="statusPage">未加载</div>
+            </div>
+            
+            <div class="status-item">
+              <div class="status-label">CPU使用率</div>
+              <div class="status-value" id="statusCpu">0%</div>
+            </div>
+            
+            <div class="status-item">
+              <div class="status-label">内存使用</div>
+              <div class="status-value" id="statusMemory">0 MB</div>
+            </div>
+            
+            <div class="status-item">
+              <div class="status-label">运行时间</div>
+              <div class="status-value" id="statusUptime">0秒</div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px;">
+            <h4 style="margin-bottom: 15px;">性能图表</h4>
+            <div id="performanceChart" style="background: #fafafa; padding: 20px; border-radius: 8px; height: 200px; display: flex; align-items: center; justify-content: center;">
+              <div style="text-align: center; color: var(--text-secondary);">
+                性能监控图表
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- 任务日志 -->
-        <div class="section">
-            <div class="section-title">
-            任务日志
-            <button class="toggle-btn" onclick="toggleLogs()" style="float: right;">
-                折叠/展开
+        <div id="logs" class="tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">任务日志</h3>
+            <div class="action-buttons">
+              <button class="btn btn-secondary" onclick="clearLogs()">
+                <i class="fas fa-trash"></i> 清除日志
+              </button>
+              <button class="btn btn-secondary" onclick="exportLogs()">
+                <i class="fas fa-download"></i> 导出日志
+              </button>
+              <button class="btn btn-secondary" onclick="filterLogs('all')">
+                全部
+              </button>
+              <button class="btn btn-secondary" onclick="filterLogs('error')">
+                仅错误
+              </button>
+            </div>
+          </div>
+          
+          <div class="logs-container" id="logsContainer">
+            <div class="log-entry">
+              <span class="log-time">系统</span>
+              <span class="log-level info">INFO</span>
+              <span class="log-message">自动化控制台已启动，等待任务...</span>
+            </div>
+          </div>
+          
+          <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 14px; color: var(--text-secondary);">
+              共 <span id="logCount">1</span> 条日志
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="autoScroll" checked>
+              <label>自动滚动到底部</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 系统设置 -->
+        <div id="settings" class="tab-content">
+          <h3 style="margin-bottom: 20px;">系统设置</h3>
+          
+          <div class="config-grid">
+            <div class="form-group">
+              <label class="form-label">Chrome路径</label>
+              <input type="text" id="chromePath" class="form-control" 
+                     placeholder="留空则自动检测">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">截图保存路径</label>
+              <input type="text" id="screenshotPath" class="form-control" 
+                     value="./screenshots">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">默认用户代理</label>
+            <input type="text" id="userAgent" class="form-control" 
+                   value="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36">
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="autoStart" checked>
+            <label>启动时自动检查更新</label>
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="notifications" checked>
+            <label>启用桌面通知</label>
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" id="debugMode">
+            <label>调试模式（显示详细日志）</label>
+          </div>
+          
+          <div class="action-buttons" style="margin-top: 30px;">
+            <button class="btn btn-primary" onclick="saveSettings()">
+              <i class="fas fa-save"></i> 保存设置
             </button>
-            </div>
-            <div id="logsContainer" class="logs-container">
-            <div id="logsContent">
-                <div class="log-entry">
-                <span class="log-time">系统</span>
-                <span class="log-level log-info">INFO</span>
-                <span class="log-message">自动化控制台已就绪</span>
-                </div>
-            </div>
-            </div>
+            <button class="btn btn-secondary" onclick="resetSettings()">
+              <i class="fas fa-undo"></i> 恢复默认
+            </button>
+            <button class="btn btn-danger" onclick="clearAllData()">
+              <i class="fas fa-broom"></i> 清理所有数据
+            </button>
+          </div>
         </div>
-        </div>
+      </div>
     </div>
+  </div>
 
-<script>
+  <script>
+    // 全局变量
+    let currentTab = 'dashboard'
     let isRunning = false
-    let advancedVisible = false
-    let logsVisible = true
+    let taskHistory = []
+    let performanceData = []
+    let startTime = Date.now()
     
-    // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        updateStatus()
-        setupEventListeners()
-        
-        // 监听自动化日志
-        window.automationAPI.onAutomationLog((log) => {
-            addLog(log)
-        })
-        
-        // 监听自动化结果
-        window.automationAPI.onAutomationResult((result) => {
-            console.log('任务结果:', result)
-            if (result.success) {
-            alert(`任务完成！任务ID: ${result.taskId}`)
-            } else {
-            alert(`任务失败: ${result.error}`)
-            }
-            updateStatus()
-        })
-        
-        // 定期更新状态
-        setInterval(updateStatus, 2000)
-        })
-        
-        // 设置事件监听器
-        function setupEventListeners() {
-        // URL 输入框回车事件
-        document.getElementById('url').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-            startAutomation()
-            }
-        })
-        
-        // 任务类型变化
-        document.getElementById('taskType').addEventListener('change', (e) => {
-            updateTaskConfig(e.target.value)
-        })
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+  console.log('自动化控制台初始化...')
+  
+  // 初始化时间显示
+  updateTime()
+  setInterval(updateTime, 1000)
+  
+  // 初始化状态
+  updateAllStats()
+  setInterval(updateAllStats, 2000)
+  
+  // 监听自动化日志
+  window.automationAPI.onAutomationLog((log) => {
+    console.log('收到日志:', log)
+    addLog(log.level, log.message)
+  })
+  
+  // 监听自动化结果
+  window.automationAPI.onAutomationResult((result) => {
+    console.log('任务结果:', result)
+    if (result.success) {
+      showNotification(`任务完成！任务ID: ${result.taskId}`, 'success')
+    } else {
+      showNotification(`任务失败: ${result.error}`, 'error')
+    }
+    updateStatus()
+  })
+  
+  // 监听准备就绪
+  window.automationAPI.onAutomationReady(() => {
+    console.log('自动化系统已就绪')
+    addLog('success', '自动化系统已连接并准备就绪')
+    showNotification('自动化系统已就绪', 'info')
+  })
+  
+  // 添加初始日志
+  addLog('info', '系统初始化完成')
+  addLog('info', '等待用户操作...')
+})
+    
+    // 设置事件监听器
+    function setupEventListeners() {
+      // URL输入框回车事件
+      document.getElementById('url').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          testConnection()
+        }
+      })
+      
+      // 自动滚动设置
+      document.getElementById('autoScroll').addEventListener('change', function() {
+        localStorage.setItem('autoScroll', this.checked)
+      })
     }
     
-    // 更新任务配置
-    function updateTaskConfig(type) {
-        const urlInput = document.getElementById('url')
+    // 切换标签页
+    function switchTab(tabName) {
+      // 更新导航菜单
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active')
+      })
+      document.querySelector(`.nav-item[href="#${tabName}"]`).classList.add('active')
+      
+      // 更新标签内容
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active')
+      })
+      document.getElementById(tabName).classList.add('active')
+      
+      // 更新标题
+      const titles = {
+        'dashboard': '仪表板',
+        'automation': '任务配置',
+        'status': '运行状态',
+        'logs': '任务日志',
+        'settings': '系统设置'
+      }
+      document.getElementById('currentTabTitle').textContent = titles[tabName]
+      
+      currentTab = tabName
+      addLog('info', `切换到${titles[tabName]}页面`)
+    }
+    
+    // 更新时间显示
+    function updateTime() {
+      const now = new Date()
+      const timeStr = now.toLocaleTimeString('zh-CN')
+      const dateStr = now.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+      document.getElementById('currentTime').textContent = `${dateStr} ${timeStr}`
+    }
+    
+    // 更新所有统计信息
+    async function updateAllStats() {
+      try {
+        // 获取自动化状态
+        const status = await window.electronAPI.getAutomationStatus?.() || {
+          isRunning: false,
+          browserStatus: '未启动',
+          pageStatus: '未加载'
+        }
         
-        switch(type) {
-            case 'login':
-            urlInput.value = 'http://localhost:80'
-            break
-            case 'data-entry':
-            urlInput.value = 'http://localhost:80'
-            break
-            case 'simple':
-            urlInput.value = 'http://localhost:80'
-            break
-            default:
-            // 保持当前值
+        // 更新运行状态
+        isRunning = status.isRunning
+        const runningText = isRunning ? '运行中' : '已停止'
+        const runningClass = isRunning ? 'running' : 'stopped'
+        
+        document.getElementById('statRunning').textContent = runningText
+        document.getElementById('statusRunning').textContent = runningText
+        document.getElementById('statusRunning').className = `status-value ${runningClass}`
+        
+        // 更新按钮状态
+        document.getElementById('stopBtn').disabled = !isRunning
+        
+        // 更新浏览器状态
+        document.getElementById('statusBrowser').textContent = status.browserStatus || '未知'
+        document.getElementById('statusPage').textContent = status.pageStatus || '未知'
+        
+        // 更新日志统计
+        const logs = document.getElementById('logsContainer').getElementsByClassName('log-entry')
+        document.getElementById('statLogs').textContent = logs.length
+        document.getElementById('logCount').textContent = logs.length
+        
+        // 计算错误数量
+        let errorCount = 0
+        for (let log of logs) {
+          if (log.querySelector('.log-level.error')) {
+            errorCount++
+          }
         }
+        document.getElementById('statErrors').textContent = errorCount
+        
+        // 更新任务统计
+        document.getElementById('statTasks').textContent = taskHistory.length
+        
+        // 更新系统资源
+        updateSystemResources()
+        
+      } catch (error) {
+        console.error('更新状态失败:', error)
+      }
+    }
+    
+    // 更新系统资源使用情况
+    function updateSystemResources() {
+      // 运行时间
+      const uptime = Math.floor((Date.now() - startTime) / 1000)
+      document.getElementById('statusUptime').textContent = `${uptime}秒`
+      
+      // 模拟CPU和内存使用（实际应用中可以从系统API获取）
+      if (performanceData.length > 100) {
+        performanceData.shift()
+      }
+      
+      const cpu = 10 + Math.random() * 30 // 模拟CPU使用率
+      const memory = 200 + Math.random() * 300 // 模拟内存使用
+      
+      performanceData.push({
+        time: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+        cpu: cpu,
+        memory: memory
+      })
+      
+      document.getElementById('statusCpu').textContent = `${cpu.toFixed(1)}%`
+      document.getElementById('statusMemory').textContent = `${memory.toFixed(0)} MB`
+    }
+    
+    // 开始自动化任务
+    // 1. 修改 startAutomation 函数
+async function startAutomation() {
+  if (isRunning) {
+    showNotification('已有任务正在运行', 'warning')
+    return
+  }
+  
+  const url = document.getElementById('url').value.trim()
+  if (!url) {
+    showNotification('请输入目标URL', 'error')
+    return
+  }
+  
+  // 构建配置
+  const config = {
+    url: url,
+    headless: document.getElementById('headless').checked,
+    screenshot: document.getElementById('screenshot').checked,
+    timeout: parseInt(document.getElementById('timeout').value) || 30000,
+    tasks: getTaskConfig()
+  }
+  
+  try {
+    addLog('info', `开始自动化任务: ${url}`)
+    showNotification('任务开始执行', 'info')
+    
+    // 调用自动化API
+    const result = await window.automationAPI.runAutomationTask(config)
+    
+    console.log('任务结果:', result)
+    
+    // 记录任务历史
+    taskHistory.push({
+      id: result.taskId,
+      url: url,
+      time: new Date().toLocaleTimeString(),
+      success: result.success
+    })
+    
+    updateRecentTasks()
+    
+    if (result.success) {
+      addLog('success', `任务完成: ${result.message}`)
+      showNotification('任务执行成功', 'success')
+    } else {
+      addLog('error', `任务失败: ${result.error}`)
+      showNotification('任务执行失败', 'error')
+    }
+    
+  } catch (error) {
+    addLog('error', `任务异常: ${error.message}`)
+    showNotification('任务执行异常', 'error')
+  }
+}
+
+    
+    // 停止自动化任务
+    async function stopAutomation() {
+  if (!isRunning) {
+    showNotification('没有正在运行的任务', 'warning')
+    return
+  }
+  
+  try {
+    addLog('info', '正在停止任务...')
+    const result = await window.automationAPI.stopAutomationTask()
+    
+    if (result.success) {
+      addLog('success', '任务已停止')
+      showNotification('任务已停止', 'info')
+    }
+  } catch (error) {
+    addLog('error', `停止任务失败: ${error.message}`)
+    showNotification('停止任务失败', 'error')
+  }
+}
+
+async function updateStatus() {
+  try {
+    const status = await window.automationAPI.getAutomationStatus()
+    
+    // 更新运行状态
+    isRunning = status.isRunning
+    document.getElementById('statusRunning').textContent = isRunning ? '运行中' : '已停止'
+    document.getElementById('statusRunning').className = `status-value ${isRunning ? 'running' : 'stopped'}`
+    
+    // 更新按钮状态
+    document.getElementById('stopBtn').disabled = !isRunning
+    
+    // 更新浏览器状态
+    document.getElementById('statusBrowser').textContent = status.browserStatus || '未知'
+    document.getElementById('statusPage').textContent = status.pageStatus || '未知'
+    
+  } catch (error) {
+    console.error('更新状态失败:', error)
+  }
+}
+
+    // 测试连接
+    async function testConnection() {
+      const url = document.getElementById('url').value.trim()
+      if (!url) {
+        showNotification('请输入要测试的URL', 'error')
+        return
+      }
+      
+      addLog('info', `测试连接: ${url}`)
+      showNotification('正在测试连接...', 'info')
+      
+      // 添加加载动画
+      const testBtn = document.querySelector('button[onclick="testConnection()"]')
+      const originalHtml = testBtn.innerHTML
+      testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 测试中...'
+      testBtn.disabled = true
+      
+      try {
+        // 使用fetch测试连接
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        
+        const response = await fetch(url, {
+          method: 'HEAD',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        })
+        
+        clearTimeout(timeoutId)
+        
+        if (response.ok) {
+          addLog('success', `连接成功: ${response.status} ${response.statusText}`)
+          showNotification('连接测试成功', 'success')
+        } else {
+          addLog('warning', `连接异常: ${response.status} ${response.statusText}`)
+          showNotification('连接异常', 'warning')
         }
         
-        // 开始自动化
-        async function startAutomation() {
-        if (isRunning) {
-            alert('已有任务正在运行，请先停止当前任务')
-            return
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          addLog('error', '连接超时')
+          showNotification('连接超时', 'error')
+        } else {
+          addLog('error', `连接失败: ${error.message}`)
+          showNotification('连接失败', 'error')
         }
-        
-        const config = {
-            url: document.getElementById('url').value.trim(),
-            headless: document.getElementById('headless').checked,
-            screenshot: document.getElementById('screenshot').checked,
-            tasks: getTaskConfig()
-        }
-        
-        if (!config.url) {
-            alert('请输入目标URL')
-            return
-        }
-        
-        try {
-            const result = await window.automationAPI.startAutomation(config)
-            
-            if (result.success) {
-            addLog({
-                level: 'success',
-                message: `任务已开始，任务ID: ${result.taskId}`
-            })
-            isRunning = true
-            updateButtonStates()
-            } else {
-            addLog({
-                level: 'error',
-                message: `任务启动失败: ${result.error}`
-            })
-            }
-        } catch (error) {
-            addLog({
-            level: 'error',
-            message: `启动异常: ${error.message}`
-            })
-        }
+      } finally {
+        // 恢复按钮状态
+        testBtn.innerHTML = originalHtml
+        testBtn.disabled = false
+      }
     }
     
     // 获取任务配置
     function getTaskConfig() {
-        const taskType = document.getElementById('taskType').value
-        
-        switch(taskType) {
-            case 'simple':
-            return [
-                {
-                selector: 'input[type="text"]:first-of-type',
-                description: '填写第一个输入框',
-                action: 'type',
-                value: '自动化测试',
-                required: false,
-                delay: 500
-                },
-                {
-                selector: 'button[type="submit"], .el-button--primary',
-                description: '点击主要按钮',
-                action: 'click',
-                required: false,
-                delay: 1000
-                }
-            ]
-            
-            case 'login':
-            return [
-                {
-                selector: 'input[name="username"], input[type="text"]:first-of-type',
-                description: '输入用户名',
-                action: 'type',
-                value: 'admin',
-                required: false,
-                delay: 500
-                },
-                {
-                selector: 'input[name="password"], input[type="password"]',
-                description: '输入密码',
-                action: 'type',
-                value: 'admin123',
-                required: false,
-                delay: 500
-                },
-                {
-                selector: 'input[name="validateCode"], input[placeholder*="验证码"]',
-                description: '验证码',
-                action: 'type',
-                value: '2',
-                required: false,
-                delay: 500
-                },
-                {
-                selector: 'button[type="button"], .login-btn',
-                description: '点击登录按钮',
-                action: 'click',
-                required: false,
-                delay: 2000
-                }
-            ]
-            
-            case 'custom':
-            // 这里可以添加自定义任务配置界面
-            return [
-                {
-                selector: 'a:first-of-type',
-                description: '点击第一个链接',
-                action: 'click',
-                required: false,
-                delay: 1000
-                }
-            ]
-            
-            default:
-            return []
-        }
+      const taskType = document.getElementById('taskType').value
+      
+      switch(taskType) {
+        case 'login':
+          return [
+            {
+              selector: 'input[name="username"], input[type="text"]:first-of-type',
+              description: '输入用户名',
+              action: 'type',
+              value: 'admin',
+              required: false,
+              delay: 500
+            },
+            {
+              selector: 'input[name="password"], input[type="password"]',
+              description: '输入密码',
+              action: 'type',
+              value: 'admin123',
+              required: false,
+              delay: 500
+            },
+            {
+              selector: 'button[type="submit"], .login-btn',
+              description: '点击登录',
+              action: 'click',
+              required: false,
+              delay: 1000
+            }
+          ]
+          
+        case 'data-entry':
+          return [
+            {
+              selector: 'input[type="text"]:first-of-type',
+              description: '填写输入框',
+              action: 'type',
+              value: '测试数据',
+              required: false,
+              delay: 500
+            },
+            {
+              selector: 'button[type="submit"], .el-button--primary',
+              description: '提交数据',
+              action: 'click',
+              required: false,
+              delay: 1000
+            }
+          ]
+          
+        default:
+          return [
+            {
+              selector: 'a:first-of-type',
+              description: '点击第一个链接',
+              action: 'click',
+              required: false,
+              delay: 1000
+            },
+            {
+              selector: 'button[type="submit"]',
+              description: '点击提交按钮',
+              action: 'click',
+              required: false,
+              delay: 1000
+            }
+          ]
+      }
     }
     
-    // 停止自动化
-    async function stopAutomation() {
-        if (!isRunning) {
-            alert('没有正在运行的任务')
-            return
-        }
-        
-        try {
-            const result = await window.automationAPI.stopAutomation()
-            
-            addLog({
-            level: 'info',
-            message: result.message
-            })
-            
-            isRunning = false
-            updateButtonStates()
-        } catch (error) {
-            addLog({
-            level: 'error',
-            message: `停止失败: ${error.message}`
-            })
-        }
-        }
-        
-        // 测试连接
-        async function testConnection() {
-        const url = document.getElementById('url').value.trim()
-        
-        if (!url) {
-            alert('请输入要测试的URL')
-            return
-        }
-        
-        addLog({
-            level: 'info',
-            message: `正在测试连接: ${url}`
-        })
-        
-        try {
-            const response = await fetch(url, { method: 'HEAD' })
-            
-            if (response.ok) {
-            addLog({
-                level: 'success',
-                message: '连接测试成功'
-            })
-            } else {
-            addLog({
-                level: 'warning',
-                message: `连接异常: ${response.status} ${response.statusText}`
-            })
-            }
-        } catch (error) {
-            addLog({
-            level: 'error',
-            message: `连接失败: ${error.message}`
-            })
-        }
+    // 更新任务配置显示
+    function updateTaskConfig() {
+      const taskType = document.getElementById('taskType').value
+      const configArea = document.getElementById('taskConfigArea')
+      
+      let configHtml = ''
+      
+      switch(taskType) {
+        case 'login':
+          configHtml = `
+            <div style="background: #f6ffed; padding: 20px; border-radius: 8px; border: 1px solid #b7eb8f;">
+              <h4 style="margin-bottom: 15px; color: #389e0d;"><i class="fas fa-sign-in-alt"></i> 登录任务配置</h4>
+              <div class="config-grid">
+                <div class="form-group">
+                  <label class="form-label">用户名</label>
+                  <input type="text" class="form-control" value="admin">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">密码</label>
+                  <input type="password" class="form-control" value="admin123">
+                </div>
+              </div>
+              <div style="margin-top: 15px; color: #595959; font-size: 14px;">
+                <i class="fas fa-info-circle"></i> 将自动查找登录表单并填写凭据
+              </div>
+            </div>
+          `
+          break
+          
+        case 'data-entry':
+          configHtml = `
+            <div style="background: #e6f7ff; padding: 20px; border-radius: 8px; border: 1px solid #91d5ff;">
+              <h4 style="margin-bottom: 15px; color: #096dd9;"><i class="fas fa-edit"></i> 数据录入配置</h4>
+              <div class="config-grid">
+                <div class="form-group">
+                  <label class="form-label">数据内容</label>
+                  <textarea class="form-control" rows="3">测试数据内容</textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">目标字段</label>
+                  <input type="text" class="form-control" value="input[type='text']:first-of-type">
+                </div>
+              </div>
+            </div>
+          `
+          break
+          
+        default:
+          configHtml = `
+            <div style="background: #fafafa; padding: 20px; border-radius: 8px; text-align: center;">
+              <i class="fas fa-cog" style="font-size: 48px; color: #d9d9d9; margin-bottom: 15px;"></i>
+              <div style="color: var(--text-secondary);">使用默认任务配置</div>
+            </div>
+          `
+      }
+      
+      configArea.innerHTML = configHtml
+      configArea.classList.add('animate-fade')
+      
+      setTimeout(() => {
+        configArea.classList.remove('animate-fade')
+      }, 300)
+    }
+    
+    // 添加日志
+    function addLog(level, message) {
+      const logsContainer = document.getElementById('logsContainer')
+      const logEntry = document.createElement('div')
+      logEntry.className = 'log-entry animate-fade'
+      
+      const time = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+      const levelText = level.toUpperCase()
+      
+      logEntry.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-level ${level}">${levelText}</span>
+        <span class="log-message">${message}</span>
+      `
+      
+      logsContainer.appendChild(logEntry)
+      
+      // 自动滚动到底部
+      if (document.getElementById('autoScroll').checked) {
+        logsContainer.scrollTop = logsContainer.scrollHeight
+      }
+      
+      // 更新统计
+      updateAllStats()
     }
     
     // 清除日志
-    async function clearLogs() {
-        await window.automationAPI.clearAutomationLogs()
-        document.getElementById('logsContent').innerHTML = `
-            <div class="log-entry">
+    function clearLogs() {
+      if (confirm('确定要清除所有日志吗？')) {
+        const logsContainer = document.getElementById('logsContainer')
+        logsContainer.innerHTML = `
+          <div class="log-entry">
             <span class="log-time">系统</span>
-            <span class="log-level log-info">INFO</span>
+            <span class="log-level info">INFO</span>
             <span class="log-message">日志已清除</span>
+          </div>
+        `
+        addLog('info', '日志已清除')
+        showNotification('日志已清除', 'info')
+      }
+    }
+    
+    // 过滤日志
+    function filterLogs(type) {
+      const logs = document.querySelectorAll('.log-entry')
+      logs.forEach(log => {
+        if (type === 'all') {
+          log.style.display = 'flex'
+        } else if (type === 'error') {
+          if (log.querySelector('.log-level.error')) {
+            log.style.display = 'flex'
+          } else {
+            log.style.display = 'none'
+          }
+        }
+      })
+    }
+    
+    // 显示通知
+    function showNotification(message, type = 'info') {
+      // 创建通知元素
+      const notification = document.createElement('div')
+      notification.className = `notification ${type}`
+      notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+      `
+      
+      // 样式
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+        min-width: 300px;
+        border-left: 4px solid ${type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : type === 'warning' ? '#faad14' : '#1890ff'};
+        animation: slideIn 0.3s ease;
+      `
+      
+      // 添加到页面
+      document.body.appendChild(notification)
+      
+      // 自动移除
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove()
+        }
+      }, 3000)
+    }
+    
+    // 更新最近任务显示
+    function updateRecentTasks() {
+      const recentTasksDiv = document.getElementById('recentTasks')
+      
+      if (taskHistory.length === 0) {
+        recentTasksDiv.innerHTML = `
+          <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+            <i class="fas fa-tasks" style="font-size: 48px; margin-bottom: 10px; opacity: 0.5;"></i>
+            <div>暂无任务记录</div>
+          </div>
+        `
+        return
+      }
+      
+      let html = `
+        <div style="display: grid; gap: 10px;">
+          ${taskHistory.slice(-5).reverse().map(task => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 6px; border: 1px solid var(--border-color);">
+              <div>
+                <div style="font-weight: 500;">${task.url}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${task.time}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${task.success ? '#d9f7be' : '#ffccc7'}; color: ${task.success ? '#389e0d' : '#cf1322'}">
+                  ${task.success ? '成功' : '失败'}
+                </span>
+                <button onclick="rerunTask('${task.id}')" style="background: none; border: none; cursor: pointer; color: var(--primary);">
+                  <i class="fas fa-redo"></i>
+                </button>
+              </div>
             </div>
-        `
-        updateLogCount()
-        }
-        
-        // 更新状态
-        async function updateStatus() {
+          `).join('')}
+        </div>
+      `
+      
+      recentTasksDiv.innerHTML = html
+    }
+    
+    // 重新运行任务
+    function rerunTask(taskId) {
+      const task = taskHistory.find(t => t.id === taskId)
+      if (task) {
+        document.getElementById('url').value = task.url
+        addLog('info', `重新运行任务: ${task.url}`)
+        startAutomation()
+      }
+    }
+    
+    // 显示测试结果
+    function showTestResults() {
+      addLog('info', '查看测试结果')
+      showNotification('正在加载测试结果...', 'info')
+      
+      // 这里可以添加实际的结果显示逻辑
+      setTimeout(() => {
+        addLog('warning', '测试结果功能尚未实现')
+      }, 1000)
+    }
+    
+    // 导出日志
+    function exportLogs() {
+      const logs = document.querySelectorAll('.log-entry')
+      let logText = '自动化任务日志\n'
+      logText += '时间戳\t级别\t消息\n'
+      logText += '----------------------------------------\n'
+      
+      logs.forEach(log => {
+        const time = log.querySelector('.log-time').textContent
+        const level = log.querySelector('.log-level').textContent
+        const message = log.querySelector('.log-message').textContent
+        logText += `${time}\t${level}\t${message}\n`
+      })
+      
+      // 创建下载链接
+      const blob = new Blob([logText], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `automation-logs-${new Date().toISOString().slice(0, 10)}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      addLog('success', '日志已导出')
+      showNotification('日志导出成功', 'success')
+    }
+    
+    // 保存设置
+    function saveSettings() {
+      const settings = {
+        chromePath: document.getElementById('chromePath').value,
+        screenshotPath: document.getElementById('screenshotPath').value,
+        userAgent: document.getElementById('userAgent').value,
+        autoStart: document.getElementById('autoStart').checked,
+        notifications: document.getElementById('notifications').checked,
+        debugMode: document.getElementById('debugMode').checked
+      }
+      
+      localStorage.setItem('automationSettings', JSON.stringify(settings))
+      addLog('success', '设置已保存')
+      showNotification('设置保存成功', 'success')
+    }
+    
+    // 加载设置
+    function loadSettings() {
+      const saved = localStorage.getItem('automationSettings')
+      if (saved) {
         try {
-            const status = await window.automationAPI.getAutomationStatus()
-            
-            // 更新运行状态
-            isRunning = status.isRunning
-            document.getElementById('runningStatus').textContent = isRunning ? '运行中' : '停止'
-            document.getElementById('runningStatus').className = `status-value ${isRunning ? 'status-running' : 'status-stopped'}`
-            
-            // 更新浏览器状态
-            document.getElementById('browserStatus').textContent = status.browserStatus
-            
-            // 更新当前任务
-            document.getElementById('currentTask').textContent = isRunning ? '自动化任务' : '无'
-            
-            // 更新按钮状态
-            updateButtonStates()
-            
-            // 更新日志计数
-            updateLogCount()
-            
-        } catch (error) {
-            console.error('更新状态失败:', error)
+          const settings = JSON.parse(saved)
+          document.getElementById('chromePath').value = settings.chromePath || ''
+          document.getElementById('screenshotPath').value = settings.screenshotPath || './screenshots'
+          document.getElementById('userAgent').value = settings.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          document.getElementById('autoStart').checked = settings.autoStart !== false
+          document.getElementById('notifications').checked = settings.notifications !== false
+          document.getElementById('debugMode').checked = settings.debugMode || false
+          
+          // 加载自动滚动设置
+          const autoScroll = localStorage.getItem('autoScroll')
+          if (autoScroll !== null) {
+            document.getElementById('autoScroll').checked = autoScroll === 'true'
+          }
+          
+        } catch (e) {
+          console.error('加载设置失败:', e)
         }
+      }
     }
     
-    // 更新按钮状态
-    function updateButtonStates() {
-        const startBtn = document.getElementById('startBtn')
-        const stopBtn = document.getElementById('stopBtn')
-        
-        startBtn.disabled = isRunning
-        stopBtn.disabled = !isRunning
-        }
-        
-        // 更新日志计数
-        function updateLogCount() {
-        const logs = document.getElementById('logsContent').getElementsByClassName('log-entry')
-        document.getElementById('logCount').textContent = logs.length
-        }
-        
-        // 添加日志
-        function addLog(log) {
-        const logsContent = document.getElementById('logsContent')
-        const logEntry = document.createElement('div')
-        logEntry.className = 'log-entry'
-        
-        const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString()
-        const level = log.level || 'info'
-        const message = log.message || ''
-        
-        logEntry.innerHTML = `
-            <span class="log-time">${time}</span>
-            <span class="log-level log-${level}">${level.toUpperCase()}</span>
-            <span class="log-message">${message}</span>
-        `
-        
-        logsContent.appendChild(logEntry)
-        
-        // 自动滚动到底部
-        const logsContainer = document.getElementById('logsContainer')
-        logsContainer.scrollTop = logsContainer.scrollHeight
-        
-        // 更新计数
-        updateLogCount()
+    // 恢复默认设置
+    function resetSettings() {
+      if (confirm('确定要恢复默认设置吗？')) {
+        localStorage.removeItem('automationSettings')
+        loadSettings()
+        addLog('info', '设置已恢复默认')
+        showNotification('设置已恢复默认', 'info')
+      }
     }
     
-    // 切换高级配置
-    function toggleAdvanced() {
-        advancedVisible = !advancedVisible
-        const advancedConfig = document.getElementById('advancedConfig')
-        const toggleBtn = document.querySelector('.toggle-btn')
+    // 清理所有数据
+    function clearAllData() {
+      if (confirm('确定要清理所有数据吗？此操作不可逆！')) {
+        localStorage.clear()
+        taskHistory = []
+        performanceData = []
         
-        if (advancedVisible) {
-            advancedConfig.style.display = 'block'
-            toggleBtn.textContent = '隐藏高级配置'
-        } else {
-            advancedConfig.style.display = 'none'
-            toggleBtn.textContent = '显示高级配置'
-        }
+        document.getElementById('url').value = 'http://localhost:80'
+        clearLogs()
+        updateRecentTasks()
+        
+        addLog('info', '所有数据已清理')
+        showNotification('数据清理完成', 'info')
+      }
     }
     
-    // 切换日志显示
-    function toggleLogs() {
-        logsVisible = !logsVisible
-        const logsContainer = document.getElementById('logsContainer')
-        const toggleBtn = document.querySelector('.toggle-btn')
-        
-        if (logsVisible) {
-            logsContainer.style.display = 'block'
-            toggleBtn.textContent = '折叠'
-        } else {
-            logsContainer.style.display = 'none'
-            toggleBtn.textContent = '展开'
+    // 刷新所有
+    function refreshAll() {
+      addLog('info', '刷新页面数据')
+      updateAllStats()
+      updateRecentTasks()
+      showNotification('数据已刷新', 'info')
+    }
+    
+    // 打开帮助
+    function openHelp() {
+      addLog('info', '打开帮助文档')
+      showNotification('帮助文档', 'info')
+      
+      // 显示帮助信息
+      const helpHtml = `
+        <div style="max-width: 600px; padding: 20px;">
+          <h3><i class="fas fa-question-circle"></i> 自动化控制台帮助</h3>
+          <div style="margin-top: 15px;">
+            <h4>基本使用步骤：</h4>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+              <li>在"仪表板"中输入目标URL</li>
+              <li>点击"测试连接"确认网站可访问</li>
+              <li>选择任务类型并配置参数</li>
+              <li>点击"开始自动化"执行任务</li>
+              <li>在"任务日志"中查看执行结果</li>
+            </ol>
+            
+            <h4 style="margin-top: 20px;">常见问题：</h4>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+              <li><strong>连接失败：</strong>检查网络和URL是否正确</li>
+              <li><strong>元素找不到：</strong>调整选择器或增加等待时间</li>
+              <li><strong>任务卡住：</strong>检查超时设置，尝试停止后重试</li>
+            </ul>
+          </div>
+        </div>
+      `
+      
+      // 这里可以替换为实际的对话框或模态框
+      alert('帮助信息已在控制台输出')
+      console.log(helpHtml)
+    }
+    
+    // 为样式表添加关键帧动画
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
         }
+        to {
+          transform: translateX(0);
+          opacity: 1;
         }
-    </script>
-    </body>
+      }
+      
+      .notification button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #999;
+        padding: 0;
+        margin-left: 10px;
+      }
+      
+      .notification button:hover {
+        color: #666;
+      }
+    `
+    document.head.appendChild(style)
+  </script>
+</body>
 </html>

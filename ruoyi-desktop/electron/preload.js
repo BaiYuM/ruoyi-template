@@ -1,75 +1,88 @@
+// electron/preload.js
 const { contextBridge, ipcRenderer } = require('electron')
 
-// 主应用 API
-contextBridge.exposeInMainWorld('electronAPI', {
-  // 窗口控制
-  minimizeWindow: () => ipcRenderer.send('window-minimize'),
-  maximizeWindow: () => ipcRenderer.send('window-maximize'),
-  closeWindow: () => ipcRenderer.send('window-close'),
-  
-  // 应用信息
-  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
-  
-  // 打开外部链接
-  openExternal: (url) => {
-    const { shell } = require('electron')
-    shell.openExternal(url)
+// 暴露自动化API
+contextBridge.exposeInMainWorld('automationAPI', {
+  // 运行自动化任务
+  runAutomationTask: (config) => {
+    console.log('调用 runAutomationTask:', config)
+    return ipcRenderer.invoke('run-automation-task', config)
   },
   
-  // 自动化相关API
-  openAutomationWindow: () => ipcRenderer.invoke('open-automation-window'),
-  runAutomationTask: (config) => ipcRenderer.invoke('run-automation-task', config),
-  getAutomationStatus: () => ipcRenderer.invoke('get-automation-status'),
+  // 停止自动化任务
+  stopAutomationTask: () => {
+    console.log('调用 stopAutomationTask')
+    return ipcRenderer.invoke('stop-automation-task')
+  },
   
-  // 监听自动化任务结果
+  // 获取自动化状态
+  getAutomationStatus: () => {
+    console.log('调用 getAutomationStatus')
+    return ipcRenderer.invoke('get-automation-status')
+  },
+  
+  // 清除日志
+  clearAutomationLogs: () => {
+    console.log('调用 clearAutomationLogs')
+    return ipcRenderer.invoke('clear-automation-logs')
+  },
+  
+  // 监听自动化日志
+  onAutomationLog: (callback) => {
+    console.log('注册自动化日志监听器')
+    ipcRenderer.on('automation-log', (event, log) => {
+      console.log('收到自动化日志:', log)
+      callback(log)
+    })
+    return () => ipcRenderer.removeListener('automation-log', callback)
+  },
+  
+  // 监听自动化结果
   onAutomationResult: (callback) => {
-    const handler = (event, result) => callback(result)
-    ipcRenderer.on('automation-result', handler)
-    // 提供清理函数
-    return () => ipcRenderer.removeListener('automation-result', handler)
+    console.log('注册自动化结果监听器')
+    ipcRenderer.on('automation-result', (event, result) => {
+      console.log('收到自动化结果:', result)
+      callback(result)
+    })
+    return () => ipcRenderer.removeListener('automation-result', callback)
   },
   
-  // 通用系统API
-  platform: process.platform,
-  
-  // 对话框
-  showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options),
-  
-  // 文件操作
-  openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
-  saveFileDialog: () => ipcRenderer.invoke('dialog:saveFile'),
-  
-  // 系统通知
-  sendNotification: (title, body) => ipcRenderer.send('notification', title, body)
+  // 监听准备就绪事件
+  onAutomationReady: (callback) => {
+    ipcRenderer.on('automation-ready', () => {
+      console.log('自动化系统准备就绪')
+      callback()
+    })
+    return () => ipcRenderer.removeListener('automation-ready', callback)
+  }
 })
 
-// 环境信息 - 统一通过这里暴露
+// 暴露系统API
+contextBridge.exposeInMainWorld('systemAPI', {
+  // 打开文件对话框
+  openFileDialog: (options) => {
+    return ipcRenderer.invoke('dialog:openFile', options)
+  },
+  
+  // 获取系统信息
+  getSystemInfo: () => {
+    return ipcRenderer.invoke('get-system-info')
+  },
+  
+  // 显示通知
+  showNotification: (title, body) => {
+    // 这里可以添加桌面通知逻辑
+    console.log('通知:', title, body)
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body })
+    }
+  }
+})
+
+// 暴露环境变量
 contextBridge.exposeInMainWorld('appEnv', {
   isElectron: true,
   platform: process.platform,
-  nodeVersion: process.version,
-  electronVersion: process.versions.electron,
-  
-  // 辅助函数：获取完整的运行环境信息
-  getEnvironmentInfo: () => ({
-    isElectron: true,
-    platform: process.platform,
-    nodeVersion: process.version,
-    electronVersion: process.versions.electron,
-    appName: process.env.npm_package_name,
-    appVersion: process.env.npm_package_version,
-    userAgent: navigator.userAgent
-  }),
-  
-  // 检查特定功能是否可用
-  isFeatureAvailable: (feature) => {
-    const availableFeatures = {
-      automation: true,      // 自动化功能
-      fileSystem: true,     // 文件系统访问
-      notifications: true,  // 系统通知
-      tray: true,           // 系统托盘
-      menu: true            // 自定义菜单
-    }
-    return availableFeatures[feature] || false
-  }
+  version: '2.0.0',
+  timestamp: new Date().toISOString()
 })

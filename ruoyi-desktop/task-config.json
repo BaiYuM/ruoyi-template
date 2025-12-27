@@ -1,0 +1,108 @@
+{
+  "douyin": {
+    "tasks": {
+      "publish_video": {
+        "description": "发布抖音视频",
+        "steps": [
+          {
+            "action": "click",
+            "selector": ".publish-btn",
+            "fallbackSelectors": ["[data-e2e=\"publish\"]", ".upload-btn"],
+            "description": "点击发布按钮"
+          },
+          {
+            "action": "upload",
+            "selector": "input[type=\"file\"]",
+            "description": "上传视频文件"
+          },
+          {
+            "action": "type",
+            "selector": "textarea",
+            "fallbackSelectors": ["[placeholder*=\"描述\"]"],
+            "value": "{description}",
+            "description": "填写视频描述"
+          },
+          {
+            "action": "click",
+            "selector": ".submit-btn",
+            "fallbackSelectors": ["[data-e2e=\"submit\"]", "button:contains(\"发布\")"],
+            "description": "点击发布按钮"
+          }
+        ]
+      },
+      "send_message": {
+        "description": "发送抖音私信",
+        "steps": [
+          {
+            "action": "click",
+            "selector": "[data-e2e=\"message\"]",
+            "fallbackSelectors": [".message-btn"],
+            "description": "打开消息页面"
+          },
+          {
+            "action": "type",
+            "selector": "input[placeholder*=\"搜索\"]",
+            "value": "{username}",
+            "description": "搜索用户"
+          },
+          {
+            "action": "click",
+            "selector": ".search-result-item:first-child",
+            "description": "点击第一个搜索结果"
+          },
+          {
+            "action": "type",
+            "selector": "textarea",
+            "value": "{message}",
+            "description": "输入消息"
+          },
+          {
+            "action": "click",
+            "selector": ".send-btn",
+            "description": "发送消息"
+          }
+        ]
+      }
+    }
+  },
+  "common": {
+    "login": {
+      "description": "通用登录任务",
+      "steps": [
+        {
+          "action": "type",
+          "selector": "input[name=\"username\"], input[type=\"text\"]:first-of-type",
+          "value": "{username}",
+          "description": "输入用户名"
+        },
+        {
+          "action": "type",
+          "selector": "input[name=\"password\"], input[type=\"password\"]",
+          "value": "{password}",
+          "description": "输入密码"
+        },
+        {
+          "action": "click",
+          "selector": "button[type=\"submit\"], .login-btn",
+          "description": "点击登录"
+        }
+      ]
+    },
+    "data_entry": {
+      "description": "数据录入任务",
+      "steps": [
+        {
+          "action": "type",
+          "selector": "input[type=\"text\"]:first-of-type",
+          "value": "{data}",
+          "description": "填写数据"
+        },
+        {
+          "action": "click",
+          "selector": "button[type=\"submit\"], .el-button--primary",
+          "description": "提交数据"
+        }
+      ]
+    }
+  }
+}
