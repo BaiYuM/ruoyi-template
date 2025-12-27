@@ -1,2 +1,3 @@
-2025/12/27-14:33:57.908 3160 Creating DB D:\baile\ruoyi-template\ruoyi-desktop\chrome_profile\Default\shared_proto_db since it was missing.
-2025/12/27-14:33:57.931 3160 Reusing MANIFEST D:\baile\ruoyi-template\ruoyi-desktop\chrome_profile\Default\shared_proto_db/MANIFEST-000001
+2025/12/27-16:24:38.301 2d28 Reusing MANIFEST D:\baile\ruoyi-template\ruoyi-desktop\chrome_profile\Default\shared_proto_db/MANIFEST-000001
+2025/12/27-16:24:38.302 2d28 Recovering log #3
+2025/12/27-16:24:38.302 2d28 Reusing old log D:\baile\ruoyi-template\ruoyi-desktop\chrome_profile\Default\shared_proto_db/000003.log 

@@ -133,7 +133,14 @@ class MainApp {
     });
 
     ipcMain.handle('browser:connect', async (event, options) => {
-      return this.automationService.connectToExistingBrowser(options);
+      try {
+        const result = await this.automationService.connectToExistingBrowser(options);
+        return result;
+      } catch (error) {
+        console.error('连接浏览器时出错:', error);
+        // 可以在这里添加更多的错误处理逻辑
+        throw error; // 重新抛出错误，让前端可以捕获
+      }
     });
 
     ipcMain.handle('browser:scan', async () => {

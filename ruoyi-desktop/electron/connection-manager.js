@@ -11,7 +11,7 @@ class ConnectionManager extends EventEmitter {
   }
 
   /**
-   * 检查端口是否开放
+   * 检查端口是否开放 - 修复：强制使用 IPv4
    */
   async checkPort(port, timeout = 2000) {
     return new Promise((resolve) => {
@@ -32,12 +32,13 @@ class ConnectionManager extends EventEmitter {
         resolve(false);
       });
       
+      // 修复：强制使用 IPv4 地址 127.0.0.1
       socket.connect(port, '127.0.0.1');
     });
   }
 
   /**
-   * 扫描可用的浏览器连接
+   * 扫描可用的浏览器连接 - 修复：所有 localhost 改为 127.0.0.1
    */
   async scanForBrowsers() {
     const results = [];
@@ -58,8 +59,8 @@ class ConnectionManager extends EventEmitter {
         
         console.log(`    端口 ${port} 已开放，尝试连接调试接口...`);
         
-        // 尝试连接调试接口
-        const response = await axios.get(`http://localhost:${port}/json/version`, {
+        // 修复：将 localhost 改为 127.0.0.1
+        const response = await axios.get(`http://127.0.0.1:${port}/json/version`, {
           timeout: 3000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -68,7 +69,7 @@ class ConnectionManager extends EventEmitter {
         
         if (response.data) {
           // 获取所有页面
-          const pagesResponse = await axios.get(`http://localhost:${port}/json/list`, {
+          const pagesResponse = await axios.get(`http://127.0.0.1:${port}/json/list`, {
             timeout: 3000
           });
           const pages = pagesResponse.data;
@@ -87,6 +88,11 @@ class ConnectionManager extends EventEmitter {
               webSocketDebuggerUrl: page.webSocketDebuggerUrl
             }))
           };
+          
+          // 修复：将 WebSocket URL 中的 localhost 改为 127.0.0.1
+          if (browserInfo.webSocketDebuggerUrl && browserInfo.webSocketDebuggerUrl.includes('localhost')) {
+            browserInfo.webSocketDebuggerUrl = browserInfo.webSocketDebuggerUrl.replace('localhost', '127.0.0.1');
+          }
           
           console.log(`    ✓ 找到浏览器: ${browserInfo.browser}, ${pages.length}个页面`);
           results.push(browserInfo);
@@ -108,14 +114,14 @@ class ConnectionManager extends EventEmitter {
   }
 
   /**
-   * 获取浏览器信息
+   * 获取浏览器信息 - 修复：localhost 改为 127.0.0.1
    */
   async getBrowserInfo(port = 9222) {
     try {
-      const response = await axios.get(`http://localhost:${port}/json/version`, {
+      const response = await axios.get(`http://127.0.0.1:${port}/json/version`, {
         timeout: 5000
       });
-      const pagesResponse = await axios.get(`http://localhost:${port}/json/list`, {
+      const pagesResponse = await axios.get(`http://127.0.0.1:${port}/json/list`, {
         timeout: 5000
       });
       
@@ -140,7 +146,7 @@ class ConnectionManager extends EventEmitter {
   }
 
   /**
-   * 连接到浏览器
+   * 连接到浏览器 - 修复：转换 WebSocket URL 中的 localhost
    */
   async connectToBrowser(options = {}) {
     try {
@@ -167,6 +173,11 @@ class ConnectionManager extends EventEmitter {
         }
         browserWSEndpoint = browsers[0].webSocketDebuggerUrl;
         port = browsers[0].port;
+      }
+      
+      // 修复：确保 WebSocket URL 使用 127.0.0.1 而不是 localhost
+      if (browserWSEndpoint && browserWSEndpoint.includes('localhost')) {
+        browserWSEndpoint = browserWSEndpoint.replace('localhost', '127.0.0.1');
       }
       
       console.log(`连接 WebSocket: ${browserWSEndpoint}`);
@@ -221,7 +232,7 @@ class ConnectionManager extends EventEmitter {
   }
 
   /**
-   * 启动 Chrome 并启用远程调试
+   * 启动 Chrome 并启用远程调试 - 修复：添加 --remote-debugging-address 参数
    */
   async launchChromeWithDebugging(options = {}) {
     const { spawn } = require('child_process');
@@ -239,6 +250,7 @@ class ConnectionManager extends EventEmitter {
     
     const args = [
       `--remote-debugging-port=${port}`,
+      `--remote-debugging-address=127.0.0.1`, // 修复：强制使用 IPv4
       `--user-data-dir="${userDataDir}"`,
       '--no-first-run',
       '--no-default-browser-check',
@@ -249,7 +261,9 @@ class ConnectionManager extends EventEmitter {
       '--disable-software-rasterizer',
       '--disable-dev-shm-usage',
       '--no-sandbox',
-      '--disable-setuid-sandbox'
+      '--disable-setuid-sandbox',
+      '--disable-blink-features=AutomationControlled', // 防止被检测为自动化
+      '--disable-features=IsolateOrigins,site-per-process' // 避免跨域问题
     ];
     
     if (options.url) {
@@ -269,6 +283,7 @@ class ConnectionManager extends EventEmitter {
       chromeProcess.unref();
       
       // 等待 Chrome 启动
+      console.log('等待 Chrome 启动...');
       await new Promise(resolve => setTimeout(resolve, 5000));
       
       // 验证是否启动成功
@@ -277,10 +292,12 @@ class ConnectionManager extends EventEmitter {
       
       while (retries > 0) {
         try {
-          await axios.get(`http://localhost:${port}/json/version`, { timeout: 2000 });
+          // 修复：使用 127.0.0.1 而不是 localhost
+          await axios.get(`http://127.0.0.1:${port}/json/version`, { timeout: 2000 });
           success = true;
           break;
         } catch (error) {
+          console.log(`第 ${6 - retries} 次尝试连接失败，等待重试...`);
           retries--;
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
