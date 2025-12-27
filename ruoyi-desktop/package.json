@@ -1,73 +1,51 @@
 {
   "name": "ruoyi-desktop",
-  "version": "2.0.0",
-  "description": "若依管理系统桌面版 + 自动化任务",
+  "version": "1.0.0",
+  "description": "Ruoyi框架桌面客户端",
   "main": "electron/main.js",
-  "private": true,
   "scripts": {
-    "vue:dev": "cd ../ruoyi-ui && npm run dev",
-    "vue:build": "cd ../ruoyi-ui && npm run build:prod",
-    "vue:install": "cd ../ruoyi-ui && npm install",
-    "vue:build:electron": "cd ../ruoyi-ui && cross-env ELECTRON=true npm run build:prod",
-    "electron:dev": "concurrently \"npm run vue:dev\" \"wait-on http://localhost:80 && cross-env ELECTRON=true electron .\"",
-    "electron:serve": "cross-env ELECTRON=true electron .",
-    "build": "npm run vue:build:electron && electron-builder",
-    "dist": "npm run build && electron-builder",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:mac": "npm run build && electron-builder --mac",
-    "dist:linux": "npm run build && electron-builder --linux",
-    "dev": "npm run electron:dev",
-    "automation:test": "node electron/simple-automation-test.js",
-    "start": "set ELECTRON=true && npx electron .",
-    "clean": "rm -rf node_modules screenshots dist_electron",
-    "setup": "npm install && npm run vue:install",
-    "douyin:dev": "concurrently \"npm run vue:dev\" \"wait-on http://localhost:80 && cross-env DOUYIN_AUTOMATION=true electron .\"",
-    "douyin:test": "node electron/douyin-automation-test.js",
-    "douyin:panel": "electron . --douyin-panel"
+    "start": "electron .",
+    "dev": "nodemon --watch electron --exec electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "pack": "electron-builder --dir"
   },
+  "keywords": [
+    "ruoyi",
+    "electron",
+    "desktop"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4",
-    "wait-on": "^7.2.0"
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0",
+    "nodemon": "^3.0.0"
   },
   "dependencies": {
-    "open": "^11.0.0"
+    "axios": "^1.13.2",
+    "chalk": "^4.1.2",
+    "electron-store": "^8.1.0",
+    "puppeteer-core": "^21.0.0",
+    "ws": "^8.14.0"
   },
   "build": {
     "appId": "com.ruoyi.desktop",
-    "productName": "若依管理系统桌面版",
+    "productName": "Ruoyi Desktop",
     "directories": {
-      "output": "dist_electron",
-      "buildResources": "build"
+      "output": "dist"
     },
     "files": [
       "**/*",
       "!node_modules/**/*",
-      "!**/.gitignore",
-      "!**/.npmrc"
-    ],
-    "extraResources": [
-      {
-        "from": "../ruoyi-ui/dist",
-        "to": "ruoyi-ui"
-      },
-      {
-        "from": "screenshots",
-        "to": "screenshots"
-      }
+      "!screenshots/",
+      "!temp/"
     ],
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "若依管理系统"
     },
     "mac": {
       "target": "dmg",

@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruoyi Desktop 控制面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .status-running {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-stopped {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-pending {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .task-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: #edf2f7;
+        }
+
+        .task-info h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .task-info p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .task-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-actions button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-start {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-stop {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #a0aec0;
+            color: white;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #4c51bf;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .control-btn:hover {
+            background: #434190;
+            transform: scale(1.05);
+        }
+
+        .control-btn i {
+            font-size: 1.2em;
+        }
+
+        .log-panel {
+            background: rgba(0, 0, 0, 0.85);
+            color: #00ff9d;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .log-time {
+            color: #63b3ed;
+        }
+
+        .log-level-info {
+            color: #68d391;
+        }
+
+        .log-level-error {
+            color: #fc8181;
+        }
+
+        .log-level-warn {
+            color: #f6ad55;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4c51bf;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4c51bf, #667eea);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-desktop"></i> Ruoyi Desktop 控制面板</h1>
+            <p>自动化任务管理与浏览器控制中心</p>
+        </div>
+
+        <div class="control-panel">
+            <button class="control-btn" onclick="createNewWindow()">
+                <i class="fas fa-plus"></i> 新建窗口
+            </button>
+            <button class="control-btn" onclick="startAutomation()">
+                <i class="fas fa-play"></i> 开始自动化
+            </button>
+            <button class="control-btn" onclick="stopAllTasks()">
+                <i class="fas fa-stop"></i> 停止所有任务
+            </button>
+            <button class="control-btn" onclick="takeScreenshot()">
+                <i class="fas fa-camera"></i> 截图
+            </button>
+            <button class="control-btn" onclick="showLogs()">
+                <i class="fas fa-clipboard-list"></i> 查看日志
+            </button>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">任务管理</div>
+                    <span class="status-badge status-running" id="systemStatus">运行中</span>
+                </div>
+                <div class="task-list" id="taskList">
+                    <!-- 任务列表将在这里动态生成 -->
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTasks">0</div>
+                        <div class="stat-label">总任务数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="runningTasks">0</div>
+                        <div class="stat-label">运行中</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">浏览器管理</div>
+                    <span class="status-badge status-running" id="browserStatus">就绪</span>
+                </div>
+                <div id="browserList">
+                    <!-- 浏览器列表将在这里动态生成 -->
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="control-btn" onclick="createBrowser()" style="width: 100%;">
+                        <i class="fas fa-window-restore"></i> 创建新浏览器实例
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">系统监控</div>
+                    <span class="status-badge status-running">正常</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="cpuUsage">--</div>
+                        <div class="stat-label">CPU 使用率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="memoryUsage">--</div>
+                        <div class="stat-label">内存使用</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeWindows">0</div>
+                        <div class="stat-label">活动窗口</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div>系统负载</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="systemLoad" style="width: 30%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+            <div class="card-title">浏览器连接</div>
+            <span class="status-badge status-stopped" id="connectionStatus">未连接</span>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: #4a5568;">调试端口:</label>
+                <input type="number" id="debugPort" value="9222" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: #4a5568;">WebSocket URL:</label>
+                <input type="text" id="wsUrl" placeholder="ws://localhost:9222/devtools/..." style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <button class="control-btn" onclick="scanExistingBrowsers()">
+            <i class="fas fa-search"></i> 扫描浏览器
+            </button>
+            <button class="control-btn" onclick="connectToExistingBrowser()">
+            <i class="fas fa-plug"></i> 连接浏览器
+            </button>
+            <button class="control-btn" onclick="testConnection()">
+            <i class="fas fa-vial"></i> 测试连接
+            </button>
+            <button class="control-btn" onclick="launchDebugChrome()">
+            <i class="fas fa-rocket"></i> 启动调试Chrome
+            </button>
+        </div>
+        
+        <div id="browserList" style="margin-top: 15px; max-height: 200px; overflow-y: auto;">
+            <!-- 浏览器列表将在这里显示 -->
+        </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">实时日志</div>
+                <button class="control-btn" onclick="clearLogs()" style="padding: 5px 15px; font-size: 0.9em;">
+                    <i class="fas fa-trash"></i> 清空日志
+                </button>
+            </div>
+            <div class="log-panel" id="logPanel">
+                <div class="log-entry">
+                    <span class="log-time">[12:00:00]</span>
+                    <span class="log-level-info">[INFO]</span> 系统启动完成
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+            loadBrowsers();
+            startMonitoring();
+            setupEventListeners();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            window.electronAPI.onTaskUpdate((data) => {
+                addLog('info', `任务更新: ${JSON.stringify(data)}`);
+                loadTasks();
+            });
+
+            window.electronAPI.onWindowEvent((data) => {
+                addLog('info', `窗口事件: ${JSON.stringify(data)}`);
+                updateWindowStats();
+            });
+        }
+
+        // 加载任务列表
+        async function loadTasks() {
+            try {
+                const tasks = await window.electronAPI.listTasks();
+                const taskList = document.getElementById('taskList');
+                const totalTasks = document.getElementById('totalTasks');
+                const runningTasks = document.getElementById('runningTasks');
+                const completedTasks = document.getElementById('completedTasks');
+                
+                taskList.innerHTML = '';
+                
+                let runningCount = 0;
+                let completedCount = 0;
+                
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item';
+                    
+                    taskItem.innerHTML = `
+                        <div class="task-info">
+                            <h4>${task.name}</h4>
+                            <p>ID: ${task.id} | 类型: ${task.type}</p>
+                            <p>进度: ${task.progress}%</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${task.progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            ${task.status === 'running' ? 
+                                `<button class="btn-stop" onclick="stopTask('${task.id}')">停止</button>` :
+                                `<button class="btn-start" onclick="startTask('${task.id}')">开始</button>`
+                            }
+                            <button class="btn-delete" onclick="deleteTask('${task.id}')">删除</button>
+                        </div>
+                    `;
+                    
+                    taskList.appendChild(taskItem);
+                    
+                    if (task.status === 'running') runningCount++;
+                    if (task.status === 'completed') completedCount++;
+                });
+                
+                totalTasks.textContent = tasks.length;
+                runningTasks.textContent = runningCount;
+                completedTasks.textContent = completedCount;
+                
+            } catch (error) {
+                addLog('error', `加载任务失败: ${error.message}`);
+            }
+        }
+
+        // 加载浏览器列表
+        async function loadBrowsers() {
+            try {
+                // 这里需要实现获取浏览器列表的API
+                addLog('info', '加载浏览器列表...');
+            } catch (error) {
+                addLog('error', `加载浏览器列表失败: ${error.message}`);
+            }
+        }
+
+        // 开始监控
+        function startMonitoring() {
+            setInterval(async () => {
+                updateSystemStats();
+                updateWindowStats();
+            }, 5000);
+        }
+
+        // 更新系统状态
+        async function updateSystemStats() {
+            // 模拟系统状态更新
+            document.getElementById('cpuUsage').textContent = 
+                Math.floor(Math.random() * 30 + 10) + '%';
+            
+            document.getElementById('memoryUsage').textContent = 
+                Math.floor(Math.random() * 4 + 2) + ' GB';
+            
+            const systemLoad = document.getElementById('systemLoad');
+            const load = Math.floor(Math.random() * 100);
+            systemLoad.style.width = `${load}%`;
+        }
+
+        // 更新窗口统计
+        async function updateWindowStats() {
+            // 这里需要实现获取窗口数量的API
+            const activeWindows = document.getElementById('activeWindows');
+            activeWindows.textContent = Math.floor(Math.random() * 5 + 1);
+        }
+
+        // 添加日志
+        function addLog(level, message) {
+            const logPanel = document.getElementById('logPanel');
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">[${timeString}]</span>
+                <span class="log-level-${level}">[${level.toUpperCase()}]</span> ${message}
+            `;
+            
+            logPanel.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+            
+            // 限制日志数量
+            if (logPanel.children.length > 100) {
+                logPanel.removeChild(logPanel.firstChild);
+            }
+        }
+
+        // 清空日志
+        function clearLogs() {
+            const logPanel = document.getElementById('logPanel');
+            logPanel.innerHTML = '';
+            addLog('info', '日志已清空');
+        }
+
+        // 控制函数
+        async function createNewWindow() {
+            try {
+                const windowId = await window.electronAPI.createWindow({
+                    url: 'https://www.baidu.com',
+                    width: 1024,
+                    height: 768
+                });
+                addLog('info', `创建新窗口: ${windowId}`);
+            } catch (error) {
+                addLog('error', `创建窗口失败: ${error.message}`);
+            }
+        }
+
+        async function startAutomation() {
+            try {
+                const script = [
+                    {
+                        action: 'navigate',
+                        url: 'https://www.baidu.com'
+                    },
+                    {
+                        action: 'type',
+                        selector: '#kw',
+                        text: '自动化测试'
+                    },
+                    {
+                        action: 'click',
+                        selector: '#su'
+                    },
+                    {
+                        action: 'wait',
+                        timeout: 2000
+                    },
+                    {
+                        action: 'screenshot',
+                        options: { fullPage: true }
+                    }
+                ];
+                
+                await window.electronAPI.executeAutomation(JSON.stringify(script));
+                addLog('info', '自动化任务已开始');
+            } catch (error) {
+                addLog('error', `启动自动化失败: ${error.message}`);
+            }
+        }
+
+        async function stopAllTasks() {
+            try {
+                const tasks = await window.electronAPI.listTasks();
+                for (const task of tasks) {
+                    if (task.status === 'running') {
+                        await window.electronAPI.stopTask(task.id);
+                    }
+                }
+                addLog('info', '所有任务已停止');
+                loadTasks();
+            } catch (error) {
+                addLog('error', `停止任务失败: ${error.message}`);
+            }
+        }
+
+        async function takeScreenshot() {
+            try {
+                addLog('info', '正在截图...');
+                // 这里需要实现截图功能
+                setTimeout(() => {
+                    addLog('info', '截图已保存');
+                }, 1000);
+            } catch (error) {
+                addLog('error', `截图失败: ${error.message}`);
+            }
+        }
+
+        function showLogs() {
+            addLog('info', '显示日志面板');
+        }
+
+        async function startTask(taskId) {
+            try {
+                await window.electronAPI.startTask({ id: taskId });
+                addLog('info', `任务 ${taskId} 已开始`);
+                loadTasks();
+            } catch (error) {
+                addLog('error', `启动任务失败: ${error.message}`);
+            }
+        }
+
+        async function stopTask(taskId) {
+            try {
+                await window.electronAPI.stopTask(taskId);
+                addLog('info', `任务 ${taskId} 已停止`);
+                loadTasks();
+            } catch (error) {
+                addLog('error', `停止任务失败: ${error.message}`);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            try {
+                addLog('info', `删除任务: ${taskId}`);
+                // 这里需要实现删除任务的API
+                loadTasks();
+            } catch (error) {
+                addLog('error', `删除任务失败: ${error.message}`);
+            }
+        }
+
+        async function createBrowser() {
+            try {
+                addLog('info', '正在创建浏览器实例...');
+                // 这里需要实现创建浏览器的API
+            } catch (error) {
+                addLog('error', `创建浏览器失败: ${error.message}`);
+            }
+        }
+
+        // 抖音自动化函数
+async function startDouyinAutomation() {
+    try {
+        addLog('info', '开始抖音自动化任务...');
+        
+        const script = {
+            type: 'douyin',
+            chromePath: 'D:\\Google\\Chrome\\Application\\chrome.exe',
+            actions: [
+                {
+                    action: 'navigate',
+                    url: 'https://www.douyin.com',
+                    description: '打开抖音首页'
+                },
+                {
+                    action: 'wait',
+                    timeout: 5000,
+                    description: '等待页面加载'
+                },
+                {
+                    action: 'evaluate',
+                    script: 'window.scrollBy(0, window.innerHeight * 2)',
+                    description: '滚动页面加载视频'
+                },
+                {
+                    action: 'wait',
+                    timeout: 2000,
+                    description: '等待视频加载'
+                },
+                {
+                    action: 'click',
+                    selector: '[data-e2e="feed-video"]:first-child',
+                    description: '点击第一个视频'
+                },
+                {
+                    action: 'wait',
+                    timeout: 3000,
+                    description: '等待视频播放'
+                },
+                {
+                    action: 'click',
+                    selector: '[data-e2e="browse-like"]',
+                    description: '点赞视频'
+                },
+                {
+                    action: 'wait',
+                    timeout: 1000,
+                    description: '等待操作完成'
+                },
+                {
+                    action: 'screenshot',
+                    options: {
+                        path: './screenshots/douyin_{{timestamp}}.png'
+                    },
+                    description: '截图保存'
+                }
+            ]
+        };
+        
+        const result = await window.electronAPI.executeAutomation(JSON.stringify(script));
+        
+        if (result.success) {
+            addLog('success', `抖音自动化任务开始，ID: ${result.automationId}`);
+            
+            // 监听自动化状态
+            window.electronAPI.onAutomationStatus((data) => {
+                if (data.automationId === result.automationId) {
+                    addLog('info', `自动化状态: ${data.status}`);
+                }
+            });
+        } else {
+            addLog('error', `自动化任务失败: ${result.error}`);
+        }
+    } catch (error) {
+        addLog('error', `启动抖音自动化失败: ${error.message}`);
+    }
+}
+
+// 高级抖音任务
+async function startAdvancedDouyinTask() {
+    try {
+        addLog('info', '开始高级抖音任务...');
+        
+        const taskConfig = {
+            name: '高级抖音互动任务',
+            type: 'douyin',
+            config: {
+                chromePath: 'D:\\Google\\Chrome\\Application\\chrome.exe',
+                headless: false,
+                userDataDir: './chrome_profile', // 使用已登录的Chrome配置
+                actions: ['scroll', 'like', 'comment', 'follow'],
+                scrollCount: 5,
+                likeCount: 3,
+                commentText: '这个视频真不错！',
+                screenshot: true,
+                randomDelay: true,
+                maxVideos: 10
+            }
+        };
+        
+        const taskId = await window.electronAPI.startTask(taskConfig);
+        addLog('success', `高级抖音任务已开始，任务ID: ${taskId}`);
+    } catch (error) {
+        addLog('error', `启动高级抖音任务失败: ${error.message}`);
+    }
+}
+
+// 抖音视频监控
+async function monitorDouyinVideos() {
+    try {
+        addLog('info', '开始抖音视频监控...');
+        
+        const monitorConfig = {
+            name: '抖音视频监控',
+            type: 'monitoring',
+            schedule: {
+                type: 'interval',
+                interval: 600000, // 每10分钟
+                startTime: '08:00',
+                endTime: '22:00'
+            },
+            config: {
+                chromePath: 'D:\\Google\\Chrome\\Application\\chrome.exe',
+                targetUrl: 'https://www.douyin.com',
+                keywords: ['热门', '推荐', '搞笑'],
+                checkInterval: 300000, // 每5分钟检查一次
+                notifyOnNew: true,
+                saveScreenshots: true
+            }
+        };
+        
+        const taskId = await window.electronAPI.startTask(monitorConfig);
+        addLog('success', `抖音监控任务已开始，任务ID: ${taskId}`);
+    } catch (error) {
+        addLog('error', `启动监控任务失败: ${error.message}`);
+    }
+}
+
+// 在控制面板中添加抖音专用按钮
+function addDouyinControls() {
+    const controlPanel = document.querySelector('.control-panel');
+    
+    const douyinButtons = `
+        <button class="control-btn" onclick="startDouyinAutomation()" style="background: linear-gradient(135deg, #FF0050, #FF6B9D);">
+            <i class="fab fa-tiktok"></i> 抖音自动化
+        </button>
+        <button class="control-btn" onclick="startAdvancedDouyinTask()" style="background: linear-gradient(135deg, #25F4EE, #FE2C55);">
+            <i class="fas fa-robot"></i> 高级抖音任务
+        </button>
+        <button class="control-btn" onclick="monitorDouyinVideos()" style="background: linear-gradient(135deg, #000000, #333333);">
+            <i class="fas fa-eye"></i> 抖音监控
+        </button>
+    `;
+    
+    controlPanel.innerHTML += douyinButtons;
+}
+
+// 在页面加载时添加抖音控制按钮
+document.addEventListener('DOMContentLoaded', () => {
+    // ... 其他初始化代码
+    addDouyinControls();
+});
+// 扫描现有浏览器
+async function scanExistingBrowsers() {
+  try {
+    addLog('info', '正在扫描浏览器...');
+    
+    const browsers = await window.electronAPI.scanBrowsers();
+    
+    if (!browsers || browsers.length === 0) {
+      addLog('warning', '未找到可连接的浏览器');
+      return;
+    }
+    
+    const browserList = document.getElementById('browserList');
+    browserList.innerHTML = '';
+    
+    browsers.forEach((browser, index) => {
+      const browserItem = document.createElement('div');
+      browserItem.className = 'browser-item';
+      browserItem.style.cssText = `
+        padding: 10px;
+        margin-bottom: 8px;
+        background: #f7fafc;
+        border-radius: 8px;
+        border-left: 4px solid #4299e1;
+      `;
+      
+      browserItem.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong>浏览器 ${index + 1}</strong>
+            <div style="font-size: 0.9em; color: #718096;">
+              端口: ${browser.port} | 页面: ${browser.pages?.length || 0}
+            </div>
+          </div>
+          <button onclick="connectToBrowser('${browser.webSocketDebuggerUrl}')" style="
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+          ">
+            连接
+          </button>
+        </div>
+        ${browser.pages && browser.pages.length > 0 ? `
+          <div style="margin-top: 8px; font-size: 0.85em; color: #4a5568;">
+            ${browser.pages.map(p => 
+              `<div>📄 ${p.title || '无标题'} - ${p.url}</div>`
+            ).join('')}
+          </div>
+        ` : ''}
+      `;
+      
+      browserList.appendChild(browserItem);
+    });
+    
+    addLog('success', `找到 ${browsers.length} 个浏览器`);
+  } catch (error) {
+    addLog('error', `扫描浏览器失败: ${error.message}`);
+  }
+}
+
+
+// 连接到指定端口
+async function connectToBrowser(webSocketDebuggerUrl) {
+  try {
+    addLog('info', '正在连接浏览器...');
+    
+    const result = await window.electronAPI.connectToBrowser({
+      webSocketDebuggerUrl: webSocketDebuggerUrl
+    });
+    
+    if (result.success) {
+      addLog('success', `连接成功! 连接ID: ${result.connectionId}`);
+      document.getElementById('connectionStatus').textContent = '已连接';
+      document.getElementById('connectionStatus').className = 'status-badge status-running';
+    } else {
+      addLog('error', `连接失败: ${result.error}`);
+    }
+  } catch (error) {
+    addLog('error', `连接失败: ${error.message}`);
+  }
+}
+
+// 连接到现有浏览器
+async function connectToExistingBrowser() {
+  const portInput = document.getElementById('debugPort');
+  const port = parseInt(portInput.value) || 9222;
+  
+  await connectToPort(port);
+}
+
+// 启动调试 Chrome
+async function launchDebugChrome() {
+  try {
+    addLog('info', '正在启动调试版 Chrome...');
+    
+    const result = await window.electronAPI.launchDebugChrome({
+      chromePath: 'D:\\Google\\Chrome\\Application\\chrome.exe',
+      url: 'https://www.douyin.com',
+      port: 9222
+    });
+    
+    if (result.success) {
+      addLog('success', `Chrome 已启动，PID: ${result.pid}, 端口: ${result.port}`);
+      
+      // 等待 3 秒后自动连接
+      setTimeout(async () => {
+        addLog('info', '尝试自动连接...');
+        await connectToPort(result.port);
+      }, 3000);
+    } else {
+      addLog('error', `启动失败: ${result.error}`);
+    }
+  } catch (error) {
+    addLog('error', `启动失败: ${error.message}`);
+  }
+}
+
+// 更新连接状态
+function updateConnectionStatus(connectionId) {
+  setInterval(async () => {
+    try {
+      // 这里可以添加心跳检测
+      const browsers = await window.electronAPI.scanBrowsers();
+      const statusElement = document.getElementById('connectionStatus');
+      
+      if (browsers.length > 0) {
+        statusElement.textContent = '已连接';
+        statusElement.className = 'status-badge status-running';
+      } else {
+        statusElement.textContent = '未连接';
+        statusElement.className = 'status-badge status-stopped';
+      }
+    } catch (error) {
+      console.error('更新连接状态失败:', error);
+    }
+  }, 5000);
+}
+
+// 抖音自动化（使用现有浏览器）
+async function douyinWithExistingBrowser() {
+  try {
+    addLog('info', '开始抖音自动化（使用现有浏览器）...');
+    
+    const portInput = document.getElementById('debugPort');
+    const port = parseInt(portInput.value) || 9222;
+    
+    const result = await window.electronAPI.executeDouyinWithExisting({
+      port: port,
+      actions: ['scroll', 'like', 'comment'],
+      scrollCount: 5,
+      likeCount: 3,
+      commentText: '赞！👍'
+    });
+    
+    if (result.success) {
+      addLog('success', `抖音自动化完成: ${result.message}`);
+      
+      // 截图
+      setTimeout(async () => {
+        try {
+          addLog('info', '正在截图...');
+          // 这里可以添加截图功能
+        } catch (error) {
+          addLog('error', `截图失败: ${error.message}`);
+        }
+      }, 2000);
+    } else {
+      addLog('error', `抖音自动化失败: ${result.error}`);
+    }
+  } catch (error) {
+    addLog('error', `抖音自动化失败: ${error.message}`);
+  }
+}
+
+// 在页面加载完成后扫描浏览器
+document.addEventListener('DOMContentLoaded', () => {
+  // ... 其他初始化代码
+  
+  // 自动扫描浏览器
+  setTimeout(() => {
+    scanExistingBrowsers();
+  }, 1000);
+});
+// 修改 startAutomation 函数，添加抖音选项
+async function startAutomation() {
+    try {
+        // 让用户选择自动化类型
+        const automationTypes = [
+            { name: '抖音自动化', value: 'douyin' },
+            { name: '百度搜索', value: 'baidu' },
+            { name: '自定义脚本', value: 'custom' }
+        ];
+        
+        // 这里可以创建一个选择对话框
+        // 暂时默认执行抖音自动化
+        await startDouyinAutomation();
+    } catch (error) {
+        addLog('error', `启动自动化失败: ${error.message}`);
+    }
+}
+
+// 测试连接
+async function testConnection() {
+    const portInput = document.getElementById('debugPort');
+    const port = parseInt(portInput.value) || 9222;
+    
+    try {
+        addLog('info', `测试端口 ${port} 连接...`);
+        
+        // 直接使用 fetch 测试
+        const response = await fetch(`http://localhost:${port}/json/version`);
+        if (response.ok) {
+            const data = await response.json();
+            addLog('success', `连接成功！\n浏览器: ${data.Browser}\nWebSocket: ${data.webSocketDebuggerUrl}`);
+            
+            // 获取页面列表
+            const pagesResponse = await fetch(`http://localhost:${port}/json/list`);
+            const pages = await pagesResponse.json();
+            addLog('info', `发现 ${pages.length} 个页面:`);
+            
+            pages.forEach((page, i) => {
+                addLog('info', `${i + 1}. ${page.title || '无标题'} - ${page.url}`);
+            });
+        } else {
+            addLog('error', `连接失败: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        addLog('error', `测试连接失败: ${error.message}`);
+    }
+}
+
+// 修改连接函数
+async function connectToExistingBrowser() {
+    const portInput = document.getElementById('debugPort');
+    const wsUrlInput = document.getElementById('wsUrl');
+    const port = parseInt(portInput.value) || 9222;
+    const wsUrl = wsUrlInput.value;
+    
+    try {
+        addLog('info', '正在连接浏览器...');
+        
+        const options = {};
+        if (wsUrl) {
+            options.webSocketDebuggerUrl = wsUrl;
+        } else {
+            options.port = port;
+        }
+        
+        const result = await window.electronAPI.connectToBrowser(options);
+        
+        if (result.success) {
+            addLog('success', `连接成功! 连接ID: ${result.connectionId}`);
+            document.getElementById('connectionStatus').textContent = '已连接';
+            document.getElementById('connectionStatus').className = 'status-badge status-running';
+            
+            // 自动更新 WebSocket URL
+            if (result.browserWSEndpoint) {
+                wsUrlInput.value = result.browserWSEndpoint;
+            }
+        } else {
+            addLog('error', `连接失败: ${result.error}`);
+        }
+    } catch (error) {
+        addLog('error', `连接失败: ${error.message}`);
+    }
+}
+
+// 添加样式更新抖音按钮
+const style = document.createElement('style');
+style.textContent = `
+    .douyin-btn {
+        background: linear-gradient(135deg, #FF0050, #25F4EE) !important;
+        color: white !important;
+    }
+    
+    .douyin-btn:hover {
+        background: linear-gradient(135deg, #FF6B9D, #FE2C55) !important;
+        transform: scale(1.05) !important;
+    }
+    
+    .douyin-stats {
+        background: rgba(255, 0, 80, 0.1) !important;
+        border: 1px solid #FF0050 !important;
+    }
+`;
+document.head.appendChild(style);
+
+        // 导出函数到全局
+        window.createNewWindow = createNewWindow;
+        window.startAutomation = startAutomation;
+        window.stopAllTasks = stopAllTasks;
+        window.takeScreenshot = takeScreenshot;
+        window.showLogs = showLogs;
+        window.clearLogs = clearLogs;
+        window.startTask = startTask;
+        window.stopTask = stopTask;
+        window.deleteTask = deleteTask;
+        window.createBrowser = createBrowser;
+    </script>
+</body>
+</html>

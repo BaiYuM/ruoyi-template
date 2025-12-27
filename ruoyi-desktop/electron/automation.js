@@ -1,742 +1,1141 @@
-// electron/automation.js
-const { BrowserWindow, ipcMain, dialog, session } = require('electron')
-const path = require('path')
-const fs = require('fs').promises
+const puppeteer = require('puppeteer-core');
+const EventEmitter = require('events');
+const path = require('path');
+const fs = require('fs').promises;
+const axios = require('axios');
 
-// 抖音检测模块
-const DOUYIN_DETECTORS = {
-  isDouyinPage: (url) => {
-    return url.includes('douyin.com') || url.includes('iesdouyin.com')
-  },
-  
-  getDouyinSelectors: () => {
-    return {
-      // 发布按钮
-      publishButton: [
-        '.publish-btn',
-        '[data-e2e="publish"]',
-        '.upload-btn',
-        'div[aria-label="发布"]'
+class Automation extends EventEmitter {
+  constructor(options = {}) {
+    super();
+    this.browser = null;
+    this.page = null;
+    this.chromePath = options.chromePath || 'D:\\Google\\Chrome\\Application\\chrome.exe';
+    this.isConnectedMode = options.connectToExisting || false;
+    
+    this.options = {
+      headless: options.headless || false,
+      executablePath: this.chromePath,
+      userDataDir: options.userDataDir || path.join(__dirname, '../chrome_profile'),
+      defaultViewport: options.defaultViewport || { width: 1280, height: 800 },
+      args: options.args || [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--window-size=1280,800',
+        '--disable-blink-features=AutomationControlled',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ],
-      
-      // 输入框
-      inputFields: [
-        'textarea',
-        '[placeholder*="描述"]',
-        '[placeholder*="说点什么"]',
-        '[contenteditable="true"]'
-      ],
-      
-      // 私信按钮
-      messageButton: [
-        '[data-e2e="message"]',
-        '.message-btn',
-        'a[href*="message"]'
-      ],
-      
-      // 点赞按钮
-      likeButton: [
-        '[data-e2e="like"]',
-        '.like-btn',
-        'svg[aria-label*="喜欢"]'
-      ],
-      
-      // 关注按钮
-      followButton: [
-        '[data-e2e="follow"]',
-        '.follow-btn',
-        'button:contains("关注")'
-      ]
-    }
+      ...options
+    };
+    
+    // 远程调试配置
+    this.remoteConfig = {
+      port: options.port || 9222,
+      browserWSEndpoint: options.browserWSEndpoint || null,
+      useExisting: options.useExisting || false
+    };
+    
+    // 抖音专用配置
+    this.douyinConfig = {
+      scrollCount: options.scrollCount || 5,
+      likeProbability: options.likeProbability || 0.3,
+      commentProbability: options.commentProbability || 0.2,
+      followProbability: options.followProbability || 0.1,
+      commentTexts: options.commentTexts || ['赞！', '不错', '学到了', '哈哈', '👍'],
+      ...options.douyinConfig
+    };
+    
+    // 状态跟踪
+    this.stats = {
+      actions: 0,
+      likes: 0,
+      comments: 0,
+      follows: 0,
+      errors: 0,
+      startTime: null,
+      endTime: null
+    };
   }
-}
 
-class AutomationManager {
-  constructor() {
-    this.automationWindow = null
-    this.isRunning = false
-    this.logs = []
-    this.currentTask = null
-  }
+  // ==================== 浏览器连接方法 ====================
 
   /**
-   * 启动自动化窗口（使用Electron内置浏览器）
+   * 查找已打开的Chrome调试端点
    */
-  async launchAutomationWindow(options = {}) {
-    if (this.automationWindow) {
-      this.automationWindow.focus()
-      return this.automationWindow
-    }
-
+  async findDebugEndpoints(port = 9222) {
     try {
-      // 创建BrowserWindow（Electron内置浏览器）
-      this.automationWindow = new BrowserWindow({
-        width: options.width || 1280,
-        height: options.height || 720,
-        show: options.show !== false,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          webSecurity: false,
-          allowRunningInsecureContent: true,
-          experimentalFeatures: true
-        },
-        backgroundColor: '#ffffff',
-        title: '自动化浏览器',
-        icon: path.join(__dirname, '../build/icon.png')
-      })
-
-      // 设置User-Agent
-      if (options.userAgent) {
-        this.automationWindow.webContents.setUserAgent(options.userAgent)
+      const response = await axios.get(`http://localhost:${port}/json/version`, {
+        timeout: 2000
+      });
+      
+      if (response.data) {
+        // 获取所有页面
+        const pagesResponse = await axios.get(`http://localhost:${port}/json/list`);
+        const pages = pagesResponse.data;
+        
+        return {
+          success: true,
+          browser: response.data.Browser || 'Chrome',
+          protocolVersion: response.data['Protocol-Version'],
+          userAgent: response.data['User-Agent'],
+          webSocketDebuggerUrl: response.data.webSocketDebuggerUrl,
+          pages: pages.map(page => ({
+            id: page.id,
+            title: page.title,
+            url: page.url,
+            type: page.type,
+            webSocketDebuggerUrl: page.webSocketDebuggerUrl
+          }))
+        };
       }
-
-      // 监听窗口关闭
-      this.automationWindow.on('closed', () => {
-        this.automationWindow = null
-        this.isRunning = false
-        this.addLog('system', 'info', '自动化窗口已关闭')
-      })
-
-      // 监听页面事件
-      this.setupWindowListeners()
-
-      this.addLog('system', 'success', '自动化窗口创建成功')
-      return this.automationWindow
-
     } catch (error) {
-      this.addLog('system', 'error', `创建自动化窗口失败: ${error.message}`)
-      throw error
-    }
-  }
-
-  /**
-   * 执行通用自动化任务
-   */
-  async runAutomationTask(config = {}) {
-    if (this.isRunning) {
-      throw new Error('已有任务正在运行')
-    }
-
-    this.isRunning = true
-    const taskId = Date.now()
-    this.currentTask = { id: taskId, config: config }
-
-    try {
-      this.addLog(taskId, 'info', '开始自动化任务')
-
-      // 1. 创建或获取自动化窗口
-      if (!this.automationWindow) {
-        await this.launchAutomationWindow({
-          show: config.headless !== true, // headless为false时显示窗口
-          width: config.width || 1280,
-          height: config.height || 720,
-          userAgent: config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-      }
-
-      // 2. 加载目标URL
-      const url = config.url || 'https://example.com'
-      this.addLog(taskId, 'info', `访问: ${url}`)
-      
-      await this.automationWindow.loadURL(url, {
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      })
-
-      // 等待页面加载
-      await this.waitForPageLoad()
-      this.addLog(taskId, 'success', '页面加载成功')
-
-      // 3. 执行任务
-      const tasks = config.tasks || [
-        { selector: 'a:first-of-type', description: '点击第一个链接', action: 'click' },
-        { selector: 'button[type="submit"]', description: '点击提交按钮', action: 'click' },
-        { selector: 'input[type="text"]:first-of-type', description: '填写输入框', action: 'type', value: '测试数据' }
-      ]
-
-      let completedTasks = 0
-      for (const [index, task] of tasks.entries()) {
-        try {
-          this.addLog(taskId, 'info', `执行任务 ${index + 1}: ${task.description}`)
-          
-          if (task.action === 'click') {
-            await this.executeClick(task.selector, task.timeout || 5000)
-          } else if (task.action === 'type' && task.value) {
-            await this.executeType(task.selector, task.value, task.timeout || 5000)
-          } else if (task.action === 'wait' && task.delay) {
-            await this.wait(task.delay)
-          }
-          
-          this.addLog(taskId, 'success', `${task.description} 完成`)
-          completedTasks++
-          
-          // 等待一下
-          await this.wait(task.delay || 1000)
-          
-        } catch (error) {
-          if (task.required) {
-            throw new Error(`${task.description} 失败: ${error.message}`)
-          } else {
-            this.addLog(taskId, 'warning', `${task.description} 跳过: ${error.message}`)
-          }
-        }
-      }
-
-      // 4. 截图保存（可选）
-      if (config.screenshot) {
-        await this.captureScreenshot(taskId)
-      }
-
-      // 5. 获取页面信息
-      const pageInfo = await this.getPageInfo()
-
-      this.addLog(taskId, 'success', '自动化任务完成')
-
-      return {
-        success: true,
-        taskId: taskId,
-        url: pageInfo.url,
-        title: pageInfo.title,
-        tasksCompleted: completedTasks,
-        totalTasks: tasks.length,
-        logs: this.getLogs(taskId)
-      }
-
-    } catch (error) {
-      this.addLog(taskId, 'error', `任务失败: ${error.message}`)
-      
-      // 错误截图
-      await this.captureScreenshot(`${taskId}_error`)
-      
       return {
         success: false,
-        taskId: taskId,
-        error: error.message,
-        logs: this.getLogs(taskId)
-      }
-    } finally {
-      this.isRunning = false
-      this.currentTask = null
+        error: error.message
+      };
     }
   }
 
   /**
-   * 执行抖音自动化任务
+   * 扫描所有可能的调试端口
    */
-  async runDouyinTask(taskType, config = {}) {
-    if (this.isRunning) {
-      throw new Error('已有任务正在运行')
+  async scanAllDebugPorts() {
+    const ports = [9222, 9223, 9224, 9225, 9226, 9227, 9228, 9229];
+    const results = [];
+    
+    for (const port of ports) {
+      try {
+        const result = await this.findDebugEndpoints(port);
+        if (result.success) {
+          results.push({
+            port,
+            ...result
+          });
+        }
+      } catch (error) {
+        // 端口未开放，跳过
+      }
     }
+    
+    return results;
+  }
 
-    this.isRunning = true
-    const taskId = `douyin_${Date.now()}`
-    this.currentTask = { id: taskId, type: taskType, config: config }
+  /**
+   * 连接到已打开的浏览器
+   */
+  async connectToExistingBrowser(options = {}) {
+    try {
+      this.emit('status', '正在连接到已打开的浏览器...');
+      
+      let browserWSEndpoint = options.browserWSEndpoint || this.remoteConfig.browserWSEndpoint;
+      let port = options.port || this.remoteConfig.port;
+      
+      // 如果没有提供端点，自动扫描
+      if (!browserWSEndpoint) {
+        const scanResults = await this.scanAllDebugPorts();
+        
+        if (scanResults.length === 0) {
+          throw new Error('未找到已开启调试模式的Chrome浏览器');
+        }
+        
+        // 选择第一个找到的浏览器
+        const firstBrowser = scanResults[0];
+        browserWSEndpoint = firstBrowser.webSocketDebuggerUrl;
+        port = firstBrowser.port;
+        
+        this.emit('status', `发现浏览器: ${firstBrowser.browser} (端口: ${port})`);
+        this.emit('status', `找到 ${firstBrowser.pages.length} 个已打开的页面`);
+        
+        // 显示页面信息
+        firstBrowser.pages.forEach((page, index) => {
+          this.emit('status', `  ${index + 1}. ${page.title || '无标题'} - ${page.url}`);
+        });
+      }
+      
+      // 连接到浏览器
+      this.browser = await puppeteer.connect({
+        browserWSEndpoint,
+        defaultViewport: null
+      });
+      
+      this.emit('status', '浏览器连接成功！');
+      
+      // 获取所有页面
+      const pages = await this.browser.pages();
+      
+      // 自动选择页面逻辑
+      if (options.selectPageByUrl) {
+        // 按URL关键词选择页面
+        await this.selectPageByUrl(options.selectPageByUrl);
+      } else if (options.selectPageIndex !== undefined) {
+        // 按索引选择页面
+        await this.selectPageByIndex(options.selectPageIndex);
+      } else if (pages.length > 0) {
+        // 默认选择第一个页面
+        this.page = pages[0];
+        this.emit('status', `自动选择页面: ${await this.page.title()} - ${this.page.url()}`);
+      } else {
+        // 没有页面则创建新页面
+        this.page = await this.browser.newPage();
+        this.emit('status', '创建新页面');
+      }
+      
+      this.isConnectedMode = true;
+      return true;
+      
+    } catch (error) {
+      this.emit('error', `连接浏览器失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 启动新浏览器
+   */
+  async launchNewBrowser() {
+    try {
+      this.emit('status', '正在启动新浏览器...');
+      
+      this.browser = await puppeteer.launch(this.options);
+      this.page = await this.browser.newPage();
+      
+      // 设置页面基本配置
+      await this.page.setUserAgent(this.options.args.find(arg => arg.includes('user-agent'))?.split('=')[1] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+      await this.page.setViewport(this.options.defaultViewport || { width: 1280, height: 800 });
+      
+      this.emit('status', '新浏览器启动成功');
+      return true;
+    } catch (error) {
+      this.emit('error', `启动浏览器失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 初始化浏览器（智能选择模式）
+   */
+  async initialize(options = {}) {
+    this.stats.startTime = new Date();
+    
+    try {
+      // 优先使用连接模式
+      if (this.remoteConfig.useExisting || options.connectToExisting) {
+        try {
+          await this.connectToExistingBrowser(options);
+          this.emit('status', '使用已连接的浏览器模式');
+        } catch (connectError) {
+          this.emit('warning', `连接现有浏览器失败: ${connectError.message}，将启动新浏览器`);
+          await this.launchNewBrowser();
+        }
+      } else {
+        await this.launchNewBrowser();
+      }
+      
+      return true;
+    } catch (error) {
+      this.emit('error', `浏览器初始化失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // ==================== 页面选择方法 ====================
+
+  /**
+   * 按索引选择页面
+   */
+  async selectPageByIndex(index = 0) {
+    if (!this.browser) {
+      throw new Error('浏览器未连接');
+    }
+    
+    const pages = await this.browser.pages();
+    if (pages.length > index) {
+      this.page = pages[index];
+      const title = await this.page.title();
+      const url = await this.page.url();
+      this.emit('status', `选择页面 ${index}: ${title} - ${url}`);
+      return true;
+    }
+    
+    throw new Error(`页面索引 ${index} 不存在，当前只有 ${pages.length} 个页面`);
+  }
+
+  /**
+   * 按URL关键词选择页面
+   */
+  async selectPageByUrl(keyword) {
+    if (!this.browser) {
+      throw new Error('浏览器未连接');
+    }
+    
+    const pages = await this.browser.pages();
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const url = await page.url();
+      
+      if (url.includes(keyword)) {
+        this.page = page;
+        const title = await page.title();
+        this.emit('status', `找到匹配页面: ${title} - ${url}`);
+        return true;
+      }
+    }
+    
+    throw new Error(`未找到包含 "${keyword}" 的页面`);
+  }
+
+  /**
+   * 按标题关键词选择页面
+   */
+  async selectPageByTitle(keyword) {
+    if (!this.browser) {
+      throw new Error('浏览器未连接');
+    }
+    
+    const pages = await this.browser.pages();
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const title = await page.title();
+      
+      if (title.includes(keyword)) {
+        this.page = page;
+        const url = await page.url();
+        this.emit('status', `找到匹配页面: ${title} - ${url}`);
+        return true;
+      }
+    }
+    
+    throw new Error(`未找到标题包含 "${keyword}" 的页面`);
+  }
+
+  /**
+   * 获取所有页面信息
+   */
+  async getAllPages() {
+    if (!this.browser) {
+      throw new Error('浏览器未连接');
+    }
+    
+    const pages = await this.browser.pages();
+    const pageInfos = [];
+    
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      try {
+        const title = await page.title();
+        const url = await page.url();
+        pageInfos.push({
+          index: i,
+          title: title || '无标题',
+          url: url || 'about:blank',
+          isActive: page === this.page
+        });
+      } catch (error) {
+        pageInfos.push({
+          index: i,
+          title: '无法获取标题',
+          url: '无法获取URL',
+          isActive: page === this.page,
+          error: error.message
+        });
+      }
+    }
+    
+    return pageInfos;
+  }
+
+  // ==================== 基础操作方法 ====================
+
+  /**
+   * 导航到URL
+   */
+  async navigate(url, options = {}) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
 
     try {
-      this.addLog(taskId, 'info', `开始抖音任务: ${taskType}`)
-
-      // 1. 创建抖音专用窗口（模拟手机端）
-      if (!this.automationWindow) {
-        await this.launchAutomationWindow({
-          show: config.headless !== true,
-          width: 375,  // 手机宽度
-          height: 667, // 手机高度
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
-        })
-      }
-
-      // 2. 加载抖音页面
-      const url = config.url || 'https://www.douyin.com'
-      this.addLog(taskId, 'info', `访问抖音: ${url}`)
+      this.emit('status', `正在导航到: ${url}`);
       
-      await this.automationWindow.loadURL(url)
+      const navigationOptions = {
+        waitUntil: options.waitUntil || 'networkidle0',
+        timeout: options.timeout || 30000,
+        ...options
+      };
 
-      // 等待页面加载
-      await this.waitForPageLoad()
-      this.addLog(taskId, 'success', '抖音页面加载成功')
-
-      // 3. 执行抖音任务
-      const result = await this.executeDouyinAction(taskType, config)
-
-      // 4. 截图保存
-      if (config.screenshot !== false) {
-        await this.captureScreenshot(`douyin_${taskId}`)
-      }
-
-      this.addLog(taskId, 'success', '抖音任务完成')
-
-      return {
-        success: true,
-        taskId: taskId,
-        type: 'douyin',
-        action: taskType,
-        result: result,
-        logs: this.getLogs(taskId)
-      }
-
+      await this.page.goto(url, navigationOptions);
+      this.stats.actions++;
+      this.emit('status', '导航完成');
     } catch (error) {
-      this.addLog(taskId, 'error', `抖音任务失败: ${error.message}`)
-      
-      // 错误截图
-      await this.captureScreenshot(`douyin_error_${taskId}`)
-      
-      return {
-        success: false,
-        taskId: taskId,
-        type: 'douyin',
-        action: taskType,
-        error: error.message,
-        logs: this.getLogs(taskId)
-      }
-    } finally {
-      this.isRunning = false
-      this.currentTask = null
+      this.stats.errors++;
+      this.emit('error', `导航失败: ${error.message}`);
+      throw error;
     }
   }
 
   /**
-   * 执行抖音特定操作
+   * 等待元素
    */
-  async executeDouyinAction(action, params = {}) {
-    const scriptMap = {
-      // 点赞视频
-      'like_video': `
-        try {
-          // 查找点赞按钮
-          const likeSelectors = [
-            '[data-e2e="like"]',
-            '.like-btn',
-            'svg[aria-label*="喜欢"]',
-            'div[aria-label*="点赞"]'
-          ]
+  async waitForElement(selector, options = {}) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+
+    try {
+      this.emit('status', `等待元素: ${selector}`);
+      
+      const waitOptions = {
+        timeout: options.timeout || 30000,
+        visible: options.visible || true,
+        ...options
+      };
+
+      await this.page.waitForSelector(selector, waitOptions);
+      this.emit('status', '元素已找到');
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `等待元素超时: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 输入文本
+   */
+  async type(selector, text, options = {}) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+
+    try {
+      await this.waitForElement(selector);
+      await this.page.focus(selector);
+      
+      if (options.clearFirst) {
+        await this.page.$eval(selector, el => el.value = '');
+      }
+      
+      await this.page.type(selector, text, { delay: options.delay || 50 });
+      this.stats.actions++;
+      this.emit('status', `已输入文本: ${text}`);
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `输入文本失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 点击元素
+   */
+  async click(selector, options = {}) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+
+    try {
+      await this.waitForElement(selector);
+      
+      if (options.delay) {
+        await this.page.waitForTimeout(options.delay);
+      }
+      
+      await this.page.click(selector);
+      this.stats.actions++;
+      this.emit('status', `已点击元素: ${selector}`);
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `点击元素失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 滚动页面
+   */
+  async scroll(amount = 500, direction = 'down') {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+
+    try {
+      this.emit('status', `正在滚动页面: ${direction} ${amount}px`);
+      
+      await this.page.evaluate((amount, direction) => {
+        if (direction === 'down') {
+          window.scrollBy(0, amount);
+        } else if (direction === 'up') {
+          window.scrollBy(0, -amount);
+        } else if (direction === 'toBottom') {
+          window.scrollTo(0, document.body.scrollHeight);
+        } else if (direction === 'toTop') {
+          window.scrollTo(0, 0);
+        }
+      }, amount, direction);
+      
+      this.stats.actions++;
+      await this.page.waitForTimeout(1000);
+      this.emit('status', '滚动完成');
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `滚动失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 截图
+   */
+  async screenshot(options = {}) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+
+    try {
+      this.emit('status', '正在截图...');
+      
+      const screenshotOptions = {
+        path: options.path || path.join(__dirname, '../screenshots', `screenshot_${Date.now()}.png`),
+        type: options.type || 'png',
+        fullPage: options.fullPage || false,
+        quality: options.quality || 90,
+        ...options
+      };
+
+      // 确保截图目录存在
+      const dir = path.dirname(screenshotOptions.path);
+      await fs.mkdir(dir, { recursive: true });
+      
+      const buffer = await this.page.screenshot(screenshotOptions);
+      this.stats.actions++;
+      this.emit('status', `截图已保存: ${screenshotOptions.path}`);
+      
+      return buffer;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `截图失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // ==================== 抖音专用方法 ====================
+
+  /**
+   * 抖音自动化主函数
+   */
+  async douyinAutomation(options = {}) {
+    try {
+      this.emit('status', '开始抖音自动化...');
+      
+      const config = {
+        scrollCount: options.scrollCount || this.douyinConfig.scrollCount,
+        likeProbability: options.likeProbability || this.douyinConfig.likeProbability,
+        commentProbability: options.commentProbability || this.douyinConfig.commentProbability,
+        followProbability: options.followProbability || this.douyinConfig.followProbability,
+        commentTexts: options.commentTexts || this.douyinConfig.commentTexts,
+        maxVideos: options.maxVideos || 20,
+        ...options
+      };
+      
+      // 1. 确保在抖音页面
+      await this.ensureOnDouyin();
+      
+      // 2. 执行主循环
+      for (let i = 0; i < config.scrollCount; i++) {
+        this.emit('status', `第 ${i + 1}/${config.scrollCount} 轮操作`);
+        
+        // 滚动加载
+        await this.scroll(800, 'down');
+        
+        // 随机点击视频
+        if (Math.random() < 0.7) { // 70%概率点击视频
+          await this.douyinClickRandomVideo();
+          await this.page.waitForTimeout(3000);
           
-          for (const selector of likeSelectors) {
-            const element = document.querySelector(selector)
-            if (element) {
-              element.click()
-              return { success: true, message: '点赞成功' }
-            }
+          // 点赞
+          if (Math.random() < config.likeProbability) {
+            await this.douyinLikeVideo();
+            await this.page.waitForTimeout(1000);
           }
           
-          return { success: false, error: '未找到点赞按钮' }
-        } catch (error) {
-          return { success: false, error: error.message }
-        }
-      `,
-
-      // 关注用户
-      'follow_user': `
-        try {
-          const followSelectors = [
-            '[data-e2e="follow"]',
-            '.follow-btn',
-            'button:contains("关注")'
-          ]
-          
-          for (const selector of followSelectors) {
-            const element = document.querySelector(selector)
-            if (element) {
-              const text = element.textContent || element.innerText
-              if (text.includes('关注') && !text.includes('已关注')) {
-                element.click()
-                return { success: true, message: '关注成功' }
-              }
-            }
+          // 评论
+          if (Math.random() < config.commentProbability) {
+            const randomComment = config.commentTexts[Math.floor(Math.random() * config.commentTexts.length)];
+            await this.douyinCommentVideo(randomComment);
+            await this.page.waitForTimeout(1500);
           }
           
-          return { success: false, error: '未找到关注按钮或已关注' }
-        } catch (error) {
-          return { success: false, error: error.message }
+          // 关注
+          if (Math.random() < config.followProbability) {
+            await this.douyinFollowAuthor();
+            await this.page.waitForTimeout(1000);
+          }
+          
+          // 返回首页
+          await this.page.goBack();
+          await this.page.waitForTimeout(2000);
         }
-      `,
+        
+        // 随机延迟
+        const delay = 2000 + Math.random() * 3000;
+        await this.page.waitForTimeout(delay);
+      }
+      
+      this.emit('status', '抖音自动化完成');
+      return this.getStats();
+      
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `抖音自动化失败: ${error.message}`);
+      throw error;
+    }
+  }
 
-      // 发送私信
-      'send_message': `
+  /**
+   * 确保在抖音页面
+   */
+  async ensureOnDouyin() {
+    if (!this.page) {
+      throw new Error('页面未初始化');
+    }
+    
+    const currentUrl = await this.page.url();
+    
+    if (!currentUrl.includes('douyin.com')) {
+      this.emit('status', '当前不在抖音页面，正在跳转...');
+      await this.navigate('https://www.douyin.com');
+      await this.page.waitForTimeout(5000);
+    } else {
+      this.emit('status', '已在抖音页面');
+    }
+    
+    // 检查登录状态
+    await this.checkDouyinLoginStatus();
+  }
+
+  /**
+   * 检查抖音登录状态
+   */
+  async checkDouyinLoginStatus() {
+    try {
+      // 检查是否有登录弹窗
+      const loginModal = await this.page.$('.dy-account-close, .login-panel, .modal-login');
+      if (loginModal) {
+        this.emit('warning', '检测到登录弹窗，请确保抖音账号已登录');
+        // 可以添加自动关闭弹窗逻辑
         try {
-          // 找到私信按钮
-          const messageBtn = document.querySelector('[data-e2e="message"], .message-btn')
-          if (messageBtn) {
-            messageBtn.click()
-            await new Promise(resolve => setTimeout(resolve, 1000))
+          await loginModal.click();
+          await this.page.waitForTimeout(1000);
+        } catch (e) {
+          // 忽略点击错误
+        }
+      }
+      
+      // 检查用户头像是否存在（登录标志）
+      const userAvatar = await this.page.$('.avatar, .user-avatar, [data-e2e="user-avatar"]');
+      if (userAvatar) {
+        this.emit('status', '抖音账号已登录');
+        return true;
+      } else {
+        this.emit('warning', '可能未检测到登录状态，继续执行...');
+        return false;
+      }
+    } catch (error) {
+      this.emit('warning', `检查登录状态失败: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * 随机点击抖音视频
+   */
+  async douyinClickRandomVideo() {
+    try {
+      // 抖音视频选择器列表
+      const videoSelectors = [
+        '[data-e2e="feed-video"]',
+        '.xg-video-container',
+        '.video-card',
+        'div[class*="video"]',
+        'a[href*="/video/"]',
+        'div[class*="card"]'
+      ];
+      
+      let clicked = false;
+      
+      for (const selector of videoSelectors) {
+        try {
+          const videos = await this.page.$$(selector);
+          if (videos.length > 0) {
+            // 随机选择一个视频（避免点击第一个，因为可能是广告）
+            const randomIndex = Math.floor(Math.random() * Math.min(videos.length, 10)) + 1;
+            const videoToClick = videos[Math.min(randomIndex, videos.length - 1)];
             
-            // 如果有用户名，搜索用户
-            ${params.username ? `
-              const searchInput = document.querySelector('input[placeholder*="搜索"]')
-              if (searchInput) {
-                searchInput.value = "${params.username}"
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }))
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                
-                // 点击第一个搜索结果
-                const firstResult = document.querySelector('.search-result-item:first-child')
-                if (firstResult) {
-                  firstResult.click()
-                  await new Promise(resolve => setTimeout(resolve, 1000))
+            await videoToClick.click();
+            clicked = true;
+            this.stats.actions++;
+            this.emit('status', `点击视频成功 (选择器: ${selector})`);
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      if (!clicked) {
+        // 备用方案：点击屏幕中央
+        const { width, height } = this.page.viewport();
+        await this.page.mouse.click(width / 2, height / 2);
+        this.emit('status', '使用备用方案点击屏幕中央');
+      }
+      
+      return clicked;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `点击视频失败: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * 点赞当前视频
+   */
+  async douyinLikeVideo() {
+    try {
+      const likeSelectors = [
+        '[data-e2e="browse-like"]',
+        '.like-icon',
+        'div[class*="like"]',
+        'svg[aria-label="点赞"]',
+        'button:has-text("赞")'
+      ];
+      
+      for (const selector of likeSelectors) {
+        try {
+          const likeButton = await this.page.$(selector);
+          if (likeButton) {
+            await likeButton.click();
+            this.stats.likes++;
+            this.stats.actions++;
+            this.emit('status', '点赞成功');
+            return true;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      this.emit('warning', '未找到点赞按钮');
+      return false;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `点赞失败: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * 评论视频
+   */
+  async douyinCommentVideo(text = '自动化测试评论') {
+    try {
+      const commentSelectors = [
+        '[data-e2e="browse-comment"]',
+        '.comment-icon',
+        'div[class*="comment"]',
+        'svg[aria-label="评论"]'
+      ];
+      
+      for (const selector of commentSelectors) {
+        try {
+          const commentButton = await this.page.$(selector);
+          if (commentButton) {
+            await commentButton.click();
+            await this.page.waitForTimeout(1500);
+            
+            // 输入评论
+            const commentInputSelectors = [
+              '.comment-input',
+              'input[placeholder*="评论"]',
+              'textarea[placeholder*="评论"]',
+              '.input-area'
+            ];
+            
+            let inputFound = false;
+            for (const inputSelector of commentInputSelectors) {
+              try {
+                const commentInput = await this.page.$(inputSelector);
+                if (commentInput) {
+                  await commentInput.click();
+                  await commentInput.type(text, { delay: 50 });
+                  inputFound = true;
+                  break;
                 }
+              } catch (error) {
+                continue;
               }
-            ` : ''}
-            
-            // 输入消息
-            const messageInput = document.querySelector('textarea, [contenteditable="true"]')
-            if (messageInput && "${params.message}") {
-              if (messageInput.contentEditable === 'true') {
-                messageInput.innerHTML = "${params.message}"
-              } else {
-                messageInput.value = "${params.message}"
-              }
-              messageInput.dispatchEvent(new Event('input', { bubbles: true }))
             }
             
-            // 发送消息
-            const sendBtn = document.querySelector('.send-btn, [data-e2e="send"]')
-            if (sendBtn) {
-              sendBtn.click()
-              return { success: true, message: '私信发送成功' }
+            if (!inputFound) {
+              this.emit('warning', '未找到评论输入框');
+              return false;
             }
+            
+            // 发送评论
+            await this.page.waitForTimeout(500);
+            const sendSelectors = [
+              '.comment-send',
+              'button:has-text("发送")',
+              'button[type="submit"]'
+            ];
+            
+            for (const sendSelector of sendSelectors) {
+              try {
+                const sendButton = await this.page.$(sendSelector);
+                if (sendButton) {
+                  await sendButton.click();
+                  this.stats.comments++;
+                  this.stats.actions++;
+                  this.emit('status', `评论成功: ${text}`);
+                  
+                  // 关闭评论框
+                  await this.page.waitForTimeout(1000);
+                  const closeSelectors = ['.close-icon', '.icon-close', 'button[aria-label="关闭"]'];
+                  for (const closeSelector of closeSelectors) {
+                    try {
+                      const closeButton = await this.page.$(closeSelector);
+                      if (closeButton) {
+                        await closeButton.click();
+                        break;
+                      }
+                    } catch (e) {
+                      continue;
+                    }
+                  }
+                  
+                  return true;
+                }
+              } catch (error) {
+                continue;
+              }
+            }
+            
+            this.emit('warning', '未找到发送按钮');
+            return false;
           }
-          
-          return { success: false, error: '未找到私信相关元素' }
         } catch (error) {
-          return { success: false, error: error.message }
+          continue;
         }
-      `,
+      }
+      
+      this.emit('warning', '未找到评论按钮');
+      return false;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `评论失败: ${error.message}`);
+      return false;
+    }
+  }
 
-      // 发布视频
-      'publish_video': `
+  /**
+   * 关注作者
+   */
+  async douyinFollowAuthor() {
+    try {
+      const followSelectors = [
+        '[data-e2e="follow-button"]',
+        '.follow-btn',
+        'button:has-text("关注")',
+        'div[class*="follow"]'
+      ];
+      
+      for (const selector of followSelectors) {
         try {
-          // 找到发布按钮
-          const publishBtn = document.querySelector('[data-e2e="publish"], .publish-btn')
-          if (publishBtn) {
-            publishBtn.click()
-            await new Promise(resolve => setTimeout(resolve, 2000))
+          const followButton = await this.page.$(selector);
+          if (followButton) {
+            const buttonText = await this.page.evaluate(el => el.textContent, followButton);
             
-            // 这里需要文件上传，但Electron中需要特殊处理
-            // 实际使用时需要通过对话框选择文件
-            
-            // 填写描述
-            ${params.description ? `
-              const descInput = document.querySelector('textarea, [placeholder*="描述"]')
-              if (descInput) {
-                descInput.value = "${params.description}"
-                descInput.dispatchEvent(new Event('input', { bubbles: true }))
-              }
-            ` : ''}
-            
-            // 发布
-            const submitBtn = document.querySelector('[data-e2e="submit"], .submit-btn')
-            if (submitBtn) {
-              submitBtn.click()
-              return { success: true, message: '发布流程已启动' }
+            // 检查是否是"关注"按钮（不是"已关注"）
+            if (buttonText.includes('关注') && !buttonText.includes('已关注')) {
+              await followButton.click();
+              this.stats.follows++;
+              this.stats.actions++;
+              this.emit('status', '关注成功');
+              return true;
             }
           }
-          
-          return { success: false, error: '未找到发布相关元素' }
         } catch (error) {
-          return { success: false, error: error.message }
+          continue;
         }
-      `
+      }
+      
+      this.emit('warning', '未找到关注按钮或已关注');
+      return false;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `关注失败: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * 获取抖音页面信息
+   */
+  async getDouyinPageInfo() {
+    try {
+      const info = await this.page.evaluate(() => {
+        const result = {
+          title: document.title,
+          url: window.location.href,
+          isLoggedIn: false,
+          videoCount: 0,
+          userInfo: null
+        };
+        
+        // 检查登录状态
+        const userElements = document.querySelectorAll('.avatar, .user-avatar, [data-e2e="user-avatar"]');
+        result.isLoggedIn = userElements.length > 0;
+        
+        // 统计视频数量
+        const videoElements = document.querySelectorAll('[data-e2e="feed-video"], .video-card, .xg-video-container');
+        result.videoCount = videoElements.length;
+        
+        // 获取用户信息（如果有）
+        const userName = document.querySelector('.user-name, .nickname, [data-e2e="user-name"]');
+        if (userName) {
+          result.userInfo = {
+            name: userName.textContent?.trim()
+          };
+        }
+        
+        return result;
+      });
+      
+      return info;
+    } catch (error) {
+      return {
+        error: error.message
+      };
+    }
+  }
+
+  // ==================== 实用工具方法 ====================
+
+  /**
+   * 执行JavaScript脚本
+   */
+  async executeScript(script, args = []) {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
     }
 
-    const script = scriptMap[action]
-    if (!script) {
-      throw new Error(`不支持的抖音操作: ${action}`)
+    try {
+      this.emit('status', '正在执行脚本...');
+      const result = await this.page.evaluate(script, ...args);
+      this.stats.actions++;
+      this.emit('status', '脚本执行完成');
+      return result;
+    } catch (error) {
+      this.stats.errors++;
+      this.emit('error', `脚本执行失败: ${error.message}`);
+      throw error;
     }
-
-    // 在页面中执行脚本
-    const result = await this.automationWindow.webContents.executeJavaScript(`(async () => { ${script} })()`)
-    return result
-  }
-
-  /**
-   * 执行点击操作
-   */
-  async executeClick(selector, timeout = 5000) {
-    return await this.automationWindow.webContents.executeJavaScript(`
-      (function() {
-        return new Promise((resolve, reject) => {
-          const element = document.querySelector('${selector.replace(/'/g, "\\'")}')
-          if (!element) {
-            reject(new Error('元素未找到: ${selector}'))
-            return
-          }
-          
-          // 获取元素位置
-          const rect = element.getBoundingClientRect()
-          const x = rect.left + rect.width / 2
-          const y = rect.top + rect.height / 2
-          
-          // 创建并触发点击事件
-          const mouseEvents = [
-            new MouseEvent('mousedown', { bubbles: true, clientX: x, clientY: y }),
-            new MouseEvent('mouseup', { bubbles: true, clientX: x, clientY: y }),
-            new MouseEvent('click', { bubbles: true, clientX: x, clientY: y })
-          ]
-          
-          mouseEvents.forEach(event => element.dispatchEvent(event))
-          
-          // 如果是链接，模拟跳转
-          if (element.tagName === 'A' && element.href) {
-            setTimeout(() => {
-              window.location.href = element.href
-            }, 100)
-          }
-          
-          resolve({
-            success: true,
-            selector: '${selector}',
-            tagName: element.tagName,
-            text: element.textContent?.trim() || ''
-          })
-        })
-      })()
-    `)
-  }
-
-  /**
-   * 执行输入操作
-   */
-  async executeType(selector, text, timeout = 5000) {
-    return await this.automationWindow.webContents.executeJavaScript(`
-      (function() {
-        return new Promise((resolve, reject) => {
-          const element = document.querySelector('${selector.replace(/'/g, "\\'")}')
-          if (!element) {
-            reject(new Error('元素未找到: ${selector}'))
-            return
-          }
-          
-          // 聚焦元素
-          element.focus()
-          
-          // 清除原有内容
-          if (element.value !== undefined) {
-            element.value = ''
-          } else if (element.textContent !== undefined) {
-            element.textContent = ''
-          } else if (element.innerHTML !== undefined) {
-            element.innerHTML = ''
-          }
-          
-          // 设置新内容
-          if (element.value !== undefined) {
-            element.value = '${text.replace(/'/g, "\\'")}'
-          } else if (element.contentEditable === 'true') {
-            element.innerHTML = '${text.replace(/'/g, "\\'")}'
-          } else {
-            element.textContent = '${text.replace(/'/g, "\\'")}'
-          }
-          
-          // 触发输入事件
-          element.dispatchEvent(new Event('input', { bubbles: true }))
-          element.dispatchEvent(new Event('change', { bubbles: true }))
-          
-          resolve({
-            success: true,
-            selector: '${selector}',
-            text: '${text}'
-          })
-        })
-      })()
-    `)
-  }
-
-  /**
-   * 等待页面加载
-   */
-  async waitForPageLoad() {
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => {
-        resolve()
-      }, 10000)
-
-      this.automationWindow.webContents.once('did-finish-load', () => {
-        clearTimeout(timeout)
-        setTimeout(() => {
-          resolve()
-        }, 1000)
-      })
-    })
   }
 
   /**
    * 等待指定时间
    */
   async wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    await this.page.waitForTimeout(ms);
   }
 
   /**
-   * 截图
+   * 获取页面标题
    */
-  async captureScreenshot(prefix = 'screenshot') {
-    if (!this.automationWindow) return null
-
-    const screenshotDir = path.join(__dirname, '../screenshots')
-    await fs.mkdir(screenshotDir, { recursive: true })
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const screenshotPath = path.join(screenshotDir, `${prefix}_${timestamp}.png`)
-
-    const image = await this.automationWindow.webContents.capturePage()
-    await fs.writeFile(screenshotPath, image.toPNG())
-    
-    this.addLog('system', 'info', `截图已保存: ${screenshotPath}`)
-    return screenshotPath
-  }
-
-  /**
-   * 获取页面信息
-   */
-  async getPageInfo() {
-    if (!this.automationWindow) return null
-
-    return await this.automationWindow.webContents.executeJavaScript(`
-      (function() {
-        return {
-          url: window.location.href,
-          title: document.title,
-          domain: window.location.hostname,
-          isDouyin: window.location.hostname.includes('douyin.com'),
-          timestamp: new Date().toISOString()
-        }
-      })()
-    `)
-  }
-
-  /**
-   * 停止任务
-   */
-  async stopTask() {
-    if (this.automationWindow) {
-      this.automationWindow.close()
-      this.automationWindow = null
+  async getTitle() {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
     }
-    
-    this.isRunning = false
-    this.currentTask = null
-    
-    this.addLog('system', 'success', '任务已停止')
-    return { success: true, message: '任务已停止' }
+    return await this.page.title();
   }
 
   /**
-   * 设置窗口监听器
+   * 获取页面URL
    */
-  setupWindowListeners() {
-    // 监听页面控制台输出
-    this.automationWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-      const levels = ['', 'INFO', 'WARNING', 'ERROR']
-      this.addLog('page-console', 'info', `页面控制台: ${levels[level]} ${message}`)
-    })
-
-    // 监听页面标题变化
-    this.automationWindow.on('page-title-updated', (event, title) => {
-      this.addLog('page', 'info', `页面标题: ${title}`)
-    })
-
-    // 监听页面URL变化
-    this.automationWindow.webContents.on('did-navigate', (event, url) => {
-      this.addLog('page', 'info', `页面跳转: ${url}`)
-    })
+  async getUrl() {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+    return await this.page.url();
   }
 
   /**
-   * 获取任务状态
+   * 获取页面内容
    */
-  getTaskStatus() {
+  async getContent() {
+    if (!this.page) {
+      throw new Error('请先初始化浏览器');
+    }
+    return await this.page.content();
+  }
+
+  /**
+   * 获取统计信息
+   */
+  getStats() {
+    this.stats.endTime = new Date();
+    const duration = this.stats.endTime - this.stats.startTime;
+    
     return {
-      isRunning: this.isRunning,
-      windowOpen: !!this.automationWindow,
-      currentTask: this.currentTask,
-      logs: this.logs.slice(-50)
+      ...this.stats,
+      duration: `${Math.floor(duration / 1000)}秒`,
+      actionsPerMinute: duration > 0 ? ((this.stats.actions / duration) * 60000).toFixed(2) : 0,
+      successRate: this.stats.actions > 0 ? 
+        ((this.stats.actions - this.stats.errors) / this.stats.actions * 100).toFixed(2) + '%' : '0%'
+    };
+  }
+
+  // ==================== 执行流程方法 ====================
+
+  /**
+   * 执行自动化流程
+   */
+  async executeFlow(steps) {
+    if (!this.page) {
+      await this.initialize();
+    }
+
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        this.emit('step:start', { index: i, step });
+        
+        switch (step.action) {
+          case 'navigate':
+            await this.navigate(step.url, step.options);
+            break;
+          case 'type':
+            await this.type(step.selector, step.text, step.options);
+            break;
+          case 'click':
+            await this.click(step.selector, step.options);
+            break;
+          case 'wait':
+            await this.wait(step.timeout || 1000);
+            break;
+          case 'waitForElement':
+            await this.waitForElement(step.selector, step.options);
+            break;
+          case 'screenshot':
+            await this.screenshot(step.options);
+            break;
+          case 'scroll':
+            await this.scroll(step.amount, step.direction);
+            break;
+          case 'evaluate':
+            await this.executeScript(step.script, step.args || []);
+            break;
+          case 'douyinAutomation':
+            await this.douyinAutomation(step.config);
+            break;
+          case 'douyinLike':
+            await this.douyinLikeVideo();
+            break;
+          case 'douyinComment':
+            await this.douyinCommentVideo(step.text);
+            break;
+          case 'douyinFollow':
+            await this.douyinFollowAuthor();
+            break;
+          default:
+            throw new Error(`未知的操作: ${step.action}`);
+        }
+        
+        this.emit('step:complete', { index: i, step });
+      }
+      
+      this.emit('flow:complete', { 
+        totalSteps: steps.length,
+        stats: this.getStats()
+      });
+      
+      return this.getStats();
+    } catch (error) {
+      this.emit('flow:error', { 
+        error: error.message,
+        stats: this.getStats()
+      });
+      throw error;
+    }
+  }
+
+  // ==================== 清理和关闭 ====================
+
+  /**
+   * 关闭浏览器
+   */
+  async close() {
+    try {
+      if (this.browser) {
+        this.emit('status', '正在关闭浏览器...');
+        
+        if (this.isConnectedMode) {
+          // 如果是连接模式，只断开连接
+          await this.browser.disconnect();
+        } else {
+          // 如果是启动模式，关闭浏览器
+          await this.browser.close();
+        }
+        
+        this.browser = null;
+        this.page = null;
+        this.emit('status', '浏览器已关闭');
+      }
+    } catch (error) {
+      this.emit('error', `关闭浏览器失败: ${error.message}`);
+      throw error;
     }
   }
 
   /**
-   * 添加日志
+   * 重启浏览器
    */
-  addLog(taskId, level, message) {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      taskId: taskId || 'system',
-      level: level,
-      message: message
-    }
-    
-    this.logs.push(logEntry)
-    console.log(`[${logEntry.timestamp}] ${level.toUpperCase()} - ${message}`)
-    
-    // 限制日志数量
-    if (this.logs.length > 1000) {
-      this.logs = this.logs.slice(-500)
-    }
-    
-    return logEntry
+  async restart(options = {}) {
+    await this.close();
+    await this.initialize(options);
+    this.emit('status', '浏览器已重启');
   }
 
   /**
-   * 获取日志
+   * 重新加载页面
    */
-  getLogs(taskId) {
-    return this.logs.filter(log => log.taskId === taskId)
+  async reload() {
+    if (!this.page) {
+      throw new Error('页面未初始化');
+    }
+    
+    await this.page.reload();
+    this.emit('status', '页面已重新加载');
   }
 
   /**
-   * 清除日志
+   * 创建新的标签页
    */
-  clearLogs() {
-    this.logs = []
-    return { success: true, message: '日志已清除' }
+  async newTab(url) {
+    if (!this.browser) {
+      throw new Error('浏览器未初始化');
+    }
+    
+    const newPage = await this.browser.newPage();
+    this.page = newPage;
+    
+    if (url) {
+      await this.navigate(url);
+    }
+    
+    this.emit('status', '已创建新标签页');
+    return newPage;
   }
 }
 
-// 创建单例实例
-const automationManager = new AutomationManager()
-
-// 导出函数接口
-async function runAutomationTask(config = {}) {
-  return await automationManager.runAutomationTask(config)
-}
-
-async function runDouyinTask(taskType, taskConfig = {}, url = 'https://www.douyin.com') {
-  return await automationManager.runDouyinTask(taskType, { ...taskConfig, url })
-}
-
-async function runUniversalTask(config = {}) {
-  // 自动检测是否为抖音页面
-  const isDouyin = DOUYIN_DETECTORS.isDouyinPage(config.url)
-  
-  if (isDouyin && config.douyinTask) {
-    return await automationManager.runDouyinTask(
-      config.douyinTask,
-      config.douyinConfig || {},
-      config.url
-    )
-  } else {
-    return await automationManager.runAutomationTask(config)
-  }
-}
-
-async function stopAutomationTask() {
-  return await automationManager.stopTask()
-}
-
-function getAutomationStatus() {
-  return automationManager.getTaskStatus()
-}
-
-function clearAutomationLogs() {
-  return automationManager.clearLogs()
-}
-
-// 导出模块
-module.exports = {
-  AutomationManager,
-  automationManager,
-  runAutomationTask,
-  runDouyinTask,
-  runUniversalTask,
-  stopAutomationTask,
-  getAutomationStatus,
-  clearAutomationLogs
-}
+module.exports = Automation;

@@ -1,0 +1,91 @@
+{
+  "name": "抖音自动化配置",
+  "version": "1.0.0",
+  "description": "抖音平台自动化操作配置",
+  "chromePath": "D:\\Google\\Chrome\\Application\\chrome.exe",
+  "userDataDir": "./chrome_profile/douyin",
+  "headless": false,
+  "viewport": {
+    "width": 375,
+    "height": 667,
+    "isMobile": true,
+    "hasTouch": true
+  },
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1",
+  "actions": {
+    "login": {
+      "enabled": false,
+      "username": "",
+      "password": "",
+      "selector": {
+        "phoneInput": "input[placeholder='请输入手机号']",
+        "passwordInput": "input[type='password']",
+        "loginButton": "button:has-text('登录')"
+      }
+    },
+    "scroll": {
+      "enabled": true,
+      "count": 10,
+      "delay": 2000,
+      "scrollBy": 500
+    },
+    "like": {
+      "enabled": true,
+      "probability": 0.3,
+      "selectors": [
+        "[data-e2e='browse-like']",
+        ".like-icon",
+        "div[class*='like']"
+      ]
+    },
+    "comment": {
+      "enabled": true,
+      "probability": 0.1,
+      "templates": [
+        "赞！",
+        "不错",
+        "学习了",
+        "哈哈哈",
+        "👍"
+      ],
+      "selectors": {
+        "commentButton": "[data-e2e='browse-comment']",
+        "commentInput": ".comment-input",
+        "sendButton": ".comment-send"
+      }
+    },
+    "follow": {
+      "enabled": false,
+      "probability": 0.05,
+      "selectors": [
+        "[data-e2e='follow-button']",
+        ".follow-btn"
+      ]
+    },
+    "share": {
+      "enabled": false,
+      "probability": 0.02
+    }
+  },
+  "screenshot": {
+    "enabled": true,
+    "directory": "./screenshots/douyin",
+    "format": "png",
+    "quality": 90,
+    "fullPage": false
+  },
+  "monitoring": {
+    "keywords": ["热门", "推荐", "搞笑", "美食", "旅行"],
+    "checkInterval": 300000,
+    "notify": true,
+    "logLevel": "info"
+  },
+  "safety": {
+    "maxActionsPerHour": 100,
+    "minDelayBetweenActions": 1000,
+    "maxDelayBetweenActions": 5000,
+    "restPeriods": [
+      {"start": "02:00", "end": "06:00"}
+    ]
+  }
+}
