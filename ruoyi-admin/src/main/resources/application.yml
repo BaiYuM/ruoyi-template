@@ -141,3 +141,21 @@ tt:
     configs:
       - clientKey: awxxxxxxxxx
         clientSecret: 87111aaaaaaa1111xxxx11
+
+# 桌面自动化配置
+desktop:
+  automation:
+    # 桌面应用路径
+    app-path: D:/KG28/ruoyi/RuoYi-Vue-master/ruoyi-desktop
+    # HTTP服务端口
+    http-port: 9876
+    # 默认是否启用无头模式
+    default-headless: false
+    # 默认是否启用截图
+    default-screenshot: true
+    # 默认延迟时间（毫秒）
+    default-delay-time: 1000
+    # 最大重试次数
+    max-retry-attempts: 3
+    # 任务超时时间（毫秒）
+    task-timeout: 300000
