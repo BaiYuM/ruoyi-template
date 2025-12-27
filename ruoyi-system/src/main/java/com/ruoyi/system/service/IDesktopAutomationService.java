@@ -1,7 +1,5 @@
 package com.ruoyi.system.service;
 
-import com.ruoyi.system.domain.AutomationConfig;
-
 /**
  * 桌面自动化服务接口
  * 
@@ -11,45 +9,30 @@ import com.ruoyi.system.domain.AutomationConfig;
 public interface IDesktopAutomationService
 {
     /**
-     * 启动桌面自动化任务
-     * 
-     * @param config 自动化配置
-     * @return 任务执行结果
-     */
-    public String startAutomationTask(AutomationConfig config);
-
-    /**
-     * 停止自动化任务
+     * 启动桌面自动化应用
      * 
      * @return 操作结果
      */
-    public String stopAutomationTask();
+    public boolean startDesktopApp();
 
     /**
-     * 获取自动化任务状态
-     * 
-     * @return 任务状态信息
-     */
-    public String getAutomationStatus();
-
-    /**
-     * 启动桌面应用
+     * 停止桌面自动化应用
      * 
      * @return 操作结果
      */
-    public String startDesktopApp();
+    public boolean stopDesktopApp();
 
     /**
-     * 关闭桌面应用
+     * 检查桌面应用是否正在运行
      * 
-     * @return 操作结果
-     */
-    public String stopDesktopApp();
-
-    /**
-     * 检查桌面应用是否运行
-     * 
-     * @return 是否运行
+     * @return 是否运行中
      */
     public boolean isDesktopAppRunning();
+
+    /**
+     * 重启桌面自动化应用
+     * 
+     * @return 操作结果
+     */
+    public boolean restartDesktopApp();
 }
